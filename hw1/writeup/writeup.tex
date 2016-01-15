@@ -1,0 +1,94 @@
+\documentclass[aps,prd,twocolumn,nofootinbib]{revtex4-1}
+%\documentclass[aps,prd,nofootinbib]{revtex4-1}
+
+\usepackage{subfig}
+%\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{float}
+
+%\usepackage[protrusion=true,expansion=true]{microtype}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bbm}
+\usepackage{ulem}
+%\usepackage{feynmp-auto}
+%\usepackage{slashed}
+%\usepackage[absolute,overlay]{textpos}
+\usepackage[usenames, dvipsnames]{color}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{epsfig}
+\usepackage{hyperref}
+%\usepackage{tikz}
+\usepackage{enumerate}
+%\usepackage{fixltx2e} % buggy
+\usepackage[compatibility=false]{caption}
+%\usepackage{subcaption} % doesn't work with subfigure
+%\usepackage{pdfpages}
+%\usepackage{setspace}
+\usepackage{verbatim}
+
+\DeclareRobustCommand{\orderof}{\ensuremath{\mathcal{O}}}
+
+\definecolor{dukeblue}{RGB}{0,0,156}
+\definecolor{dukedarkblue}{RGB}{0,26,87}
+\definecolor{dukeblack}{RGB}{79,79,79}
+\definecolor{dukegray}{RGB}{79,79,79}
+\definecolor{dukesecbrown}{RGB}{217,200,158}
+\definecolor{dukesecblue}{RGB}{127,169,174}
+
+%\renewcommand*{\thefootnote}{\fnsymbol{footnote}}
+
+\hypersetup{
+    breaklinks,
+    baseurl       = http://,
+    pdfborder     = 0 0 0,
+    pdfpagemode   = UseNone,% do not show thumbnails or bookmarks on opening
+    pdfstartpage  = 1,
+    bookmarksopen = true,
+    bookmarksdepth= 2,% to show sections and subsections
+    pdfauthor     = {\@author},
+    pdftitle      = {\@title},
+    pdfsubject    = {},
+    pdfkeywords   = {}}
+
+
+
+\begin{document}
+
+\title{PHYS 566 HW1 Writeup}
+\author{Matthew Epland}
+\affiliation{Department of Physics, Duke University, Durham, NC 27707, USA}
+
+%\author[Matthew Epland]{{\small Matthew Epland}}
+%\institute{Duke University}
+
+\date{\today}
+
+\begin{abstract}
+Abstract goes here!
+\end{abstract}\maketitle
+
+\section{Introduction}
+\label{sec:intro}
+Introduction goes here!
+
+\section{Theory}
+\label{sec:theory}
+
+\section{Body}
+\label{sec:body}
+
+
+\subsection{subsection1}
+Test citations~\cite{Winklmeier} ~\cite{ref_1} ~\cite{ref_2}
+
+\section{Conclusions}
+The end!
+
+
+\bibliographystyle{bib_files/styles/atlasBibStyleWoTitle}
+\bibliography{bib_files/my_bib.bib}
+
+\end{document} %%% end of doc %%%
+
+
