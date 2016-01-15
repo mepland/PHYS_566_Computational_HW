@@ -4,6 +4,7 @@
 *.toc
 *.pdf
 *.aux
+*Notes.bib
 *.log
 *.bbl
 *.blg
