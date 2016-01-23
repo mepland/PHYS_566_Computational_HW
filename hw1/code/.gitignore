@@ -1,1 +1,5 @@
-output.txt
+*.txt
+*.pdf
+*.eps
+*.png
+*.jpeg
