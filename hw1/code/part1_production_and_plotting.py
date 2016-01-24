@@ -20,18 +20,21 @@ for i in range(x.size):
 		y2[i] = 0.0 # Already should be 0.0 from initialization, but may change this later
 
 # Now plot x, y1, y2 all together
-plt.plot(x, y1, 'b')
-plt.plot(x, y2, 'g')
+y1_plt, = plt.plot(x, y1, 'b', label='Sin(x)')
+y2_plt, = plt.plot(x, y2, 'g', label='Sin(x)/x')
+
+plt.axis([-11, 11, -1.1, 1.1])
+
 plt.xlabel('x')
 plt.ylabel('f(x)')
 
-# TODO add legend
+plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+           ncol=2, borderaxespad=0.)
 
 plt.savefig('part1.pdf')
 plt.savefig('part1.eps')
 plt.savefig('part1.png')
 plt.savefig('part1.jpeg')
-
 
 #print "\n y.size returns %i" % y.size
 
