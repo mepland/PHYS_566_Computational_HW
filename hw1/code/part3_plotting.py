@@ -5,21 +5,35 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Produce the desired x ndarray, from -10.0 to 10.0 in steps of 0.05
-x = np.linspace(-10.0, 10.0, 401)
+# Set input path, hard coded...
+input_path = './output'
+
+# open input file and see how many data points/lines there are
+input_file = open(input_path+'/data.txt','r')
+num_data = sum(1 for line in input_file)
+#print 'Input file %s has %i lines' % (input_file.name, num_data)
 
 # Declare the y ndarray
-y1 = np.zeros(x.size)
-y2 = np.zeros(x.size)
+x  = np.zeros(num_data)
+y1 = np.zeros(num_data)
+y2 = np.zeros(num_data)
 
-# Fill the y ndarrays
-# Note that y2 at x = 0 is undefined not zero, so set it to None
-for i in range(x.size):
-	y1[i] = np.sin(x[i])
-	if x[i] != 0.0:
-		y2[i] = np.sin(x[i])/x[i]
-	elif x[i] == 0.0:
-		y2[i] = None
+# Return to the top of the file and read the data in
+input_file.seek(0)
+
+for i in range(num_data):
+	line = input_file.readline()
+	x[i]  = line.split('\t')[0]
+	y1[i] = line.split('\t')[1]
+	y2[i] = line.split('\t')[2]
+	#print '%(x).2f \t %(y1).6f \t %(y2).6f' % {'x': x[i], 'y1': y1[i], 'y2': y2[i]}
+
+# Close the input file
+input_file.close()
+
+
+#######################################################
+# Recycle the plotting code from part 1
 
 # Now plot and format
 y1_plt, = plt.plot(x, y1, 'b', label='Sin(x)')
@@ -44,10 +58,10 @@ except OSError:
         raise Exception('Problem creating output dir %s !!!\nA file with the same name probably already exists, please fix the conflict and run again.' % output_path)
 
 # Print the plots
-plt.savefig(output_path+'/part1.pdf')
-plt.savefig(output_path+'/part1.eps')
-plt.savefig(output_path+'/part1.png')
-plt.savefig(output_path+'/part1.jpeg')
+plt.savefig(output_path+'/part3.pdf')
+plt.savefig(output_path+'/part3.eps')
+plt.savefig(output_path+'/part3.png')
+plt.savefig(output_path+'/part3.jpeg')
 
 print 'Done!'
 

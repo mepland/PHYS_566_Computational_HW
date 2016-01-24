@@ -8,12 +8,12 @@ import matplotlib.pyplot as plt
 # Produce the desired x ndarray, from -10.0 to 10.0 in steps of 0.05
 x = np.linspace(-10.0, 10.0, 401)
 
-# Declare the y ndarray
+# Declare the y ndarrays
 y1 = np.zeros(x.size)
 y2 = np.zeros(x.size)
 
 # Fill the y ndarrays
-# Note that y2 at x = 0 is undefined not zero, so set it to None
+# Note that y2 at x = 0 is undefined not zero, so set it to None TODO watch for crashes in part 3 on nan
 for i in range(x.size):
 	y1[i] = np.sin(x[i])
 	if x[i] != 0.0:
@@ -21,33 +21,23 @@ for i in range(x.size):
 	elif x[i] == 0.0:
 		y2[i] = None
 
-# Now plot and format
-y1_plt, = plt.plot(x, y1, 'b', label='Sin(x)')
-y2_plt, = plt.plot(x, y2, 'g', label='Sin(x)/x')
-
-plt.axis([-11.0, 11.0, -1.1, 1.1])
-
-plt.xlabel('x')
-plt.ylabel('f(x)')
-
-plt.legend(bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2, borderaxespad=0.0)
-
-
 # Set output path, hard coded...
 output_path = './output'
 
 # Create the output dir, if it exists don't crash, otherwise raise an exception
-try: 
+try:
     os.makedirs(output_path)
 except OSError:
     if not os.path.isdir(output_path):
         raise Exception('Problem creating output dir %s !!!\nA file with the same name probably already exists, please fix the conflict and run again.' % output_path)
 
-# Print the plots
-plt.savefig(output_path+'/part1.pdf')
-plt.savefig(output_path+'/part1.eps')
-plt.savefig(output_path+'/part1.png')
-plt.savefig(output_path+'/part1.jpeg')
+# write output to file
+output_file = open(output_path+'/data.txt','w')
+for i in range(x.size):
+        output_file.write('%(x).2f \t %(y1).6f \t %(y2).6f \n' % {'x': x[i], 'y1': y1[i], 'y2': y2[i]})
+
+# close output file
+output_file.close()
 
 print 'Done!'
 
