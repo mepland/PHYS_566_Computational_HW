@@ -36,7 +36,9 @@ plt.legend(bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, ncol=2, borderaxespad=
 # Set output path, hard coded...
 output_path = './output'
 
-# Create the output dir, if it exists don't crash, otherwise raise an exception
+# Create the output dir, if it already exists don't crash, otherwise raise an exception
+# Adapted from A-B-B's response to http://stackoverflow.com/questions/273192/in-python-check-if-a-directory-exists-and-create-it-if-necessary
+# Note in python 3.4+ 'os.makedirs(output_path, exist_ok=True)' would handle all of this...
 try: 
     os.makedirs(output_path)
 except OSError:

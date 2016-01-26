@@ -13,7 +13,7 @@ y1 = np.zeros(x.size)
 y2 = np.zeros(x.size)
 
 # Fill the y ndarrays
-# Note that y2 at x = 0 is undefined not zero, so set it to None TODO watch for crashes in part 3 on nan
+# Note that y2 at x = 0 is undefined not zero, so set it to None
 for i in range(x.size):
 	y1[i] = np.sin(x[i])
 	if x[i] != 0.0:
@@ -24,7 +24,9 @@ for i in range(x.size):
 # Set output path, hard coded...
 output_path = './output'
 
-# Create the output dir, if it exists don't crash, otherwise raise an exception
+# Create the output dir, if it already exists don't crash, otherwise raise an exception
+# Adapted from A-B-B's response to http://stackoverflow.com/questions/273192/in-python-check-if-a-directory-exists-and-create-it-if-necessary
+# Note in python 3.4+ 'os.makedirs(output_path, exist_ok=True)' would handle all of this...
 try:
     os.makedirs(output_path)
 except OSError:
