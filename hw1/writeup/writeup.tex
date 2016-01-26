@@ -92,7 +92,8 @@
   title={\protect\filename@parse{\lstname}\protect\filename@base.\filename@ext},
   firstnumber=0,
 %  linewidth=0.95\textwidth
-  xleftmargin=0.01\textwidth
+  xleftmargin=0.01\textwidth,
+  xrightmargin=0.01\textwidth
 }
 
 
@@ -107,7 +108,7 @@
 \date{\today}
 
 \begin{abstract}
-Python code was written to compute $sin\left(x\right)$ and $sin\left(x\right)/x$ between $-10.0 \le x \le 10.0$ in steps of $0.05$. The values were plotted, written to a text file, read from the text file, and plotted again.
+Python code was written to compute $\sin(x)$ and $\sin(x)/x$ between $-10.0 \le x \le 10.0$ in steps of $0.05$. The values were plotted, written to a text file, read from the text file, and plotted again.
 \end{abstract}\maketitle
 
 \begin{comment}
@@ -137,12 +138,12 @@ The end!
   \centering
   \includegraphics[width=.70\textwidth]{output/part1.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Output plot of $sin\left(x\right)$ and $sin\left(x\right)/x$ from Part 1.}
+	\caption{Output plot of $\sin(x)$ and $\sin(x)/x$ from Part 1.}
 	\label{fig:part1}
 \end{figure}
 
 \subsection{Part 2}
-Below are the first 30 lines of plain text output from part 2 in the format, $x$ \texttt{tab} $sin\left(x\right)$ \texttt{tab} $sin\left(x\right)/x$. See \texttt{data.txt} for the full dataset.
+Below are the first 30 lines of plain text output from part 2 in the format, $x$ \texttt{tab} $\sin(x)$ \texttt{tab} $\sin(x)/x$. See \texttt{data.txt} for the full dataset.
 \lstinputlisting[language=, numbers=none, frame=none,
 	xleftmargin=0.325\textwidth,
 	xrightmargin=0.325\textwidth,
@@ -157,7 +158,7 @@ Below are the first 30 lines of plain text output from part 2 in the format, $x$
   \centering
   \includegraphics[width=.70\textwidth]{output/part3.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Output plot of $sin\left(x\right)$ and $sin\left(x\right)/x$ from Part 3. Note that this plot is identical to the one from Part 1 by design.}
+	\caption{Output plot of $\sin(x)$ and $\sin(x)/x$ from Part 3. Note that this plot is identical to the one from Part 1 by design.}
 	\label{fig:part3}
 \end{figure}
 
