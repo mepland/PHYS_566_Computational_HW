@@ -2,7 +2,6 @@
 *.out
 *.snm
 *.toc
-*.pdf
 *.aux
 *Notes.bib
 *.log

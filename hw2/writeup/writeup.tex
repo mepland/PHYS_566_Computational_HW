@@ -1,0 +1,161 @@
+%\documentclass[notitlepage,aps,prd,twocolumn,nofootinbib]{revtex4-1}
+\documentclass[notitlepage,aps,prd,nofootinbib]{revtex4-1}
+
+\usepackage{subfig}
+%\usepackage[colorinlistoftodos]{todonotes}
+\usepackage{float}
+
+%\usepackage[protrusion=true,expansion=true]{microtype}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bbm}
+\usepackage{ulem}
+%\usepackage{feynmp-auto}
+%\usepackage{slashed}
+%\usepackage[absolute,overlay]{textpos}
+\usepackage[usenames, dvipsnames]{color}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{epsfig}
+\usepackage{hyperref}
+%\usepackage{tikz}
+\usepackage{enumerate}
+%\usepackage{fixltx2e} % buggy
+\usepackage[compatibility=false]{caption}
+%\usepackage{subcaption} % doesn't work with subfigure
+\usepackage{pdfpages}
+%\usepackage{setspace}
+\usepackage{verbatim}
+
+\DeclareRobustCommand{\orderof}{\ensuremath{\mathcal{O}}}
+
+\definecolor{dukeblue}{RGB}{0,0,156}
+\definecolor{dukedarkblue}{RGB}{0,26,87}
+\definecolor{dukeblack}{RGB}{79,79,79}
+\definecolor{dukegray}{RGB}{79,79,79}
+\definecolor{dukesecbrown}{RGB}{217,200,158}
+\definecolor{dukesecblue}{RGB}{127,169,174}
+
+%\renewcommand*{\thefootnote}{\fnsymbol{footnote}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\hypersetup{
+    breaklinks,
+    baseurl       = http://,
+    pdfborder     = 0 0 0,
+    pdfpagemode   = UseNone,% do not show thumbnails or bookmarks on opening
+    pdfstartpage  = 1,
+    bookmarksopen = true,
+    bookmarksdepth= 2,% to show sections and subsections
+% revtex needs author and title declared after \begin{document}, so have to hard code them...
+%    pdfauthor     = {\@author},
+%    pdftitle      = {\@title},
+    pdfauthor     = {Matthew Epland},
+    pdftitle      = {Phys 566 HW2},
+    pdfsubject    = {},
+    pdfkeywords   = {}}
+
+
+% Code import settings
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+%\lstset{ %
+\lstdefinestyle{python}{ %
+  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  basicstyle=\scriptsize,        % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  commentstyle=\color{mygreen},    % comment style
+  deletekeywords={...},            % if you want to delete keywords from the given language
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+  frame=single,	                   % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  keywordstyle=\color{blue},       % keyword style
+  language=Python,                 % the language of the code
+  otherkeywords={*,...},           % if you want to add more keywords to the set
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+  showstringspaces=false,          % underline spaces within strings only
+  showtabs=false,                  % show tabs within strings adding particular underscores
+  stepnumber=5,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  stringstyle=\color{mymauve},     % string literal style
+  tabsize=2,	                   % sets default tabsize to 2 spaces
+%  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+  title={\protect\filename@parse{\lstname}\protect\filename@base.\filename@ext},
+  firstnumber=0,
+%  linewidth=0.95\textwidth
+  xleftmargin=0.01\textwidth,
+  xrightmargin=0.01\textwidth
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+
+\title{PHYS 566 HW2}
+\author{Matthew Epland}
+\affiliation{Department of Physics, Duke University, Durham, NC 27707, USA}
+%\institute{Duke University}
+
+\date{\today}
+
+\begin{abstract}
+Python code was written to compute 
+\end{abstract}\maketitle
+
+\begin{comment}
+
+\section{Introduction}
+\label{sec:intro}
+Introduction goes here!
+\section{Theory}
+\label{sec:theory}
+\section{Body}
+\label{sec:body}
+\subsection{Subsection 1}
+Test citations~\cite{Winklmeier} ~\cite{ref_1} ~\cite{ref_2}
+\section{Conclusions}
+The end!
+
+\bibliographystyle{bib_files/styles/atlasBibStyleWoTitle}
+\bibliography{bib_files/my_bib.bib}
+
+
+\section{Outputs}
+
+\subsection{Part 1}
+\begin{figure}[htbc]
+%\begin{figure}
+  \centering
+  \includegraphics[width=.70\textwidth]{output/part1.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Output plot of $\sin(x)$ and $\sin(x)/x$ from Part 1.}
+	\label{fig:part1}
+\end{figure}
+
+\clearpage
+\section{Code}
+The source code to make these plots can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/hw2/code}, as well as in plain text below.
+
+
+\subsection{Part 1}
+\lstinputlisting[style=python]{../code/part1_production_and_plotting.py}
+\end{comment}
+
+\clearpage
+%\section{Assignment}
+$\includepdf{../homework2.pdf}
+
+\end{document} %%% end of doc %%%
+
+
+
+
