@@ -108,30 +108,79 @@
 \date{\today}
 
 \begin{abstract}
-Python code was written to compute 
+TODO Abstract
 \end{abstract}\maketitle
 
-\begin{comment}
+
 
 \section{Introduction}
 \label{sec:intro}
-Introduction goes here!
+TODO
+
+
 \section{Theory}
 \label{sec:theory}
-\section{Body}
-\label{sec:body}
-\subsection{Subsection 1}
-Test citations~\cite{Winklmeier} ~\cite{ref_1} ~\cite{ref_2}
+
+The decay of atomic nuclei can be modeled by assuming the change in number of nuclei per unit time, $\frac{d N}{d t}$, is proportional to the number of nuclei present at the time, $N\left(t\right)$.
+
+\begin{equation} \label{eq:deq}
+\frac{d N}{d t} = -\frac{1}{\tau} N\left(t\right)
+\end{equation}
+
+This simple first-order differential equation (\ref{eq:deq}) can be solved using separation of variables, resulting in the familiar equation for exponential decay (\ref{eq:exp}).
+
+\begin{equation} \label{eq:exp}
+N\left(t\right) = N_{0} e^{-t/\tau}
+\end{equation}
+
+The exponential decay is characterized by initial number of nuclei present, $N_{0}$, and the decay constant, $\tau$. We can relate $\tau$ to the half-life of the nuclei, $T_{1/2}$, when half of the initial population has decayed by solving (\ref{eq:half-life}). Taking natural logs of both sides and rearranging gives the desired result, $T_{1/2} = \tau \ln\left(2\right)$.
+
+
+\begin{equation} \label{eq:half-life}
+\frac{N_{0}}{2} = N_{0} e^{-T_{1/2}/\tau}
+\end{equation}
+
+In this assignment we are interested in calculating the activity of the decay, $R\left(t\right)$, defined in (\ref{eq:activity}).
+
+\begin{equation} \label{eq:activity}
+R\left(t\right) \equiv -\frac{d N}{d t} = \frac{1}{\tau} N\left(t\right) = \frac{N_{0}}{\tau} e^{-t/\tau}
+\end{equation}
+
+To calculate $N\left(t\right)$, and hence $R\left(t\right)$, numerically we can use the Euler method; approximating the derivative over a finite time step $\Delta t$ as (\ref{eq:euler}).
+
+\begin{equation} \label{eq:euler}
+\frac{d N}{d t} \approx \frac{N\left(t+\Delta t\right)-N\left(t\right)}{\Delta t}
+\end{equation}
+
+Substituting (\ref{eq:deq}) in for $\frac{d N}{d t}$ in (\ref{eq:euler}) and solving for $N\left(t+\Delta t\right)$ produces an iterative equation (\ref{eq:N_approx}) which we can use to compute $N\left(t\right)$ and $R\left(t\right)$ in our program.
+
+\begin{equation} \label{eq:N_approx}
+N\left(t+\Delta t\right) = \tau R\left(t+\Delta t\right) = \left(1-\frac{\Delta t}{\tau}\right) N\left(t\right)
+\end{equation}
+
+
+\section{Results}
+\label{sec:results}
+TODO
+
 \section{Conclusions}
-The end!
+\label{sec:Conclusions}
+TODO
+
+
+
+\clearpage
+\includepdf{../homework2.pdf}
+
+\end{document} %%% end of doc %%%
+
+
+
 
 \bibliographystyle{bib_files/styles/atlasBibStyleWoTitle}
 \bibliography{bib_files/my_bib.bib}
 
 
-\section{Outputs}
-
-\subsection{Part 1}
 \begin{figure}[htbc]
 %\begin{figure}
   \centering
@@ -143,18 +192,9 @@ The end!
 
 \clearpage
 \section{Code}
-The source code to make these plots can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/hw2/code}, as well as in plain text below.
+TODO The source code to make these plots can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/hw2/code}, as well as in plain text below.
 
-
-\subsection{Part 1}
 \lstinputlisting[style=python]{../code/part1_production_and_plotting.py}
-\end{comment}
-
-\clearpage
-%\section{Assignment}
-$\includepdf{../homework2.pdf}
-
-\end{document} %%% end of doc %%%
 
 
 
