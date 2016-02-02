@@ -22,7 +22,7 @@ tau = half_life/np.log(2)
 
 # Print out starting values
 print '\nHalf-Live is: %.1f' % half_life
-print 'Decay Constant is: %.3f' % tau
+print 'Decay Constant is: %.2f' % tau
 print 'Initial Mass is: %2.2e' % initial_mass
 print 'Initial Number (N0) is: %2.2e' % N0
 print 'Stop Time is: %.1f' % stop_time
@@ -159,24 +159,40 @@ t3_i = i
 ########################################################
 # Print the results
 
-print '\nBelow are the %% deviations from the exact result after two half-lives (%.1f) for each time step.' % (2*half_life)
-print '---------------------------------------------------------------------------------------------------\n'
+print '\nBelow are the various calculations of deviations from the exact result after two half-lives (%.1f years) for each time step.' % (2*half_life)
+print '-------------------------------------------------------------------------------------------------------------------------------'
 
 exact_result = (N0/tau)*np.exp(-t1[t1_i]/tau)
 numerical_result =  N1[t1_i]/tau
-percent_deviation = 100*((exact_result-numerical_result)/exact_result)
-print  'Delta t = %4.1f, first time step >= two half-lives = %.1f, exact R(t) value = %.3E, numerical R(t) value = %.3E, %% deviation = %1.6f%%' % (dt1, dt1*t1_i, exact_result, numerical_result, percent_deviation)
+second_order_term = (N0/tau)*(0.5*((-t1[t1_i]/tau)**2))
+deviation = exact_result-numerical_result
+percent_deviation = 100*(deviation/exact_result)
+
+print '\nDelta t = %4.1f, 1st time step >= 2 T1/2 = %.1f, exact R(t) = %.3E, numerical R(t) = %.3E, deviation = %.3E' % (dt1, dt1*t1_i, exact_result, numerical_result, deviation)
+print '%% deviation = %.5f%%, 2nd order term = %.3E, deviation/2nd order term = %.7f' % (percent_deviation, second_order_term, deviation/second_order_term)
+
 
 exact_result = (N0/tau)*np.exp(-t2[t2_i]/tau)
 numerical_result =  N2[t2_i]/tau
-percent_deviation = 100*((exact_result-numerical_result)/exact_result)
-print  'Delta t = %4.1f, first time step >= two half-lives = %.1f, exact R(t) value = %.3E, numerical R(t) value = %.3E, %% deviation = %1.6f%%' % (dt2, dt2*t2_i, exact_result, numerical_result, percent_deviation)
+second_order_term = (N0/tau)*(0.5*((-t2[t2_i]/tau)**2))
+deviation = exact_result-numerical_result
+percent_deviation = 100*(deviation/exact_result)
+
+print '\nDelta t = %4.1f, 1st time step >= 2 T1/2 = %.1f, exact R(t) = %.3E, numerical R(t) = %.3E, deviation = %.3E' % (dt2, dt2*t2_i, exact_result, numerical_result, deviation)
+print '%% deviation = %.5f%%, 2nd order term = %.3E, deviation/2nd order term = %.7f' % (percent_deviation, second_order_term, deviation/second_order_term)
+
 
 exact_result = (N0/tau)*np.exp(-t3[t3_i]/tau)
 numerical_result =  N3[t3_i]/tau
-percent_deviation = 100*((exact_result-numerical_result)/exact_result)
-print  'Delta t = %4.1f, first time step >= two half-lives = %.1f, exact R(t) value = %.3E, numerical R(t) value = %.3E, %% deviation = %1.6f%%' % (dt3, dt3*t3_i, exact_result, numerical_result, percent_deviation)
+second_order_term = (N0/tau)*(0.5*((-t3[t3_i]/tau)**2))
+deviation = exact_result-numerical_result
+percent_deviation = 100*(deviation/exact_result)
+
+print '\nDelta t = %4.1f, 1st time step >= 2 T1/2 = %.1f, exact R(t) = %.3E, numerical R(t) = %.3E, deviation = %.3E' % (dt3, dt3*t3_i, exact_result, numerical_result, deviation)
+print '%% deviation = %.5f%%, 2nd order term = %.3E, deviation/2nd order term = %.7f' % (percent_deviation, second_order_term, deviation/second_order_term)
 
 
-print '\nDone!\n'
+
+
+print '\n\nDone!\n'
 
