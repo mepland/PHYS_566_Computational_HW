@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 ########################################################
-# Set inital parameters
+# Set initial parameters
 # Units: Time ~ years, N ~ raw number, mass ~ kg
 half_life = 5700.0
 initial_mass = 10**-12
@@ -21,11 +21,11 @@ N0 = NA*((initial_mass*1000.0)/14.0)
 tau = half_life/np.log(2)
 
 # Print out starting values
-print '\nHalf-Live is: %d' % half_life
-print 'Decay Constant is: %d' % tau
+print '\nHalf-Live is: %.1f' % half_life
+print 'Decay Constant is: %.3f' % tau
 print 'Initial Mass is: %2.2e' % initial_mass
 print 'Initial Number (N0) is: %2.2e' % N0
-print 'Stop Time is: %d' % stop_time
+print 'Stop Time is: %.1f' % stop_time
 
 ########################################################
 # Set time steps
@@ -61,13 +61,13 @@ for i in range(1,t3.size):
 
 ########################################################
 # Create the plots
-R1_label = '$\Delta t = %.0d$' % dt1
+R1_label = '$\Delta t = %.1f$' % dt1
 R1_plt, = plt.plot(t1, N1/tau, 'b--', label=R1_label)
 
-R2_label = '$\Delta t = %.0d$' % dt2
+R2_label = '$\Delta t = %.1f$' % dt2
 R2_plt, = plt.plot(t2, N2/tau, 'g-.', label=R2_label)
 
-R3_label = '$\Delta t = %.0d$' % dt3
+R3_label = '$\Delta t = %.1f$' % dt3
 R3_plt, = plt.plot(t3, N3/tau, 'm:', label=R3_label)
 
 
@@ -131,8 +131,51 @@ plt.savefig(output_path+'/diagnostic_plot.png')
 
 
 ########################################################
-# TODO Compute and printout the desirec accuracy calculations 
+# Compute and print out the desired accuracy calculations 
 
+# Find the time step immediately after two half-lives have passed
+
+# t1
+i = 0
+while t1[i] < 2*half_life:
+	i = i + 1
+
+t1_i = i
+
+# t2
+i = 0
+while t2[i] < 2*half_life:
+	i = i + 1
+
+t2_i = i
+
+# t3
+i = 0
+while t3[i] < 2*half_life:
+	i = i + 1
+
+t3_i = i
+
+########################################################
+# Print the results
+
+print '\nBelow are the %% deviations from the exact result after two half-lives (%.1f) for each time step.' % (2*half_life)
+print '---------------------------------------------------------------------------------------------------\n'
+
+exact_result = (N0/tau)*np.exp(-t1[t1_i]/tau)
+numerical_result =  N1[t1_i]/tau
+percent_deviation = 100*((exact_result-numerical_result)/exact_result)
+print  'Delta t = %4.1f, first time step >= two half-lives = %.1f, exact R(t) value = %.3E, numerical R(t) value = %.3E, %% deviation = %1.6f%%' % (dt1, dt1*t1_i, exact_result, numerical_result, percent_deviation)
+
+exact_result = (N0/tau)*np.exp(-t2[t2_i]/tau)
+numerical_result =  N2[t2_i]/tau
+percent_deviation = 100*((exact_result-numerical_result)/exact_result)
+print  'Delta t = %4.1f, first time step >= two half-lives = %.1f, exact R(t) value = %.3E, numerical R(t) value = %.3E, %% deviation = %1.6f%%' % (dt2, dt2*t2_i, exact_result, numerical_result, percent_deviation)
+
+exact_result = (N0/tau)*np.exp(-t3[t3_i]/tau)
+numerical_result =  N3[t3_i]/tau
+percent_deviation = 100*((exact_result-numerical_result)/exact_result)
+print  'Delta t = %4.1f, first time step >= two half-lives = %.1f, exact R(t) value = %.3E, numerical R(t) value = %.3E, %% deviation = %1.6f%%' % (dt3, dt3*t3_i, exact_result, numerical_result, percent_deviation)
 
 
 print '\nDone!\n'
