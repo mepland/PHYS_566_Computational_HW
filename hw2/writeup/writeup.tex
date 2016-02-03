@@ -137,7 +137,7 @@ Nuclear decay activity $R\left(t\right)$ was simulated numerically using the Eul
 
 \section{Introduction}
 \label{sec:intro}
-Carbon dating is an extremely useful tool for establishing the age of ancient objects in archeology and related fields. From a physics stand point the method is fairly simple, being an application of well understood nuclear decays. In this assignment we modeled the decay of Carbon-14 with a half-life of 5700 years over a period of 20,000 years numerically in order to gain practice applying the Euler method to solve differential equations. Carbon dating is a good case study for doing so as the exact result, a decaying exponential, can by derived analytically without much issue.
+Carbon dating is an extremely useful tool for establishing the age of ancient objects in archeology and related fields. From a physics stand point the method is fairly simple, being an application of well understood nuclear decays. In this assignment we numerically modeled the decay of a $10^{-12}$ kg sample of Carbon-14, which has a half-life of 5700 years, over a period of 20,000 years in order to gain practice applying the Euler method to solve differential equations. Carbon dating is a good case study for doing so as the exact result, a decaying exponential, can by derived analytically without much issue.
 
 \section{Theory}
 \label{sec:theory}
@@ -202,7 +202,7 @@ As can be seen in Figures~\ref{fig:plot} and~\ref{fig:log_plot}, the Euler metho
 	\label{fig:log_plot}
 \end{figure}
 
-Besides just looking at plots, we can quantify how well the numerical results match the exact result by comparing them at specific times. A reasonable time to pick is $t = 2T_{1/2}$ (specified in the assignment itself) as the majority of nuclei have decayed by then, giving the numerical result sufficient time to diverge. Two useful variables to perform the comparison are the raw deviation, $R\left(t\right)_{exact}-R\left(t\right)_{numerical}$, and percent deviation, $\left(R\left(t\right)_{exact}-R\left(t\right)_{numerical}\right)/R\left(t\right)_{exact}$. We can also compare the deviation to the second order term of the exact result, which can be found by expanding the exponential and identifying the correct term, $\left(N_{0}/\tau\right) \left(-t/\tau\right)^2/2$. The modeling code was modified to perform these calculations and print the results to the screen, see below: %Figure~\ref{lst:output}. % prints III instead of 1...
+Besides just looking at plots, we can quantify how well the numerical results match the exact result by comparing them at specific times. A reasonable time to pick is $t = 2T_{1/2}$ (specified in the assignment itself) as the majority of nuclei have decayed by then, giving the numerical result sufficient time to diverge. Two useful variables for performing the comparison are the raw deviation, $R\left(t\right)_{exact}-R\left(t\right)_{numerical}$, and percent deviation, $100\%\cdot\left(R\left(t\right)_{exact}-R\left(t\right)_{numerical}\right)/R\left(t\right)_{exact}$. We can also compare the deviation to the second order term of the exact result, which can be found by expanding the exponential and identifying the correct term, $\left(N_{0}/\tau\right) \left(-t/\tau\right)^2/2$. The modeling code was modified to perform these calculations and print the results to the screen, see below: %Figure~\ref{lst:output}. % prints III instead of 1...
 \newline
 \lstinputlisting[style=output,label={lst:output}]{output/output.log}
 
@@ -212,9 +212,9 @@ Upon taking the ratio of the deviations to the second order term of the exact re
 
 \section{Conclusions}
 \label{sec:Conclusions}
-The nuclear decay of Carbon-14, which must be well understood to facilitate the method of Carbon dating, was successfully modeled numerically via the Euler method, as well as being solved analytically in Section~\ref{sec:theory}. Of the three time steps used, the smaller two produced acceptable results within \le1\% of the exact result while the largest was unacceptable at 9.2\%. In all three cases the deviation from the exact result was much less than the second order term of the analytic solution.
+The nuclear decay of Carbon-14, which must be well understood to facilitate the experimental method of Carbon dating, was successfully modeled numerically via the Euler method, as well as being solved analytically in Section~\ref{sec:theory}. Of the three time steps used, the shortest two produced acceptable results within \le1\% of the exact result while the longest was unacceptable with a 9.2\% deviation from the exact result. In all three cases the deviation from the exact result was much smaller in magnitude than the second order term of the analytic solution.
 
-The \texttt{python} source code used to produce these results can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/hw2/code}, and is included in Section~\ref{sec:code}.
+The Python source code used to produce these results can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/hw2/code}, and is included in Section~\ref{sec:code}.
 
 \clearpage
 \section{Supporting Material}

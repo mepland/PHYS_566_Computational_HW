@@ -10,12 +10,13 @@ import matplotlib.pyplot as plt
 # Units: Time ~ years, N ~ raw number, mass ~ kg
 half_life = 5700.0
 initial_mass = 10**-12
-stop_time = 20000
+stop_time = 20000.0
+atomic_mass = 14.0
 
 ########################################################
 # Compute initial N0 from initial mass
 NA = 6.022*(10**23)
-N0 = NA*((initial_mass*1000.0)/14.0)
+N0 = NA*((initial_mass*1000.0)/atomic_mass)
 
 # Compute decay constant tau from half-life
 tau = half_life/np.log(2)
@@ -24,6 +25,7 @@ tau = half_life/np.log(2)
 print '\nHalf-Live is: %.1f' % half_life
 print 'Decay Constant is: %.2f' % tau
 print 'Initial Mass is: %2.2E' % initial_mass
+print 'Atomic Mass is: %d' % atomic_mass
 print 'Initial Number (N0) is: %2.2E' % N0
 print 'Stop Time is: %.1f' % stop_time
 
