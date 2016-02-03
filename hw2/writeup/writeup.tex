@@ -131,13 +131,13 @@
 \date{\today}
 
 \begin{abstract}
-Nuclear decay activity $R\left(t\right)$ was simulated numerically using the Euler method in the context of Carbon-14 dating. Three time steps of $\Delta t =$ 10, 100, and 100 years were used to model $R\left(t\right)$ over $20,000$ years. The numerical results were compared to the analytical solution and found to be consistent with \le1\% divergence at $2T_{1/2}$ for $\Delta t =$ 10 and 100 years, and inconsistent with 9.2\% divergence for $\Delta t =$ 100 years. For all three time steps the divergence observed was orders of magnitude smaller than the second order term of the analytical solution.
+Nuclear decay activity $R\left(t\right)$ was simulated numerically using the Euler method in the context of Carbon-14 dating. Three time steps of $\Delta t =$ 10, 100, and 100 years were used to model $R\left(t\right)$ over $20,000$ years. The numerical results were compared to the analytical solution and found to be consistent with \le1\% divergence after two half-lives for $\Delta t =$ 10 and 100 years, and inconsistent with 9.2\% divergence for $\Delta t =$ 100 years. For all three time steps the divergence observed was orders of magnitude smaller than the second order term of the analytical solution.
 \end{abstract}\maketitle
 
 
 \section{Introduction}
 \label{sec:intro}
-Carbon dating is an extremely useful tool for establishing the age of ancient objects in archeology and related fields. From a physics stand point the method is fairly simple, being an application of well understood nuclear decays. In this assignment we modeled the decay of Carbon-14 over a period of $20,000$ years numerically in order to gain practice applying the Euler method to solve differential equations. Carbon dating is a good case study for doing so as the exact result, a decaying exponential, can by derived analytically without much issue.
+Carbon dating is an extremely useful tool for establishing the age of ancient objects in archeology and related fields. From a physics stand point the method is fairly simple, being an application of well understood nuclear decays. In this assignment we modeled the decay of Carbon-14 with a half-life of 5700 years over a period of 20,000 years numerically in order to gain practice applying the Euler method to solve differential equations. Carbon dating is a good case study for doing so as the exact result, a decaying exponential, can by derived analytically without much issue.
 
 \section{Theory}
 \label{sec:theory}
@@ -212,8 +212,9 @@ Upon taking the ratio of the deviations to the second order term of the exact re
 
 \section{Conclusions}
 \label{sec:Conclusions}
-TODO wrap it up
-The source code can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/hw2/code}, as well as being attached to the end of this document.
+The nuclear decay of Carbon-14, which must be well understood to facilitate the method of Carbon dating, was successfully modeled numerically via the Euler method, as well as being solved analytically in Section~\ref{sec:theory}. Of the three time steps used, the smaller two produced acceptable results within \le1\% of the exact result while the largest was unacceptable at 9.2\%. In all three cases the deviation from the exact result was much less than the second order term of the analytic solution.
+
+The \texttt{python} source code used to produce these results can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/hw2/code}, and is included in Section~\ref{sec:code}.
 
 \clearpage
 \section{Supporting Material}
@@ -233,6 +234,8 @@ The source code can be found online at \url{http://github.com/mepland/PHYS_566_C
 
 \clearpage
 \section{Code}
+\label{sec:code}
+
 \lstinputlisting[style=python]{../code/exp_decay.py}
 
 \end{document} %%% end of doc %%%
