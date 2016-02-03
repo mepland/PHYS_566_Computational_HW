@@ -23,8 +23,8 @@ tau = half_life/np.log(2)
 # Print out starting values
 print '\nHalf-Live is: %.1f' % half_life
 print 'Decay Constant is: %.2f' % tau
-print 'Initial Mass is: %2.2e' % initial_mass
-print 'Initial Number (N0) is: %2.2e' % N0
+print 'Initial Mass is: %2.2E' % initial_mass
+print 'Initial Number (N0) is: %2.2E' % N0
 print 'Stop Time is: %.1f' % stop_time
 
 ########################################################
@@ -160,7 +160,7 @@ t3_i = i
 # Print the results
 
 print '\nBelow are the various calculations of deviations from the exact result after two half-lives (%.1f years) for each time step.' % (2*half_life)
-print '-------------------------------------------------------------------------------------------------------------------------------'
+print '---------------------------------------------------------------------------------------------'
 
 exact_result = (N0/tau)*np.exp(-t1[t1_i]/tau)
 numerical_result =  N1[t1_i]/tau

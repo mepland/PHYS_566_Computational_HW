@@ -65,7 +65,7 @@
 %\lstset{ %
 \lstdefinestyle{python}{ %
   backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
-  basicstyle=\scriptsize,        % the size of the fonts that are used for the code
+  basicstyle=\scriptsize,          % the size of the fonts that are used for the code
   breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
   breaklines=true,                 % sets automatic line breaking
   captionpos=b,                    % sets the caption-position to bottom
@@ -96,6 +96,29 @@
   xrightmargin=0.01\textwidth
 }
 
+\lstdefinestyle{output}{ %
+  backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+  basicstyle=\scriptsize,          % the size of the fonts that are used for the code
+  breakatwhitespace=false,         % sets if automatic breaks should only happen at whitespace
+  breaklines=true,                 % sets automatic line breaking
+  captionpos=b,                    % sets the caption-position to bottom
+  escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+  frame=single,	                   % adds a frame around the code
+  keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+  numbers=left,                    % where to put the line-numbers; possible values are (none, left, right)
+  numbersep=5pt,                   % how far the line-numbers are from the code
+  numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+  rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+  stepnumber=5,                    % the step between two line-numbers. If it's 1, each line will be numbered
+  tabsize=2,	                   % sets default tabsize to 2 spaces
+%  title=\lstname                   % show the filename of files included with \lstinputlisting; also try caption instead of title
+  title={\protect\filename@parse{\lstname}\protect\filename@base.\filename@ext},
+  firstnumber=0,
+%  linewidth=0.95\textwidth
+  xleftmargin=0.01\textwidth,
+  xrightmargin=0.01\textwidth
+}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
@@ -108,15 +131,13 @@
 \date{\today}
 
 \begin{abstract}
-TODO Abstract
+Nuclear decay activity $R\left(t\right)$ was simulated numerically using the Euler method in the context of Carbon-14 dating. Three time steps of $\Delta t =$ 10, 100, and 100 years were used to model $R\left(t\right)$ over $20,000$ years. The numerical results were compared to the analytical solution and found to be consistent with \le1\% divergence at $2T_{1/2}$ for $\Delta t =$ 10 and 100 years, and inconsistent with 9.2\% divergence for $\Delta t =$ 100 years. For all three time steps the divergence observed was orders of magnitude smaller than the second order term of the analytical solution.
 \end{abstract}\maketitle
-
 
 
 \section{Introduction}
 \label{sec:intro}
-TODO
-
+Carbon dating is an extremely useful tool for establishing the age of ancient objects in archeology and related fields. From a physics stand point the method is fairly simple, being an application of well understood nuclear decays. In this assignment we modeled the decay of Carbon-14 over a period of $20,000$ years numerically in order to gain practice applying the Euler method to solve differential equations. Carbon dating is a good case study for doing so as the exact result, a decaying exponential, can by derived analytically without much issue.
 
 \section{Theory}
 \label{sec:theory}
@@ -161,16 +182,58 @@ N\left(t+\Delta t\right) = \tau R\left(t+\Delta t\right) = \left(1-\frac{\Delta 
 
 \section{Results}
 \label{sec:results}
-TODO
+As can be seen in Figures~\ref{fig:plot} and~\ref{fig:log_plot}, the Euler method numerical results using small time steps $\Delta t =$ 10, and 100 years are practically indistinguishable from the exact result when plotted. However, when $\Delta t$ is increased to 1000 years the numerical result begins to diverge visually.
+
+\begin{figure}[!htbc]
+%\begin{figure}
+  \centering
+  \includegraphics[width=.70\textwidth]{output/plot.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$R\left(t\right)$ calculated numerically with three different time steps, $\Delta t$, and the exact solution.}
+	\label{fig:plot}
+\end{figure}
+
+\begin{figure}[!htbc]
+%\begin{figure}
+  \centering
+  \includegraphics[width=.70\textwidth]{output/log_plot.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Semi-log plot of $R\left(t\right)$ calculated numerically with three different time steps, $\Delta t$, and the exact solution.}
+	\label{fig:log_plot}
+\end{figure}
+
+Besides just looking at plots, we can quantify how well the numerical results match the exact result by comparing them at specific times. A reasonable time to pick is $t = 2T_{1/2}$ (specified in the assignment itself) as the majority of nuclei have decayed by then, giving the numerical result sufficient time to diverge. Two useful variables to perform the comparison are the raw deviation, $R\left(t\right)_{exact}-R\left(t\right)_{numerical}$, and percent deviation, $\left(R\left(t\right)_{exact}-R\left(t\right)_{numerical}\right)/R\left(t\right)_{exact}$. We can also compare the deviation to the second order term of the exact result, which can be found by expanding the exponential and identifying the correct term, $\left(N_{0}/\tau\right) \left(-t/\tau\right)^2/2$. The modeling code was modified to perform these calculations and print the results to the screen, see below: %Figure~\ref{lst:output}. % prints III instead of 1...
+\newline
+\lstinputlisting[style=output,label={lst:output}]{output/output.log}
+
+As can be seen from the output, the percent deviation for both $\Delta t =$ 10 and 100 years is acceptable at \le 1\%. However setting $\Delta t =$ 1000 years results in a percent deviation of 9.2\% which is unacceptable for most applications. In this case using $\Delta t =$ 10 years is not computationally prohibitive, so there is no problem producing a high quality numerical result. Interestingly, it appears that the percent deviation and $\Delta t$ are linearly related, each increasing by an order of magnitude between the three different $\Delta t$'s. Of course this is only considering three data points and thus is a very weak observation, but it would be an interesting area for future investigation.
+
+Upon taking the ratio of the deviations to the second order term of the exact result, we see that the deviations are orders of magnitude smaller than the second order term for all three time steps. This implies that only going to first order with Euler method was sufficient to model the decays behavior over the range of parameters considered, something hinted at immediately by how well the plots matched visually.
 
 \section{Conclusions}
 \label{sec:Conclusions}
-TODO
+TODO wrap it up
+The source code can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/hw2/code}, as well as being attached to the end of this document.
 
+\clearpage
+\section{Supporting Material}
+\label{sec:Supporting_Material}
 
+\begin{figure}[!htbc]
+%\begin{figure}
+  \centering
+  \includegraphics[width=.70\textwidth]{output/diagnostic_plot.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$R\left(t\right)$ diagnostics plot generated to verify that $R\left(T_{1/2}\right) = \frac{N_{0}}{2\tau}$ as it should.}
+	\label{fig:diagnostic_plot}
+\end{figure}
 
 \clearpage
 \includepdf{../homework2.pdf}
+
+\clearpage
+\section{Code}
+\lstinputlisting[style=python]{../code/exp_decay.py}
 
 \end{document} %%% end of doc %%%
 
@@ -179,23 +242,5 @@ TODO
 
 \bibliographystyle{bib_files/styles/atlasBibStyleWoTitle}
 \bibliography{bib_files/my_bib.bib}
-
-
-\begin{figure}[htbc]
-%\begin{figure}
-  \centering
-  \includegraphics[width=.70\textwidth]{output/part1.pdf}
-	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Output plot of $\sin(x)$ and $\sin(x)/x$ from Part 1.}
-	\label{fig:part1}
-\end{figure}
-
-\clearpage
-\section{Code}
-TODO The source code to make these plots can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/hw2/code}, as well as in plain text below.
-
-\lstinputlisting[style=python]{../code/part1_production_and_plotting.py}
-
-
 
 
