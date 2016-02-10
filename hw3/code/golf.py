@@ -1,6 +1,10 @@
 #!/usr/bin/env /home/mbe9/Documents/Spring_2016/PHYS_566_Computational_HW/anaconda/bin/python
 # #! to the correct python install, not portable!!!
 
+# Run by calling
+# ./golf.py 2>&1 | tee output.log
+# to save output to output.log
+
 import os
 import sys
 import numpy as np
@@ -14,7 +18,7 @@ rho = 1.29 # Density of air (at sea level)
 A =  0.0014 # Frontal Area
 g = 9.80665 # g at sea level
 
-vartheta0 = [45, 30, 15, 9, 60] # Initial launch angles (degrees)
+vartheta0 = [60, 45, 30, 15, 9] # Initial launch angles (degrees)
 # Convert to radians
 for k in range(len(vartheta0)):
 	vartheta0[k] = vartheta0[k]*(np.pi/180.0)
@@ -24,6 +28,9 @@ C = 0.5
 C_prime = 7.0
 v_transition = 14.0
 
+# Spin Constant eta defined in writeup
+eta = 0.25
+
 dt = 0.0005 # Time step of simulation, empirically set to satisfy max_r
 max_r = 0.05 # Maximum distance allowed between time steps
 # For comparison, Solving 0.0014 = 2 pi r^2 for half the surface area of a sphere gives us the balls radius r ~= 0.015
@@ -32,7 +39,8 @@ max_r = 0.05 # Maximum distance allowed between time steps
 ########################################################
 # Print out starting values
 print '\nBeginning golf.py simulation'
-print 'All units are SI unless otherwise specified'
+print 'Parameters have units are SI unless otherwise specified'
+print '---------------------------------------------'
 
 print '\nMass is: %.3f' % mass
 print 'Initial Velocity is: %.1f' % v0
@@ -47,10 +55,12 @@ for k in range(len(vartheta0)):
 print '\nDrag Coefficients are C = %.1f and C\' = %.1f' % (C, C_prime)
 print 'Transition Velocity is: %.1f' % v_transition
 
+print '\nSpin Constant Eta is: %.2f' % eta
+
 print '\nSimulation Time Step is: %.5f' % dt
 print 'Simulation Max Step Size is: %.3f' % max_r
-
-# TODO add ---s
+print '---------------------------------------------'
+print '---------------------------------------------\n'
 
 ########################################################
 # Define time_step class to hold all the relevant parameters at a time step
@@ -77,6 +87,10 @@ class time_step:
     def r(self, time_step2):
 	if self.x == -99.0 and self.y == -99.0 and self.vx == -99.0 and self.vy == -99.0: print 'WARNING COMPUTING r WITH ON DEFAULT TIME STEP'
 	return np.sqrt( np.square(self.x - time_step2.x) + np.square(self.y - time_step2.y))
+    # Note: We could speed up the computation by saving r, vmag after it is called the first time
+    # then return the value we have. This will be more complex and cost more memory though
+    # The plot printing seems to be the bottleneck, so it's not worth changing
+
 # end class for time_step
 
 ########################################################
@@ -104,31 +118,46 @@ def run_sim(case, m_vartheta0, m_color):
 		# Compute the new position
 		run[i].x = run[i-1].x + run[i-1].vx*dt
 		run[i].y = run[i-1].y + run[i-1].vy*dt
+
 		# Compute the new velocity, see writeup for physics...
+
 		if(case == 'a'): # ideal
 			run[i].vx = run[i-1].vx + (dt/mass)*( 0.0 )
 			run[i].vy = run[i-1].vy + (dt/mass)*( -mass*g )
+
 		if(case == 'b'): # smooth ball with drag
 			F_drag_smooth = -C*rho*A*np.square(run[i-1].vmag())
 			run[i].vx = run[i-1].vx + (dt/mass)*( F_drag_smooth*np.cos(run[i-1].vartheta()) )
 			run[i].vy = run[i-1].vy + (dt/mass)*( F_drag_smooth*np.sin(run[i-1].vartheta()) -mass*g )
+
 		if(case == 'c'): # dimpled ball with drag
 			# see what v regime we are in and pick C accordingly
 			if( run[i-1].vmag() <= v_transition):
 				C_dimpled = C # 1/2
-				# print 'v = %.2f, C_dimpled = %.3f, BELOW TRANSITION' % (run[i-1].vmag(), C_dimpled)
 			else:
 				C_dimpled = C_prime/run[i-1].vmag() # C'/v
-				# print 'v = %.2f, C_dimpled = %.3f' % (run[i-1].vmag(), C_dimpled)
 			F_drag_dimpled = -C_dimpled*rho*A*np.square(run[i-1].vmag())
 			run[i].vx = run[i-1].vx + (dt/mass)*( F_drag_dimpled*np.cos(run[i-1].vartheta()) )
 			run[i].vy = run[i-1].vy + (dt/mass)*( F_drag_dimpled*np.sin(run[i-1].vartheta()) -mass*g )
-		# TODO add more cases
+
+		if(case == 'd'): # dimpled ball with drag and spin
+			# see what v regime we are in and pick C accordingly
+			if( run[i-1].vmag() <= v_transition):
+				C_dimpled = C # 1/2
+			else:
+				C_dimpled = C_prime/run[i-1].vmag() # C'/v
+			F_drag_dimpled = -C_dimpled*rho*A*np.square(run[i-1].vmag())
+			F_spin = mass*eta*run[i-1].vmag()
+			run[i].vx = run[i-1].vx + (dt/mass)*( -F_spin*np.sin(run[i-1].vartheta()) + F_drag_dimpled*np.cos(run[i-1].vartheta()) )
+			run[i].vy = run[i-1].vy + (dt/mass)*(  F_spin*np.cos(run[i-1].vartheta()) + F_drag_dimpled*np.sin(run[i-1].vartheta()) -mass*g )
+
+
 		# Make sure we didn't move to far, notify user and exit if we did
 		if(run[i].r(run[i-1]) > max_r):
 			print 'On time step %d the ball moved to far, r = %.3f\nProgram Exiting' % (i, run[i].r(run[i-1]))
 			sys.exit()
 		current_y = run[i].y # update current_y
+	# end while current_y > 0.0 loop
 	
 	########################################################
 	# Create ndarrays that we can plot
@@ -145,7 +174,6 @@ def run_sim(case, m_vartheta0, m_color):
 	########################################################
 	# Create and return the scatter object
 	m_label = '$\\vartheta_{0}$ = %.1f$^{\circ}$' % (m_vartheta0*(180.0/np.pi))
-	print 'Run Completed'
 	return plt.scatter(x_ndarray, y_ndarray, marker='.', label=m_label, c=m_color, edgecolors='none')
 # end def for run_sim
 
@@ -153,7 +181,8 @@ def run_sim(case, m_vartheta0, m_color):
 # Define a function to run the simulation multiple times for all the vartheta0's 
 def loop_vartheta0(case):
 	# Define the colors we want to use, include some extra to be safe
-	colors = ['black', 'blue', 'green', 'cyan', 'magenta', 'crimson']
+	# If crimson starts printing, you better be careful!
+	colors = ['magenta', 'black', 'blue', 'green', 'cyan', 'crimson']
 	scatters = []
 	for k in range(len(vartheta0)):
 		print 'Running with vartheta0 = %.1f degrees' % (vartheta0[k]*(180.0/np.pi))
@@ -165,7 +194,7 @@ def loop_vartheta0(case):
 # Define a function to run, plot, and print a whole case 
 def run_case(case, title, fname):
 	print '\nRunning Case: %s' % title
-	print '-----------------------------------------\n'
+	print '---------------------------------------------\n'
 
 	fig = plt.figure(case) # get a separate figure for the case
 	ax = fig.add_subplot(111) # Get the axes, effectively
@@ -210,12 +239,11 @@ except OSError:
 
 ########################################################
 # Finally, actually run over the four cases
-#'''
+
 run_case('a', 'Ideal Ball', 'ideal')
 run_case('b', 'Smooth Ball with Drag', 'smooth_ball_w_drag')
 run_case('c', 'Dimpled Ball with Drag', 'dimpled_ball_w_drag')
-#'''
-#run_case('d', 'Dimpled Ball with Drag and Spin', 'dimpled_ball_w_drag_and_spin')
+run_case('d', 'Dimpled Ball with Drag and Spin', 'dimpled_ball_w_drag_and_spin')
 
 
 ########################################################

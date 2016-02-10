@@ -123,7 +123,7 @@
   xrightmargin=0.01\textwidth
 }
 
-% Select between raw and saved plots here
+% TODO Select between raw and saved plots here
 \graphicspath{{../code/output/}} % raw plots
 %\graphicspath{{./output/}} % saved plots
 
@@ -282,17 +282,15 @@ TODO
   \centering
   \includegraphics[width=.70\textwidth]{ideal.png}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Trajectories of an ideal ball without drag at different initial elevations, $\vartheta_{0}$.}
+	\caption{Trajectories of an ideal ball without drag at different initial elevations, $\vartheta_{0}$. Note that $\vartheta_{0} = 45^{\circ}$ and $60^{\circ}$ have the same range, as is expected.}
 	\label{fig:ideal}
 \end{figure}
-
-
 
 \begin{figure}[!htbc]
   \centering
   \includegraphics[width=.70\textwidth]{smooth_ball_w_drag.png}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Trajectories of a smooth ball with drag at different initial elevations, $\vartheta_{0}$.}
+	\caption{Trajectories of a smooth ball with drag at different initial elevations, $\vartheta_{0}$. Note the massive decrease in range from the ideal ball due to the introduction of drag.}
 	\label{fig:smooth_ball_w_drag}
 \end{figure}
 
@@ -300,11 +298,20 @@ TODO
   \centering
   \includegraphics[width=.70\textwidth]{dimpled_ball_w_drag.png}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Trajectories of a dimpled ball with drag at different initial elevations, $\vartheta_{0}$.}
+	\caption{Trajectories of a dimpled ball with drag at different initial elevations, $\vartheta_{0}$. In comparison to the smooth ball it is easy to see that the dimples help the ball reduce drag and fly further}
 	\label{fig:dimpled_ball_w_drag}
 \end{figure}
 
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.70\textwidth]{dimpled_ball_w_drag_and_spin.png}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Trajectories of a dimpled ball with drag and spin at different initial elevations, $\vartheta_{0}$. Note that with backspin the maximum range is now obtained at $\vartheta_{0} = 9^{\circ}$, and that at large enough launch angles ($\vartheta_{0} = 60^{\circ}$) loop--de--loops are possible}
+	\label{fig:dimpled_ball_w_drag_and_spin}
+\end{figure}
 
+% TODO Temporarily force a new page
+\clearpage
 
 \section{Conclusions}
 \label{sec:Conclusions}
@@ -316,7 +323,8 @@ The Python source code used to produce these results can be found online at \url
 \section{Supporting Material}
 \label{sec:Supporting_Material}
 
-% TODO output.log
+\lstinputlisting[style=output,label={lst:output}]{../code/output.log} % TODO raw
+%\lstinputlisting[style=output,label={lst:output}]{./output/output.log} % saved 
 
 \clearpage
 \includepdf{../homework3.pdf}
