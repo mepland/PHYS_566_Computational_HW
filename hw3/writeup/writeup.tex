@@ -27,6 +27,10 @@
 %\usepackage{setspace}
 \usepackage{verbatim}
 
+% Turn of meaningless float warnings
+\usepackage{silence}
+\WarningFilter{revtex4-1}{Repair the float}
+
 \DeclareRobustCommand{\orderof}{\ensuremath{\mathcal{O}}}
 
 \definecolor{dukeblue}{RGB}{0,0,156}
@@ -119,6 +123,9 @@
   xrightmargin=0.01\textwidth
 }
 
+% Select between raw and saved plots here
+\graphicspath{{../code/output/}} % raw plots
+%\graphicspath{{./output/}} % saved plots
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
@@ -141,10 +148,10 @@ TODO
 
 \section{Theory}
 \label{sec:theory}
-We can numerically model an objects trajectory by splitting up Newton's 2nd Law (\ref{eq:newton2}) into coupled first order differential equations (\ref{eq:deqs}) that we can apply the Euler method (\ref{eq:euler1}) to.
+We can numerically model an objects trajectory by splitting up Newton's 2nd Law (\ref{eq:newton2}) into coupled first order differential equations (\ref{eq:deqs}) that we can apply the Euler method (\ref{eq:r_euler} and \ref{eq:v_euler}) to.
 
 \begin{equation} \label{eq:newton2}
-m \frac{d^2 \mathbf{r}}{d t^2} = \mathbf{F}_{\text{net}} 
+m \frac{d^{2} \mathbf{r}}{d t^{2}} = \mathbf{F}_{\text{net}} 
 \end{equation}
 
 \begin{equation} \label{eq:deqs}
@@ -153,21 +160,23 @@ m \frac{d^2 \mathbf{r}}{d t^2} = \mathbf{F}_{\text{net}}
 \frac{d \mathbf{r}}{d t} = \mathbf{v}
 \end{equation}
 
-\begin{equation} \label{eq:euler1}
+\begin{equation} \label{eq:r_euler}
 \mathbf{r}\left(t + \Delta t\right) \approx \mathbf{r}\left(t\right) + \frac{d \mathbf{r}}{d t} \Delta t = \mathbf{r}\left(t\right) + \mathbf{v}\left(t\right) \Delta t
-\qquad
+\end{equation}
+
+\begin{equation} \label{eq:v_euler}
 \mathbf{v}\left(t + \Delta t\right) \approx \mathbf{v}\left(t\right) + \frac{d \mathbf{v}}{d t} \Delta t = \mathbf{v}\left(t\right) + \frac{1}{m}\mathbf{F}_{\text{net}}\left(t\right) \Delta t
 \end{equation}
 
-These equations are the heart of our model. All we need do now is split the vectors up into $\hat{\mathbf{x}}$ and $\hat{\mathbf{y}}$ components, using some simple trigonometry when necessary (\ref{eq:theta}), and set the initial conditions (\ref{eq:initial_conditions}).
+These equations are the heart of our model. All we need do now is split the vectors up into components, $\hat{\mathbf{x}}$ along the ground and $\hat{\mathbf{y}}$ vertical, by performing some simple trigonometry (\ref{eq:vartheta}) with $\vartheta$ defined as the angle from horizontal i.e.\ $\hat{\mathbf{x}}$, and set the initial conditions (\ref{eq:initial_conditions}).
 
-\begin{equation} \label{eq:theta}
-\theta\left(t\right) = \arctan\left(\frac{v_{y}(t)}{v_{x}(t)}\right)
+\begin{equation} \label{eq:vartheta}
+\vartheta\left(t\right) = \arctan\left(\frac{v_{y}(t)}{v_{x}(t)}\right)
 \qquad
-\mathbf{v}\left(t\right) = \big|\mathbf{v}\left(t\right)\big|
+\mathbf{v}\left(t\right) = v\left(t\right)
 \begin{pmatrix}
-  \cos(\theta) \\
-  \sin(\theta)
+  \cos(\vartheta) \\
+  \sin(\vartheta)
 \end{pmatrix}
 \end{equation}
 
@@ -180,51 +189,121 @@ These equations are the heart of our model. All we need do now is split the vect
 \qquad
 \mathbf{v}\left(0\right) = v_{0}
 \begin{pmatrix}
-  \cos(\theta_{0}) \\
-  \sin(\theta_{0})
+  \cos(\vartheta_{0}) \\
+  \sin(\vartheta_{0})
 \end{pmatrix}
 \end{equation}
 
 
 In this assignment we are considering gravity as well as drag forces in four different cases:
 
-\subsection{Ideal} \label{subsec:ideal}
-Without drag we have the simplest $\mathbf{F}_{\text{net}}$ (\ref{eq:F_ideal}).
+\subsection{Ideal Object} \label{subsec:ideal}
+Without drag $\mathbf{F}_{\text{net}}$ (\ref{eq:F_ideal}) is very straight forward as only gravity acts on the object, and even then only along one axis.
 
 \begin{equation} \label{eq:F_ideal}
-\mathbf{F}_{\text{net}} = -m g\hat{\mathbf{y}}
+\mathbf{F}_{\text{net}} = -m g~\hat{\mathbf{y}}
 \end{equation}
 
-\subsection{Smooth Ball with Drag} \label{subsec:smooth_drag}
-Adding $\mathbf{F}_{\text{drag}} = - C \rho A \big|\mathbf{v}\left(t\right)\big|^2 \hat{\mathbf{v}}$, we have (\ref{eq:F_smooth_drag}).
+\subsection{Smooth Object with Drag} \label{subsec:smooth_drag}
+A simple approximation of the laminar flow drag force over a smooth surface is $\mathbf{F}_{\text{drag}} = - C \rho A v^{2}~\hat{\mathbf{v}}$, where $C = 1/2$, $\rho$ is the density of surrounding fluid, and $A$ is the frontal area of the object. Adding this form of drag to the ideal case results in (\ref{eq:F_smooth_drag}).
 
 \begin{equation} \label{eq:F_smooth_drag}
-\mathbf{F}_{\text{net}} = - C \rho A \big|\mathbf{v}\left(t\right)\big|^2 
+\mathbf{F}_{\text{net}} = - \frac{1}{2} \rho A v^{2} 
 \begin{pmatrix}
-  \cos(\theta) \\
-  \sin(\theta)
+  \cos(\vartheta) \\
+  \sin(\vartheta)
 \end{pmatrix}
--m g\hat{\mathbf{y}}
+-m g~\hat{\mathbf{y}}
 \end{equation}
 
-TODO
+
+\subsection{Dimpled Object with Drag} \label{subsec:dimpled_drag}
+We can increase the complexity of the problem by allowing the object's surface to be dimpled, like a golf ball. $\mathbf{F}_{\text{drag}} = - C \rho A v^{2}~\hat{\mathbf{v}}$ will still work in this case, but now we let $C$ become a piecewise function of the object's speed (\ref{eq:Cv}). This is done to account for the switch between laminar flow at low speeds, where the dimples effects are negligible and $\mathbf{F}_{\text{drag}} \propto v^{2}$, and turbulent flow at high speeds, where the dimples break up the air flow over the object's surface and allow it to maintain contact longer. The air flow thus sticks close to the surface further along it's length, thereby reducing the overall wake vortex and drag, which is equivalent to letting $\mathbf{F}_{\text{drag}} \propto v$. With this modification our $\mathbf{F}_{\text{net}}$ equation becomes (\ref{eq:F_dimpled_drag}).
+
+\begin{equation} \label{eq:Cv}
+C\left(v\right) =
+  \begin{cases} 
+    \frac{1}{2} & v \leq v_{\text{transition}} \\
+    \\
+    \frac{C'}{v} & v \geq v_{\text{transition}}
+  \end{cases}
+\qquad \text{where} \qquad
+C' \leq \frac{v_{\text{transition}}}{2}
+\end{equation}
+
+\begin{equation} \label{eq:F_dimpled_drag}
+\mathbf{F}_{\text{net}} = - C\left(v\right) \rho A v^{2}
+\begin{pmatrix}
+  \cos(\vartheta) \\
+  \sin(\vartheta)
+\end{pmatrix}
+-m g~\hat{\mathbf{y}}
+\end{equation}
+
+\subsection{Dimpled Object with Drag and Spin} \label{subsec:dimpled_drag_spin}
+Lastly, we can allow the object to spin in addition to the drag force considered earlier. In particular we will be considering objects with back spin, like a golf ball after it leaves the club. The objects spin will make the relative velocity of the surrounding fluid over the object's surface a function of position, thereby creating uneven drag forces. We can model this effect with a Magnus force, $\mathbf{F}_{\text{Magnus}} = S_{0}~\vec{\omega} \times \mathbf{v}$. In our coordinate system backspin corresponds to having $\hat{\omega} = \hat{\mathbf{z}}$ out of the page. With this in mind we can perform the cross product, break $\mathbf{F}_{\text{Magnus}}$ into its components, and compute the new $\mathbf{F}_{\text{net}}$ (\ref{eq:F_dimpled_drag_and_spin}).
+
+\begin{equation} \label{eq:F_dimpled_drag_and_spin}
+\mathbf{F}_{\text{net}} = S_{0} \omega v 
+\begin{pmatrix}
+  \cos(\vartheta + \frac{\pi}{2}) \\
+  \sin(\vartheta + \frac{\pi}{2})
+\end{pmatrix}
+- C\left(v\right) \rho A v^{2}
+\begin{pmatrix}
+  \cos(\vartheta) \\
+  \sin(\vartheta)
+\end{pmatrix}
+-m g~\hat{\mathbf{y}}
+\end{equation}
+
+It is convenient to define one constant $\eta \equiv \frac{S_{0} \omega}{m}$ to hold the $S_{0}$ and $\omega$ dependence. Making this substitution and simplifying the trigonometry leaves us with the final form of $\mathbf{F}_{\text{net}}$ (\ref{eq:F_dimpled_drag_and_spin_2}). 
+
+\begin{equation} \label{eq:F_dimpled_drag_and_spin_2}
+\mathbf{F}_{\text{net}} = m \eta v 
+\begin{pmatrix}
+  -\sin(\vartheta) \\
+  \cos(\vartheta)
+\end{pmatrix}
+- C\left(v\right) \rho A v^{2}
+\begin{pmatrix}
+  \cos(\vartheta) \\
+  \sin(\vartheta)
+\end{pmatrix}
+-m g~\hat{\mathbf{y}}
+\end{equation}
 
 
 \section{Results}
 \label{sec:results}
 TODO
 
-\begin{comment}
 \begin{figure}[!htbc]
-%\begin{figure}
   \centering
-  \includegraphics[width=.70\textwidth]{output/plot.pdf}
+  \includegraphics[width=.70\textwidth]{ideal.png}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{$R\left(t\right)$ calculated numerically with three different time steps, $\Delta t$, and the exact solution.}
-	\label{fig:plot}
+	\caption{Trajectories of an ideal ball without drag at different initial elevations, $\vartheta_{0}$.}
+	\label{fig:ideal}
 \end{figure}
 
-\end{comment}
+
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.70\textwidth]{smooth_ball_w_drag.png}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Trajectories of a smooth ball with drag at different initial elevations, $\vartheta_{0}$.}
+	\label{fig:smooth_ball_w_drag}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.70\textwidth]{dimpled_ball_w_drag.png}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Trajectories of a dimpled ball with drag at different initial elevations, $\vartheta_{0}$.}
+	\label{fig:dimpled_ball_w_drag}
+\end{figure}
+
 
 
 \section{Conclusions}
@@ -236,6 +315,8 @@ The Python source code used to produce these results can be found online at \url
 \clearpage
 \section{Supporting Material}
 \label{sec:Supporting_Material}
+
+% TODO output.log
 
 \clearpage
 \includepdf{../homework3.pdf}
