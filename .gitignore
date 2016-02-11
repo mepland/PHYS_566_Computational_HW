@@ -8,6 +8,7 @@
 *.bbl
 *.blg
 *.swp
+*.tar.gz
 anaconda/
 Anaconda2-2.4.1-Linux-x86_64.sh
 notes_on_anaconda_install.txt
