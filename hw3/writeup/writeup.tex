@@ -123,7 +123,9 @@
   xrightmargin=0.01\textwidth
 }
 
-% TODO Select between raw and saved plots here
+\newcommand{\degree}{\ensuremath{^{\circ}}}
+
+% Select between raw and saved plots here
 \graphicspath{{../code/output/}} % raw plots
 %\graphicspath{{./output/}} % saved plots
 
@@ -138,14 +140,14 @@
 \date{\today}
 
 \begin{abstract}
-TODO
+The trajectory of a typical golf ball was computed numerically via the Euler method for four cases: ideal motion, smooth drag, dimpled drag, and dimpled drag with spin. The computational method and code were successfully validated against the known parabolic behavior of the ideal case. The final case of a dimpled golf ball with backspin produced trajectories similar to those observed by real world golf balls in flight, demonstrating the power of computational methods.
 \end{abstract}\maketitle
 
 
 \section{Introduction}
 \label{sec:intro}
-TODO
-
+From its modern beginnings with Galileo, physics has always been interested in the trajectories of objects undergoing projectile motion. In the ideal case without drag, the object's trajectory can easily be derived analytically, as is done countless times each fall in introductory mechanics courses around the world. However, adding a simple drag force $\mathbf{F}_{\text{drag}}$ proportional to velocity $v$ drastically complicates the problem. While still solvable analytically, the simple drag case pushes up against the bounds of what is reasonable to do with pencil and paper. Going any further by allowing $\mathbf{F}_{\text{drag}} \propto v~\text{or}~v^2$ depending on the velocity regime, or by spinning the object, turns any analytical efforts into exercises in futility. Fortunately, all of these cases can be readily handled numerically with about the same amount of effort no matter how many drag or spin forces are considered.
+In this assignment the trajectory of a golf ball with mass $m = 0.046$ kg, launched at an angle of $9\degree \leq \vartheta \leq 60\degree$, with initial velocity $v_{0} = 70 $ m/s, was computed numerically via the Euler method. Four cases; ideal motion, smooth drag, dimpled drag, and dimpled drag with spin, based on those mentioned above and detailed in the subsequent section, were considered in turn.
 \section{Theory}
 \label{sec:theory}
 We can numerically model an objects trajectory by splitting up Newton's 2nd Law (\ref{eq:newton2}) into coupled first order differential equations (\ref{eq:deqs}) that we can apply the Euler method (\ref{eq:r_euler} and \ref{eq:v_euler}) to.
@@ -168,7 +170,7 @@ m \frac{d^{2} \mathbf{r}}{d t^{2}} = \mathbf{F}_{\text{net}}
 \mathbf{v}\left(t + \Delta t\right) \approx \mathbf{v}\left(t\right) + \frac{d \mathbf{v}}{d t} \Delta t = \mathbf{v}\left(t\right) + \frac{1}{m}\mathbf{F}_{\text{net}}\left(t\right) \Delta t
 \end{equation}
 
-These equations are the heart of our model. All we need do now is split the vectors up into components, $\hat{\mathbf{x}}$ along the ground and $\hat{\mathbf{y}}$ vertical, by performing some simple trigonometry (\ref{eq:vartheta}) with $\vartheta$ defined as the angle from horizontal i.e.\ $\hat{\mathbf{x}}$, and set the initial conditions (\ref{eq:initial_conditions}).
+Once $\mathbf{F}_{\text{net}}$ is specified, these equations form the heart of our model. All we need do now is split the vectors up into components, $\hat{\mathbf{x}}$ horizontal along the ground and $\hat{\mathbf{y}}$ vertical, by performing some simple trigonometry (\ref{eq:vartheta}) with $\vartheta$ defined as the angle from horizontal, and set the initial conditions (\ref{eq:initial_conditions}).
 
 \begin{equation} \label{eq:vartheta}
 \vartheta\left(t\right) = \arctan\left(\frac{v_{y}(t)}{v_{x}(t)}\right)
@@ -194,8 +196,9 @@ These equations are the heart of our model. All we need do now is split the vect
 \end{pmatrix}
 \end{equation}
 
+\clearpage
 
-In this assignment we are considering gravity as well as drag forces in four different cases:
+In this assignment we are considering gravity as well as drag and spin forces in four different cases:
 
 \subsection{Ideal Object} \label{subsec:ideal}
 Without drag $\mathbf{F}_{\text{net}}$ (\ref{eq:F_ideal}) is very straight forward as only gravity acts on the object, and even then only along one axis.
@@ -218,7 +221,7 @@ A simple approximation of the laminar flow drag force over a smooth surface is $
 
 
 \subsection{Dimpled Object with Drag} \label{subsec:dimpled_drag}
-We can increase the complexity of the problem by allowing the object's surface to be dimpled, like a golf ball. $\mathbf{F}_{\text{drag}} = - C \rho A v^{2}~\hat{\mathbf{v}}$ will still work in this case, but now we let $C$ become a piecewise function of the object's speed (\ref{eq:Cv}). This is done to account for the switch between laminar flow at low speeds, where the dimples effects are negligible and $\mathbf{F}_{\text{drag}} \propto v^{2}$, and turbulent flow at high speeds, where the dimples break up the air flow over the object's surface and allow it to maintain contact longer. The air flow thus sticks close to the surface further along it's length, thereby reducing the overall wake vortex and drag, which is equivalent to letting $\mathbf{F}_{\text{drag}} \propto v$. With this modification our $\mathbf{F}_{\text{net}}$ equation becomes (\ref{eq:F_dimpled_drag}).
+We can increase the complexity of the problem by allowing the object's surface to be dimpled, like a golf ball. $\mathbf{F}_{\text{drag}} = - C \rho A v^{2}~\hat{\mathbf{v}}$ will still work in this case, but now we let $C$ become a piecewise function of the object's speed (\ref{eq:Cv}). This is done to account for the switch between laminar flow at low speeds, where the dimples effects are negligible and $\mathbf{F}_{\text{drag}} \propto v^{2}$, and turbulent flow at high speeds, where the dimples break up the air flow over the object's surface and allow it to maintain contact longer. The air flow thus sticks close to the surface further along it's length, thereby reducing the overall wake vortex and drag, which can be modeled by letting $\mathbf{F}_{\text{drag}} \propto v$. With this modification our $\mathbf{F}_{\text{net}}$ equation becomes (\ref{eq:F_dimpled_drag}).
 
 \begin{equation} \label{eq:Cv}
 C\left(v\right) =
@@ -241,7 +244,7 @@ C' \leq \frac{v_{\text{transition}}}{2}
 \end{equation}
 
 \subsection{Dimpled Object with Drag and Spin} \label{subsec:dimpled_drag_spin}
-Lastly, we can allow the object to spin in addition to the drag force considered earlier. In particular we will be considering objects with back spin, like a golf ball after it leaves the club. The objects spin will make the relative velocity of the surrounding fluid over the object's surface a function of position, thereby creating uneven drag forces. We can model this effect with a Magnus force, $\mathbf{F}_{\text{Magnus}} = S_{0}~\vec{\omega} \times \mathbf{v}$. In our coordinate system backspin corresponds to having $\hat{\omega} = \hat{\mathbf{z}}$ out of the page. With this in mind we can perform the cross product, break $\mathbf{F}_{\text{Magnus}}$ into its components, and compute the new $\mathbf{F}_{\text{net}}$ (\ref{eq:F_dimpled_drag_and_spin}).
+Lastly, we can allow the object to spin in addition to the drag force considered earlier. In particular we will be considering objects with backspin, like a golf ball after it leaves the club. The spin will make the relative velocity of the surrounding fluid over the object's surface a function of position, thereby creating uneven drag forces. We can model this effect with a Magnus force, $\mathbf{F}_{\text{Magnus}} = S_{0}~\vec{\omega} \times \mathbf{v}$. In our coordinate system backspin corresponds to having $\hat{\omega} = \hat{\mathbf{z}}$ out of the page. With this in mind we can perform the cross product, break $\mathbf{F}_{\text{Magnus}}$ into its components, and compute the new $\mathbf{F}_{\text{net}}$ (\ref{eq:F_dimpled_drag_and_spin}).
 
 \begin{equation} \label{eq:F_dimpled_drag_and_spin}
 \mathbf{F}_{\text{net}} = S_{0} \omega v 
@@ -276,46 +279,61 @@ It is convenient to define one constant $\eta \equiv \frac{S_{0} \omega}{m}$ to 
 
 \section{Results}
 \label{sec:results}
-TODO
+We begin by considering the ideal case where only gravity, $g = 9.80665$ m/s$^2$, acts on the golf ball. From introductory mechanics we expect to see perfect parabolas, maximum range at $\vartheta_{0} = 45\degree$, and a symmetry in range for $\vartheta_{0} = \vartheta' \pm \vartheta''$, and indeed Figure~\ref{fig:ideal} has these characteristics. While perhaps not as interesting as the cases to come, the ideal case serves as an important validation of our mathematics and code. 
+
+\vspace{-0.4cm}
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.70\textwidth]{ideal.png}
+  \includegraphics[width=.6\textwidth]{ideal.png}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Trajectories of an ideal ball without drag at different initial elevations, $\vartheta_{0}$. Note that $\vartheta_{0} = 45^{\circ}$ and $60^{\circ}$ have the same range, as is expected.}
+	\caption{Trajectories of an ideal golf ball without drag at different initial elevations, $\vartheta_{0}$. Note that $\vartheta_{0} = 45\degree$ has the maximum range, and that $\vartheta_{0} = 30\degree$ and $60\degree$ have the same range, as expected.}
 	\label{fig:ideal}
 \end{figure}
 
-\begin{figure}[!htbc]
-  \centering
-  \includegraphics[width=.70\textwidth]{smooth_ball_w_drag.png}
-	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Trajectories of a smooth ball with drag at different initial elevations, $\vartheta_{0}$. Note the massive decrease in range from the ideal ball due to the introduction of drag.}
-	\label{fig:smooth_ball_w_drag}
-\end{figure}
+
+Next the drag on a smooth golf ball was added, using $\rho_{\text{sea level}} = 1.29$ kg/m$^3$ and $A = 0.0014$ m$^2$. As could be expected, the drag drastically reduces the ranges from the ideal case at all $\vartheta_{0}$'s, less so for flatter trajectories, see Figure~\ref{fig:smooth_ball_w_drag}.
+
+\vspace{-0.4cm}
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.70\textwidth]{dimpled_ball_w_drag.png}
+  \includegraphics[width=.6\textwidth]{smooth_ball_w_drag.png}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Trajectories of a dimpled ball with drag at different initial elevations, $\vartheta_{0}$. In comparison to the smooth ball it is easy to see that the dimples help the ball reduce drag and fly further}
+	\caption{Trajectories of a smooth golf ball with drag at different initial elevations, $\vartheta_{0}$. Note the massive decrease in range from the ideal golf ball due to the introduction of drag.}
+	\label{fig:smooth_ball_w_drag}
+\end{figure}
+
+\clearpage
+
+Changing to a dimpled golf ball with $C' = 7$ m/s and $v_{\text{transition}} = 14$ m/s, we find that the reduced drag force at higher velocities, $v \geq v_{\text{transition}}$, gives the ball an increase in range, see Figure~\ref{fig:dimpled_ball_w_drag}.
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.7\textwidth]{dimpled_ball_w_drag.png}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Trajectories of a dimpled golf ball with drag at different initial elevations, $\vartheta_{0}$. In comparison to the smooth golf ball it is easy to see that the dimples help the golf ball reduce drag and fly further.}
 	\label{fig:dimpled_ball_w_drag}
 \end{figure}
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.70\textwidth]{dimpled_ball_w_drag_and_spin.png}
+  \includegraphics[width=.7\textwidth]{dimpled_ball_w_drag_and_spin.png}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Trajectories of a dimpled ball with drag and spin at different initial elevations, $\vartheta_{0}$. Note that with backspin the maximum range is now obtained at $\vartheta_{0} = 9^{\circ}$, and that at large enough launch angles ($\vartheta_{0} = 60^{\circ}$) loop--de--loops are possible}
+	\caption{Trajectories of a dimpled golf ball with drag and spin at different initial elevations, $\vartheta_{0}$. Note that with backspin the maximum range is now obtained at $\vartheta_{0} = 9\degree$, and that at large enough launch angles, $\vartheta_{0} = 60\degree$, loop--de--loops are possible.}
 	\label{fig:dimpled_ball_w_drag_and_spin}
 \end{figure}
 
-% TODO Temporarily force a new page
+
 \clearpage
+
+Lastly, the introduction of (back) spin with $\eta = 0.25$ s$^{-1}$ in combination with drag on the dimpled golf ball gives it trajectories familiar to those observed by golfers in the real world, see Figure~\ref{fig:dimpled_ball_w_drag_and_spin}. They are characterized by a relatively straight initial climb over the first half of the flight, before shifting into a more usual parabolic trajectory for the second half. Very shallow launch angles, $\vartheta_{0} = 9\degree$, now have the maximum range as $\mathbf{F}_{\text{Magnus}} \perp \mathbf{v}$ mostly provides the golf ball with extra lift. On the other hand, at very high launch angles, $\vartheta_{0} = 60\degree$, $\mathbf{F}_{\text{Magnus}}$ largely points in $-\hat{\textbf{x}}$ and can pull the ball through a loop--de--loop. This trajectory in particular would be hard to come by analytically!
+
+
 
 \section{Conclusions}
 \label{sec:Conclusions}
-TODO
+Using the Euler method we were able to computationally determine the trajectories of golf balls in a variety of complex situations that would have been difficult, if not impossible, to analytically derive. The computational method and code was checked against the known behavior of the ideal no drag case to verify it was functioning as intended. The most complex case of a dimpled golf ball undergoing drag with backspin produced trajectories similar to those observed by real world golf balls in flight. Overall, this assignment showcased the power of computational tools in situations where analytical ones fail.
 
 The Python source code used to produce these results can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/hw3/code}, and is included in Section~\ref{sec:code}.
 
@@ -323,7 +341,7 @@ The Python source code used to produce these results can be found online at \url
 \section{Supporting Material}
 \label{sec:Supporting_Material}
 
-\lstinputlisting[style=output,label={lst:output}]{../code/output.log} % TODO raw
+\lstinputlisting[style=output,label={lst:output}]{../code/output.log} % raw
 %\lstinputlisting[style=output,label={lst:output}]{./output/output.log} % saved 
 
 \clearpage
