@@ -152,6 +152,40 @@ TODO
 \label{sec:theory}
 TODO
 
+\begin{equation} \label{eq:diff_eq}
+\frac{d^2 \theta}{d t^2} = -\frac{g}{l}\theta - 2\gamma\frac{d \theta}{d t} + \alpha_{D}\sin\left(\Omega_{D} t\right)
+\end{equation}
+
+\subsection{Resonance}
+\label{subsec:resonance}
+TODO
+
+\subsection{Euler--Cromer}
+\label{subsec:eulercromer}
+In the past we have used the Euler method solve differential equations time step to time step. The advantage of using the Euler method is its simplicity, however its solutions usually do not conserve energy but increase in total energy over time. We can remedy this by switching to the Euler--Cromer method, also known as the semi-implicit Euler method\footnote{The name semi-implicit comes from the fact that $n+1$ data in the form of $\omega_{n+1}$ is being used to compute $\theta_{n+1}$.}, by modifying the Euler method to use $\omega_{n+1}$ instead of $\omega_{n}$ when computing $\theta_{n+1}$, see (\ref{eq:euler_chromer1}, \ref{eq:euler_chromer2}).
+
+\begin{align}
+\frac{d \theta}{d t} &= f\left(t, \omega\right) &
+\frac{d \omega}{d t} &= \frac{d^2 \theta}{d t^2} = g\left(t, \theta\right) \label{eq:euler_chromer1} \\
+\omega_{n+1} &= \omega_{n} + g\left(t_{n}, \theta_{n};~\omega_{n}\right) \Delta t & 
+\theta_{n+1} &= \theta_{n} + f\left(t_{n}, \underline{\omega_{n+1}}\right) \Delta t \label{eq:euler_chromer2}
+\end{align}
+
+Applying the Euler--Cromer method to our pendulum problem, we have:
+
+\begin{align} \label{eq:euler_chromer_applied}
+\omega_{n+1} &= \omega_{n} + \bigg( -\frac{g}{l}\theta_{n} - 2\gamma \omega_{n} + \alpha_{D}\sin\left(\Omega_{D} t_{n}\right)  \bigg) \Delta t \\
+\theta_{n+1} &= \theta_{n} + \omega_{n+1} \Delta t \\
+t_{n} &= t_{0} + n \Delta t = n \Delta t
+\end{align}
+
+
+\subsection{Runge--Kutta}
+\label{subsec:runge_kutta}
+TODO
+Runge--Kutta method
+
+
 \section{Results}
 \label{sec:results}
 TODO
