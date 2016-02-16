@@ -150,11 +150,50 @@ TODO
 
 \section{Theory}
 \label{sec:theory}
-TODO
+The equation of motion of a damped, driven pendulum (\ref{eq:diff_eq}) is a TODO second order linear equation. As written all of the constants are positive real numbers. It is helpful to rewrite (\ref{eq:diff_eq}) as (\ref{eq:diff_eq2}) where $\omega_{0}^2 = \frac{g}{l}$ and $F\left(t\right)$ is the external driving force.
 
 \begin{equation} \label{eq:diff_eq}
 \frac{d^2 \theta}{d t^2} = -\frac{g}{l}\theta - 2\gamma\frac{d \theta}{d t} + \alpha_{D}\sin\left(\Omega_{D} t\right)
 \end{equation}
+
+\begin{equation} \label{eq:diff_eq2} 
+\begin{gathered}
+\ddot{\theta} + 2\gamma \dot{\theta} + \omega_{0}^2 \theta = F\left(t\right) \\
+F\left(t\right) = \alpha_{D} \sin\left(\Omega_{D} t\right)
+\end{gathered}
+\end{equation}
+
+The solution to (\ref{eq:diff_eq2}) can be broken into two parts, the solution of the associated homogeneous equation where $F\left(t\right) = 0$ and any particular solution of (\ref{eq:diff_eq2}). To begin with we will solve the homogeneous equation by assuming a solution of the form $\theta\left(t\right) \sim e^{r t}$, which is indeed a solution provided that $r$ is a root of the characteristic equation (\ref{eq:characteristic_eq}). Using the quadratic formula we find the two roots to be $r_{\pm}$ (\ref{eq:r_pm}), thereby specifying the homogeneous solution\footnote{If $\gamma = \omega_{0}$, and therefore $r_{+} = r_{-}$, we need to include a multiplicative factor of $t$ on one of the solutions so that they are linearly independent.} (\ref{eq:homogeneous_soln}). 
+
+\begin{gather}
+r^2 + 2 \gamma r + \omega_{0}^2 = 0 \label{eq:characteristic_eq} \\
+r_{\pm} = -\gamma \pm \sqrt{\gamma^2 - \omega_{0}^2} \label{eq:r_pm}
+\end{gather}
+
+\begin{equation} \label{eq:homogeneous_soln}
+\theta\left(t\right)_{\text{homogeneous}} =
+\begin{cases}
+A e^{r_{+} t} + B e^{r_{-} t} & \text{if } \gamma \neq \omega_{0} \\
+\left(A + B t\right) e^{-\gamma t} & \text{if } \gamma = \omega_{0}
+\end{cases}
+\end{equation}
+
+It is easy to see from (\ref{eq:r_pm}) that $\operatorname{Re}\left(r_{\pm}\right) < 0$ for all $\gamma$ and $\omega_{0}$, therefore the homogeneous solution (\ref{eq:homogeneous_soln}) always decays away to nothing; it is a transient solution. As we are primary interested in the steady state behavior of the pendulum in this assignment, we therefore need only be concerned with the particular solution from here on out.
+
+We can find a particular solution (\ref{eq:particular_soln}) that works by trial and error. Plugging (\ref{eq:particular_soln}) into (\ref{eq:diff_eq2}) with $F\left(t\right) \neq 0$ results in (\ref{eq:part_work}).
+
+\begin{equation} \label{eq:particular_soln}
+\theta\left(t\right)_{\text{particular}} = \theta_{0} \sin\left(\Omega_{D} t - \phi\right)
+\end{equation}
+
+\begin{equation} \label{eq:part_work}
+TODO
+\end{equation}
+
+\begin{equation} \label{eq:trig_identity}
+\sin\left(\alpha + \beta\right) = \sin\left(\alpha\right) \cos\left(\beta\right) + \cos\left(\alpha\right) \sin\left(\beta\right)
+\end{equation}
+
 
 \subsection{Resonance}
 \label{subsec:resonance}
@@ -162,7 +201,7 @@ TODO
 
 \subsection{Euler--Cromer}
 \label{subsec:eulercromer}
-In the past we have used the Euler method solve differential equations time step to time step. The advantage of using the Euler method is its simplicity, however its solutions usually do not conserve energy but increase in total energy over time. We can remedy this by switching to the Euler--Cromer method, also known as the semi-implicit Euler method\footnote{The name semi-implicit comes from the fact that $n+1$ data in the form of $\omega_{n+1}$ is being used to compute $\theta_{n+1}$.}, by modifying the Euler method to use $\omega_{n+1}$ instead of $\omega_{n}$ when computing $\theta_{n+1}$, see (\ref{eq:euler_chromer1}, \ref{eq:euler_chromer2}).
+In the past we have used the Euler method solve differential equations time step to time step. The advantage of using the Euler method is its simplicity, however its solutions usually do not conserve energy but increase in total energy over time. We can remedy this by switching to the Euler--Cromer method, also known as the semi-implicit Euler method\footnote{The name semi-implicit comes from the fact that $n+1$ data in the form of $\omega_{n+1}$ is being used to compute $\theta_{n+1}$. Also note that like the unmodified Euler method, the Euler--Cromer method is still only a TODO $\orderof\big(\left(\Delta t\right)^2\big)$ method.}, by modifying the Euler method to use $\omega_{n+1}$ instead of $\omega_{n}$ when computing $\theta_{n+1}$, see (\ref{eq:euler_chromer1}, \ref{eq:euler_chromer2}).
 
 \begin{align}
 \frac{d \theta}{d t} &= f\left(t, \omega\right) &
@@ -174,7 +213,7 @@ In the past we have used the Euler method solve differential equations time step
 Applying the Euler--Cromer method to our pendulum problem, we have:
 
 \begin{align} \label{eq:euler_chromer_applied}
-\omega_{n+1} &= \omega_{n} + \bigg( -\frac{g}{l}\theta_{n} - 2\gamma \omega_{n} + \alpha_{D}\sin\left(\Omega_{D} t_{n}\right)  \bigg) \Delta t \\
+\omega_{n+1} &= \omega_{n} + \bigg( -\frac{g}{l}\theta_{n} - 2\gamma \omega_{n} + \alpha_{D}\sin\left(\Omega_{D} t_{n}\right) \bigg) \Delta t \\
 \theta_{n+1} &= \theta_{n} + \omega_{n+1} \Delta t \\
 t_{n} &= t_{0} + n \Delta t = n \Delta t
 \end{align}
@@ -186,6 +225,7 @@ TODO
 Runge--Kutta method
 
 
+\clearpage
 \section{Results}
 \label{sec:results}
 TODO
