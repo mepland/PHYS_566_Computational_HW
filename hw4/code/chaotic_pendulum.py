@@ -9,17 +9,21 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import curve_fit
 
 ########################################################
 # Set fixed parameters [SI units]
-g = 9.80665 # g, gravity [m/s^2]
+g = 9.8 # g, gravity [m/s^2]
 l = 9.8 # l, length [m]
-gamma = 2.05 # gamma, dampening constant [s^-1]
+gamma = 0.25 # gamma, dampening constant [s^-1]
 possible_alphaD = [0.2, 0.5, 1.2] # driving force amplitude [rad/s^2]
 
 # Euler-Cromer method parameters
 Dt = 0.001 # Time step of TODO simulation
 max_Dtheta = np.pi/100.0 # TODO Maximum radial distance allowed between time steps
+
+# compute omega0
+omega0 = g/l
 
 # TODO list of 10 good driving frequencies for res plot
 
@@ -30,6 +34,7 @@ print '\nFixed Parameters are:'
 print '---------------------------------------------'
 print 'g = %.5f [m/s^2]' % g
 print 'l = %.5f [m]' % l
+print 'omega0 = %.5f [radians/s]' % omega0
 print 'Dampening Constant gamma = %.5f [s^-1]' % gamma
 
 print '\nPossible Driving Amplitudes alphaD [radians/s^2]'
@@ -64,6 +69,7 @@ class time_step:
 	self.t = time
         self.theta = -99.0
 	self.omega = -99.0
+	self.forceD = -99.0
 
 	# save the raw theta coordinate, no bounds
 	self.rawtheta = -99.0
@@ -76,9 +82,12 @@ class time_step:
 	self.sim_method = ''
 	self.lin_case = ''
 
+	self.omega_res_theory = -99.0
+
+
     # Define a function to set theta while forcing -pi < theta <= pi 
     # WARNING do not use object.theta = X to set theta!!!
-    # There are no real private variables in python so I can't enforce this...
+    # I may clean this up using python properties, at the very end... TODO 
     def set_theta(self, new_theta):
 	self.rawtheta = new_theta
 
@@ -110,13 +119,16 @@ def run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case):
 	run[0].alphaD = alphaD
 	run[0].omegaD = omegaD
 	run[0].theta0 = theta0
-	run[0].tmax = periodsD*(2.0*np.pi/omegaD)
+	run[0].tmax = periodsD*((2.0*np.pi)/omegaD)
 	run[0].sim_method = sim_method
 	run[0].lin_case = lin_case
+
+	run[0].omega_res_theory = np.sqrt( omega0 - 2*np.square(gamma) )
 	
 	# Set the initial values
 	run[0].set_theta(theta0)
 	run[0].omega = 0.0
+	run[0].forceD = alphaD*np.sin(omegaD*run[0].t)
 
 	# Loop for periodsD driving force periods
 	n = 0 # time step index
@@ -126,10 +138,12 @@ def run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case):
 		# append a new time_step object for n+1
 		run.append(time_step((n+1)*Dt)) 
 
+		run[n+1].forceD = alphaD*np.sin(omegaD*run[n+1].t)
+
 		if(sim_method == 'euler_cromer'): # Euler-Cromer method
 
 			# Compute the new velocity, see writeup for details...
-			run[n+1].omega = run[n].omega + ( -(g/l)*linearity(run[n].theta, lin_case) -2*gamma*run[n].omega + alphaD*np.sin(omegaD*run[n].t) )*Dt
+			run[n+1].omega = run[n].omega + ( -omega0*linearity(run[n].theta, lin_case) -2*gamma*run[n].omega + alphaD*np.sin(omegaD*run[n].t) )*Dt
 	
 			# Compute the new position
 			run[n+1].set_theta( run[n].theta + run[n+1].omega*Dt )
@@ -159,7 +173,7 @@ def run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case):
 ########################################################
 # Define a function to take two runs and compare them
 # Runs should have the same driving force and run time
-# Should be used to compare Euler-Cromer to Runge-Kutta and linear to nonlinear
+# Should be used to compare Euler-Cromer to Runge-Kutta and linear to nonlinear, or different starting angles
 def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 	if( run1[0].alphaD != run2[0].alphaD and run1[0].omegaD != run2[0].omegaD and run1[0].tmax != run2[0].tmax ):
 		print 'SERIOUS ERROR: Comparing incompatible runs!!!!'
@@ -170,7 +184,7 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 	
 	t_ndarray = np.zeros(num_timesteps)
 
-	driving_theta = np.zeros(num_timesteps)
+	driving_force = np.zeros(num_timesteps)
 
 	run1_theta = np.zeros(num_timesteps)
 	run1_omega = np.zeros(num_timesteps)
@@ -190,7 +204,7 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 	for i in range(num_timesteps):
 		t_ndarray[i] = run1[i].t
 
-		driving_theta[i] = run1[0].alphaD*np.sin(run1[0].omegaD*run1[i].t) 
+		driving_force[i] = run1[i].forceD
 
 		run1_theta[i] = run1[i].theta
 		run1_omega[i] = run1[i].omega
@@ -214,17 +228,59 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 	theta_fig = plt.figure('theta') # get a separate figure
 	theta_ax = theta_fig.add_subplot(111) # Get the axes, effectively
 
-	plt.plot(t_ndarray, run1_theta, ls='solid', label=run1_name, c='blue')
-	plt.plot(t_ndarray, run2_theta, ls='solid', label=run2_name, c='green')
-	plt.plot(t_ndarray, driving_theta, ls='dotted', label='$F_{Driving}$', c='black')
-
 	theta_ax.set_title(title)
 	theta_ax.set_xlabel('$t$ [s]')
 	theta_ax.set_ylabel('$\\theta$ [radians]')
+
 	theta_ax.set_xlim((0.0, run1[0].tmax))
-	plt.legend()
+
+	force_theta_ax = theta_ax.twinx() # Get a new axes for the force
+	force_theta_color = 'darkmagenta'
+	force_theta_ax.set_ylabel('$F_{Driving}$', color=force_theta_color, rotation=-90)
+	force_theta_ax.set_ylim(-1.5*run1[0].alphaD, 1.5*run1[0].alphaD)
+
+	theta_ax.plot(t_ndarray, run1_theta, ls='solid', label=run1_name, c='blue')
+	theta_ax.plot(t_ndarray, run2_theta, ls='solid', label=run2_name, c='green')
+	force_theta_ax.plot(t_ndarray, driving_force, ls='dotted', label='$F_{Driving}$', c=force_theta_color)
+
+	x1_theta,x2_theta,y1_theta,y2_theta = theta_ax.axis()
+	theta_ax.set_ylim(-1.2*max(y1_theta,y2_theta), 1.2*max(y1_theta,y2_theta))
+
+	theta_ax.legend()
+
+	for tl in force_theta_ax.get_yticklabels():
+		tl.set_color(force_theta_color)
 
 	theta_fig.savefig(m_path+'/'+fname+'_theta.pdf')
+
+	# omega
+	omega_fig = plt.figure('omega') # get a separate figure
+	omega_ax = omega_fig.add_subplot(111) # Get the axes, effectively
+
+	omega_ax.set_title(title)
+	omega_ax.set_xlabel('$t$ [s]')
+	omega_ax.set_ylabel('$\\omega$ [radians/s]')
+	omega_ax.set_xlim((0.0, run1[0].tmax))
+
+	force_omega_ax = omega_ax.twinx() # Get a new axes for the force
+	force_omega_color = 'darkmagenta'
+	force_omega_ax.set_ylabel('$F_{Driving}$', color=force_omega_color, rotation=-90)
+	force_omega_ax.set_ylim(-1.5*run1[0].alphaD, 1.5*run1[0].alphaD)
+
+	omega_ax.plot(t_ndarray, run1_omega, ls='solid', label=run1_name, c='blue')
+	omega_ax.plot(t_ndarray, run2_omega, ls='solid', label=run2_name, c='green')
+	force_omega_ax.plot(t_ndarray, driving_force, ls='dotted', label='$F_{Driving}$', c=force_omega_color)
+
+	x1_omega,x2_omega,y1_omega,y2_omega = omega_ax.axis()
+	omega_ax.set_ylim(-1.2*max(y1_omega,y2_omega), 1.2*max(y1_omega,y2_omega))
+
+	omega_ax.legend()
+
+	for tl in force_omega_ax.get_yticklabels():
+		tl.set_color(force_omega_color)
+
+	omega_fig.savefig(m_path+'/'+fname+'_omega.pdf')
+
 
 	# run1 energy
 	run1_energy_fig = plt.figure('run1_energy') # get a separate figure
@@ -236,7 +292,7 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 
 	run1_energy_ax.set_title('Energy: '+run1_name)
 	run1_energy_ax.set_xlabel('$t$ [s]')
-	run1_energy_ax.set_ylabel('$E$ [J/mass]')
+	run1_energy_ax.set_ylabel('$E$/mass [J/mass]')
 	run1_energy_ax.set_xlim((0.0, run1[0].tmax))
 	plt.legend()
 
@@ -253,7 +309,7 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 
 	run2_energy_ax.set_title('Energy: '+run2_name)
 	run2_energy_ax.set_xlabel('$t$ [s]')
-	run2_energy_ax.set_ylabel('$E$ [J/mass]')
+	run2_energy_ax.set_ylabel('$E$/mass [J/mass]')
 	run2_energy_ax.set_xlim((0.0, run1[0].tmax))
 	plt.legend()
 
@@ -264,6 +320,146 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 
 	print 'compare_runs completed'
 # end def for compare_runs
+
+########################################################
+# Define a function to run and fit one omegaD for resonance sweeping
+def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case):
+
+	# TODO move to res_sweep eventually
+	m_path = output_path+'/res_sweep'
+	make_path(m_path)
+
+	# Perform a run 
+	run = run_sim(alphaD, omegaD, theta0, run_end_periodsD, sim_method, lin_case)
+
+	# set up fit ranges, we have to hack a fit range by splitting the actual ndarrays...
+	# ROOT can do this much better, scipy failed me!
+	fit_range_min = fit_begin_periodsD*(2.0*np.pi/omegaD)
+	fit_range_max = run[0].tmax
+	
+	########################################################
+	# Create lists that we can plot
+	# Note we aren't using ndarrays like usual, this is faster...
+	# and we have to because we can't fit over None
+
+	t_driving_force = []
+	driving_force = []
+
+	t_nofit = []
+	theta_nofit = []
+
+	t_fit = []
+	theta_fit = []
+
+	# Fill the lists
+	for i in range(len(run)):
+		t_driving_force.append(run[i].t)
+		driving_force.append(run[i].forceD)
+
+		if( run[i].t < fit_range_min or run[i].t > fit_range_max):
+			t_nofit.append(run[i].t)
+			theta_nofit.append(run[i].theta)
+		elif( run[i].t >= fit_range_min and run[i].t <= fit_range_max):
+			t_fit.append(run[i].t)
+			theta_fit.append(run[i].theta)
+			# Fill nofit with Nones so it doesn't plot at the y axis min
+			# we aren't fitting this one so it's fine
+                        t_nofit.append(None)
+                        theta_nofit.append(None)
+
+
+
+	########################################################
+	# Create the theta plot
+	theta_fig = plt.figure('theta') # get a separate figure
+	theta_ax = theta_fig.add_subplot(111) # Get the axes, effectively
+
+	theta_title = '$\\theta\left(t\\right)$, $\Omega_{D} = $ %.4f [radians/s]' % omegaD
+	theta_ax.set_title(theta_title)
+	theta_ax.set_xlabel('$t$ [s]')
+	theta_ax.set_ylabel('$\\theta$ [radians]')
+
+	force_theta_ax = theta_ax.twinx() # Get a new axes for the force
+	force_theta_color = 'darkmagenta'
+	force_theta_ax.set_ylabel('$F_{Driving}$', color=force_theta_color, rotation=-90)
+	force_yax_multiplier = 1.6 # control the force y axis range
+	force_theta_ax.set_ylim(-force_yax_multiplier*alphaD, force_yax_multiplier*alphaD)
+	
+	theta_ax.plot(t_nofit, theta_nofit, ls='dotted', label='Unfitted $\\theta\left(t\\right)$', c='blue')
+	theta_ax.plot(t_fit, theta_fit, ls='dashed', label='Fitted $\\theta\left(t\\right)$', c='blue')
+	force_theta_ax.plot(t_driving_force, driving_force, ls='dotted', label='$F_{Driving}$', c=force_theta_color)
+
+	x1_theta,x2_theta,y1_theta,y2_theta = theta_ax.axis()
+	theta_yax_multiplier = 1.5 # control the theta y axis range
+	theta_ax.set_ylim(-theta_yax_multiplier*max(y1_theta,y2_theta), theta_yax_multiplier*max(y1_theta,y2_theta))
+
+
+	for tl in force_theta_ax.get_yticklabels():
+		tl.set_color(force_theta_color)
+
+	# Do the fitting
+	########################################################
+	# Define a sinusoidal fit function
+	
+	def sine_fit_function(theta, thetaP_fit, omegaD_fit, phiP_fit):
+		# force thetaP_fit > 0, May not be legal TODO
+		#thetaP_fit = abs(thetaP_fit)
+		return thetaP_fit*np.sin(omegaD_fit*theta - phiP_fit)
+	# end def sine_fit_function
+
+	fit_color = 'green'
+
+	# Put an arrow on the graph where the fit range begins
+	# theta_ax.annotate('Fit Range Min', xy=(fit_range_min, -theta_yax_multiplier*max(y1_theta,y2_theta)), xytext=(fit_range_min, -(theta_yax_multiplier+0.3)*max(y1_theta,y2_theta)), arrowprops=dict(facecolor=fit_color, shrink=0.05),)
+
+	# Add vertical line at where the fit range begins
+	theta_ax.axvline(x=fit_range_min, ls = 'solid', label='Fit Begins', c='gray')
+
+	# compute particular solution parameters from theory
+	thetaP_theory = alphaD/np.sqrt(np.square(np.square(omega0) - np.square(omegaD)) + 4*np.square(gamma)*np.square(omegaD) ) 
+	phiP_theory = np.arctan((2*gamma*omegaD)/(np.square(omega0) - np.square(omegaD)))
+	# omegaD is just omegaD...
+
+	# set them as the initial fit parameters
+	m_p0 = [thetaP_theory, omegaD, phiP_theory]
+
+	# actually perform the fit, op_par = optimal parameters
+	op_par, covar_matrix = curve_fit(sine_fit_function, t_fit, theta_fit, p0=m_p0)
+
+	# plot the fit
+	t_fit_ndarray = np.array(t_fit)
+	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, op_par[0], op_par[1], op_par[2]), ls='solid', label='Fit', c=fit_color)
+	# plot the theory particular/steady state solution
+	#theta_ax.plot(t_fit, sine_fit_function(t_fit, p0[0], p0[1], p0[2]), ls='solid', label='$\\theta\left(t\\right)_{Particular}$', c='maroon')
+
+
+	# write out the fit parameters
+	fit_text = '$\\theta_{P Theory} =$ %.5f, $\\theta_{P Fit} =$  %.5f' % (m_p0[0], op_par[0])
+	fit_text = fit_text+'\n$\\Omega_{D} =$ %.5f, $\\Omega_{D Fit} =$ %.5f' % (m_p0[1], op_par[1])
+	fit_text = fit_text+'\n$\phi_{Theory} =$ %.5f, $\phi_{Fit} =$ %.5f' % (m_p0[2], op_par[2])
+	plt.figtext(0.61, 0.13, fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
+
+	# draw final legend, set the x range, and print it out!
+	theta_ax.legend(bbox_to_anchor=(0.025, 0.92, 0.925, 0.10), loc=3, ncol=4, mode="expand", borderaxespad=0.0)
+
+	# full view
+	theta_ax.set_xlim((0.0, run[0].tmax))
+
+	fname = 'res_run_omegaD_%.4f.pdf' % omegaD
+	theta_fig.savefig(m_path+'/'+fname)
+
+	# croped
+	theta_ax.set_xlim((0.9*fit_range_min, 1.05*fit_range_max))
+
+	fname = 'res_run_omegaD_%.4f_fit_region.pdf' % omegaD
+	theta_fig.savefig(m_path+'/'+fname)
+
+	# Clear the figure
+	theta_fig.clf()
+
+	print 'Resonance Run Completed!'
+
+# end def for res_sweep
 
 
 
@@ -286,6 +482,7 @@ compare_runs(ec_run, '$\\theta_{0} = 0.0^{\circ}$', ec_run2, '$\\theta_{0} = 10.
 '''
 
 # vary linearity 
+'''
 # run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case)
 
 ec_run = run_sim(possible_alphaD[0], 1.0, np.pi, 25, 'euler_cromer','linear')
@@ -293,8 +490,14 @@ ec_run2 = run_sim(possible_alphaD[0], 1.0, np.pi, 25, 'euler_cromer','nonlinear'
 
 # compare_runs(run1, run1_name, run2, run2_name, title, fname) 
 compare_runs(ec_run, 'Linear', ec_run2, 'Nonlinear', 'Vary Linearity', 'vary_linearity')
+'''
 
 
+# res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case)
+
+res_run(0.8*np.sqrt( omega0 - 2*np.square(gamma) ), possible_alphaD[0], 0.0, 6, 10, 'euler_cromer', 'linear')
+res_run(1.1*np.sqrt( omega0 - 2*np.square(gamma) ), possible_alphaD[0], 0.0, 6, 10, 'euler_cromer', 'linear')
+res_run(1.5*np.sqrt( omega0 - 2*np.square(gamma) ), possible_alphaD[0], 0.0, 6, 10, 'euler_cromer', 'linear')
 
 
 ########################################################
