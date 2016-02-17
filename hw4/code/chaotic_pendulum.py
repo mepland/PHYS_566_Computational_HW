@@ -332,22 +332,23 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	# Perform a run 
 	run = run_sim(alphaD, omegaD, theta0, run_end_periodsD, sim_method, lin_case)
 
-	# set up fit ranges, we have to hack a fit range by splitting the actual ndarrays...
-	# ROOT can do this much better, scipy failed me!
+	# set up fit ranges
 	fit_range_min = fit_begin_periodsD*(2.0*np.pi/omegaD)
 	fit_range_max = run[0].tmax
 	
 	########################################################
-	# Create lists that we can plot
-	# Note we aren't using ndarrays like usual, this is faster...
-	# and we have to because we can't fit over None
+	# As we can't specify a fit range when we fit, we have to force it by
+	# dividing up our data into chunks by hand. ROOT can do this much better,
+	# scipy failed me! First we create python lists as they can be built up from
+	# nothing, then we make ndarrays so numpy works as intended. It should be able
+	# to plot and fit lists just fine, but it was having weird behavior... 
+	# It's quite a hack but if it works it works...
 
+	# Declare the lists
 	t_driving_force = []
 	driving_force = []
-
 	t_nofit = []
 	theta_nofit = []
-
 	t_fit = []
 	theta_fit = []
 
@@ -366,51 +367,54 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 			# we aren't fitting this one so it's fine
                         t_nofit.append(None)
                         theta_nofit.append(None)
+	# Create the ndarrays
 
-
+	t_driving_force_ndarray = np.array(t_driving_force)
+	driving_force_ndarray = np.array(driving_force)
+	t_nofit_ndarray = np.array(t_nofit)
+	theta_nofit_ndarray = np.array(theta_nofit)
+	t_fit_ndarray = np.array(t_fit)
+	theta_fit_ndarray = np.array(theta_fit)
 
 	########################################################
 	# Create the theta plot
-	theta_fig = plt.figure('theta') # get a separate figure
-	theta_ax = theta_fig.add_subplot(111) # Get the axes, effectively
+	fig = plt.figure('res_run') # get a separate figure
+	theta_ax = fig.add_subplot(111) # Get the axes, effectively
 
-	theta_title = '$\\theta\left(t\\right)$, $\Omega_{D} = $ %.4f [radians/s]' % omegaD
+	theta_title = '$\\theta\left(t\\right)$, $\Omega_{D} = $ %.4f [radians/s] = %.2f $\Omega_{Res Theory}$' % (omegaD, omegaD/run[0].omega_res_theory) 
 	theta_ax.set_title(theta_title)
 	theta_ax.set_xlabel('$t$ [s]')
 	theta_ax.set_ylabel('$\\theta$ [radians]')
 
-	force_theta_ax = theta_ax.twinx() # Get a new axes for the force
-	force_theta_color = 'darkmagenta'
+	# Get a new axes for the force so we can plot it with a different y scale
+	force_theta_ax = theta_ax.twinx()
+ 	force_theta_color = 'darkmagenta'
 	force_theta_ax.set_ylabel('$F_{Driving}$', color=force_theta_color, rotation=-90)
+	# we known alphaD should be the force y max, so set y axis range now
 	force_yax_multiplier = 1.6 # control the force y axis range
 	force_theta_ax.set_ylim(-force_yax_multiplier*alphaD, force_yax_multiplier*alphaD)
+	for tl in force_theta_ax.get_yticklabels():
+		tl.set_color(force_theta_color)
 	
-	theta_ax.plot(t_nofit, theta_nofit, ls='dotted', label='Unfitted $\\theta\left(t\\right)$', c='blue')
-	theta_ax.plot(t_fit, theta_fit, ls='dashed', label='Fitted $\\theta\left(t\\right)$', c='blue')
-	force_theta_ax.plot(t_driving_force, driving_force, ls='dotted', label='$F_{Driving}$', c=force_theta_color)
+	# Create the three base plots
+	theta_ax.plot(t_nofit_ndarray, theta_nofit_ndarray, ls='dotted', label='Unfitted $\\theta\left(t\\right)$', c='blue')
+	theta_ax.plot(t_fit_ndarray, theta_fit_ndarray, ls='solid', label='Fitted $\\theta\left(t\\right)$', c='blue')
+	force_theta_ax.plot(t_driving_force_ndarray, driving_force_ndarray, ls='dotted', label='$F_{Driving}$', c=force_theta_color)
 
+	# Now that they have been plotted, clean up the theta y range
 	x1_theta,x2_theta,y1_theta,y2_theta = theta_ax.axis()
 	theta_yax_multiplier = 1.5 # control the theta y axis range
 	theta_ax.set_ylim(-theta_yax_multiplier*max(y1_theta,y2_theta), theta_yax_multiplier*max(y1_theta,y2_theta))
 
-
-	for tl in force_theta_ax.get_yticklabels():
-		tl.set_color(force_theta_color)
-
-	# Do the fitting
+	# Fitting 
 	########################################################
 	# Define a sinusoidal fit function
-	
 	def sine_fit_function(theta, thetaP_fit, omegaD_fit, phiP_fit):
-		# force thetaP_fit > 0, May not be legal TODO
-		#thetaP_fit = abs(thetaP_fit)
 		return thetaP_fit*np.sin(omegaD_fit*theta - phiP_fit)
 	# end def sine_fit_function
 
+	# Set fit color
 	fit_color = 'green'
-
-	# Put an arrow on the graph where the fit range begins
-	# theta_ax.annotate('Fit Range Min', xy=(fit_range_min, -theta_yax_multiplier*max(y1_theta,y2_theta)), xytext=(fit_range_min, -(theta_yax_multiplier+0.3)*max(y1_theta,y2_theta)), arrowprops=dict(facecolor=fit_color, shrink=0.05),)
 
 	# Add vertical line at where the fit range begins
 	theta_ax.axvline(x=fit_range_min, ls = 'solid', label='Fit Begins', c='gray')
@@ -418,46 +422,50 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	# compute particular solution parameters from theory
 	thetaP_theory = alphaD/np.sqrt(np.square(np.square(omega0) - np.square(omegaD)) + 4*np.square(gamma)*np.square(omegaD) ) 
 	phiP_theory = np.arctan((2*gamma*omegaD)/(np.square(omega0) - np.square(omegaD)))
-	# omegaD is just omegaD...
+	# omegaP theory is just omegaD...
 
-	# set them as the initial fit parameters
+	# set them as the initial/guess fit parameters
 	m_p0 = [thetaP_theory, omegaD, phiP_theory]
 
-	# actually perform the fit, op_par = optimal parameters
+	# actually perform the fit
+	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
 	op_par, covar_matrix = curve_fit(sine_fit_function, t_fit, theta_fit, p0=m_p0)
 
+	# get the number of data points, to set the marker spacing by doing integer division // on it
+	num_points = len(t_fit)
+
 	# plot the fit
-	t_fit_ndarray = np.array(t_fit)
-	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, op_par[0], op_par[1], op_par[2]), ls='solid', label='Fit', c=fit_color)
+	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, *op_par), ls='None', markevery=num_points//70, marker='s', markersize=7, label='Fit', c=fit_color)
+
 	# plot the theory particular/steady state solution
-	#theta_ax.plot(t_fit, sine_fit_function(t_fit, p0[0], p0[1], p0[2]), ls='solid', label='$\\theta\left(t\\right)_{Particular}$', c='maroon')
+	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, *m_p0), ls='None', markevery=num_points//70, marker='d', markersize=6, label='$\\theta\left(t\\right)_{Particular}$', c='maroon')
 
-
-	# write out the fit parameters
+	# Write out the fit parameters
 	fit_text = '$\\theta_{P Theory} =$ %.5f, $\\theta_{P Fit} =$  %.5f' % (m_p0[0], op_par[0])
 	fit_text = fit_text+'\n$\\Omega_{D} =$ %.5f, $\\Omega_{D Fit} =$ %.5f' % (m_p0[1], op_par[1])
 	fit_text = fit_text+'\n$\phi_{Theory} =$ %.5f, $\phi_{Fit} =$ %.5f' % (m_p0[2], op_par[2])
 	plt.figtext(0.61, 0.13, fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
 
 	# draw final legend, set the x range, and print it out!
-	theta_ax.legend(bbox_to_anchor=(0.025, 0.92, 0.925, 0.10), loc=3, ncol=4, mode="expand", borderaxespad=0.0)
+	theta_ax.legend(bbox_to_anchor=(0.025, 0.92, 0.925, 0.10), loc=3, ncol=5, mode="expand", borderaxespad=0.0, fontsize='small')
 
 	# full view
 	theta_ax.set_xlim((0.0, run[0].tmax))
+	fname = 'res_run_omegaD_over_omega_res_theory_%.2f.pdf' % (omegaD/run[0].omega_res_theory)
+	fig.savefig(m_path+'/'+fname)
 
-	fname = 'res_run_omegaD_%.4f.pdf' % omegaD
-	theta_fig.savefig(m_path+'/'+fname)
-
-	# croped
+	# fit region only
 	theta_ax.set_xlim((0.9*fit_range_min, 1.05*fit_range_max))
+	fname = 'res_run_omegaD_over_omega_res_theory_%.2f_fit_region.pdf' % (omegaD/run[0].omega_res_theory)
+	fig.savefig(m_path+'/'+fname)
 
-	fname = 'res_run_omegaD_%.4f_fit_region.pdf' % omegaD
-	theta_fig.savefig(m_path+'/'+fname)
-
-	# Clear the figure
-	theta_fig.clf()
+	# Clear the figure for the next res_sweep
+	fig.clf()
 
 	print 'Resonance Run Completed!'
+
+	# Return the list of fit parameters
+	return op_par
 
 # end def for res_sweep
 
