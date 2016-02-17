@@ -323,11 +323,7 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 
 ########################################################
 # Define a function to run and fit one omegaD for resonance sweeping
-def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case):
-
-	# TODO move to res_sweep eventually
-	m_path = output_path+'/res_sweep'
-	make_path(m_path)
+def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case, m_path):
 
 	# Perform a run 
 	run = run_sim(alphaD, omegaD, theta0, run_end_periodsD, sim_method, lin_case)
@@ -467,16 +463,125 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	# Return the list of fit parameters
 	return op_par
 
+# end def for res_run
+
+########################################################
+# Define a function to sweep for resonances
+def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case):
+	
+	# make paths
+	m_path = output_path+'/res_sweep'
+	make_path(m_path)
+
+	m_path2 = m_path+'/res_runs'
+	make_path(m_path2)
+
+
+	# Compute omega_res_theory locally to setup omegaD list
+	m_omega_res_theory = np.sqrt( omega0 - 2*np.square(gamma) )
+
+	# make num runs odd so we always hit omega res theory in the middle
+	if(num_runs % 2 == 0): num_runs = num_runs + 1
+
+	# make a ndarray of omegaD's to sweep over, our spectrum
+	m_omegaD_min = (1.0-omegaD_percent_range)*m_omega_res_theory
+	m_omegaD_max = (1.0+omegaD_percent_range)*m_omega_res_theory
+	omegaD_spectrum_ndarray = np.linspace(m_omegaD_min, m_omegaD_max, num=num_runs)
+
+	# Create empty list to store lists of fit parameters
+	all_op_pars = []
+
+	# Create empty list to store fit amplitudes, op_par[0]
+	thetaP_fits = []
+
+	# Create empty list to store fit phases, op_par[2]
+	phi_fits = []
+
+	# run res_run for each omegaD
+	for i in range(omegaD_spectrum_ndarray.size):
+		all_op_pars.append(res_run(omegaD_spectrum_ndarray[i], alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case, m_path2))
+		thetaP_fits.append(all_op_pars[i][0])
+		phi_fits.append(all_op_pars[i][2])
+
+	# Note you must manually view each res_run output plot to make sure the fit isn't bad
+	# TODO could implement auto Rsquared check of some kind... very end
+
+	# Create ndarrays of the amplitudes and phases we can plot nicely, no bugs!
+	thetaP_fits_ndarray = np.array(thetaP_fits)
+	phi_fits_ndarray = np.array(phi_fits)
+
+	########################################################
+	# Make amplitude vs omegaD plot
+	thetaP_fig = plt.figure('res_sweep_thetaP') # get a separate figure
+	thetaP_ax = thetaP_fig.add_subplot(111) # Get the axes, effectively
+
+	thetaP_ax.set_title('$\\theta_{P}$ vs $\Omega_{D}$')
+	thetaP_ax.set_xlabel('$\Omega_{D}$ [radians/s]')
+	thetaP_ax.set_ylabel('$\\theta_{P}$ [radians]')
+
+	# Create the base plot
+	thetaP_ax.plot(omegaD_spectrum_ndarray, thetaP_fits_ndarray, ls='None' , marker='o', markersize=8, label='$\\theta_{P Fit}$', c='blue')
+
+	# Add a vertical line at omega res theory
+	thetaP_ax.axvline(x=m_omega_res_theory, ls = 'dashed', label='$\Omega_{Resonance Theory}$', c='gray')
+
+
+	'''
+	# Fitting 
+	########################################################
+	# Define a TODO fit function
+	def sine_fit_function(theta, thetaP_fit, omegaD_fit, phiP_fit):
+		return thetaP_fit*np.sin(omegaD_fit*theta - phiP_fit)
+	# end def sine_fit_function
+
+	# Set fit color
+	fit_color = 'green'
+
+	# set them as the initial/guess fit parameters
+	m_p0 = [thetaP_theory, omegaD, phiP_theory]
+
+	# actually perform the fit
+	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
+	op_par, covar_matrix = curve_fit(sine_fit_function, t_fit, theta_fit, p0=m_p0)
+
+	# plot the fit
+	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, *op_par), ls='None', markevery=num_points//70, marker='s', markersize=7, label='Fit', c=fit_color)
+
+	# Write out the fit parameters
+	fit_text = '$\\theta_{P Theory} =$ %.5f, $\\theta_{P Fit} =$  %.5f' % (m_p0[0], op_par[0])
+	fit_text = fit_text+'\n$\\Omega_{D} =$ %.5f, $\\Omega_{D Fit} =$ %.5f' % (m_p0[1], op_par[1])
+	fit_text = fit_text+'\n$\phi_{Theory} =$ %.5f, $\phi_{Fit} =$ %.5f' % (m_p0[2], op_par[2])
+	plt.figtext(0.61, 0.13, fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
+	'''
+
+	# draw final legend
+	# thetaP_ax.legend(bbox_to_anchor=(0.025, 0.92, 0.925, 0.10), loc=3, ncol=5, mode="expand", borderaxespad=0.0, fontsize='small')
+	thetaP_ax.legend()
+
+	# set the x range
+	#thetaP_ax.set_xlim((0.0, run[0].tmax))
+
+	# print it out
+	thetaP_fig.savefig(m_path+'/res_sweep_thetaP.pdf')
+
+	# Clear the figure to be nice... 
+	thetaP_fig.clf()
+
+
+
+	# TODO phase plot
+
+
+	print 'Resonance Sweep Completed!!!!'
+
 # end def for res_sweep
-
-
 
 ########################################################
 ########################################################
 ########################################################
 # Finally, actually run things!
 
-output_path = './output' # Set output path, hard coded...
+output_path = './output'
 
 # vary theta0
 '''
@@ -500,12 +605,26 @@ ec_run2 = run_sim(possible_alphaD[0], 1.0, np.pi, 25, 'euler_cromer','nonlinear'
 compare_runs(ec_run, 'Linear', ec_run2, 'Nonlinear', 'Vary Linearity', 'vary_linearity')
 '''
 
-
+# raw res_runs
+'''
+# All of these need to be given a m_path if run again...
 # res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case)
-
 res_run(0.8*np.sqrt( omega0 - 2*np.square(gamma) ), possible_alphaD[0], 0.0, 6, 10, 'euler_cromer', 'linear')
 res_run(1.1*np.sqrt( omega0 - 2*np.square(gamma) ), possible_alphaD[0], 0.0, 6, 10, 'euler_cromer', 'linear')
 res_run(1.5*np.sqrt( omega0 - 2*np.square(gamma) ), possible_alphaD[0], 0.0, 6, 10, 'euler_cromer', 'linear')
+'''
+
+# res_sweep
+# res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case)
+res_sweep(11, 0.6, possible_alphaD[0], 0.0, 6, 10, 'euler_cromer', 'linear')
+
+
+
+
+
+
+
+
 
 
 ########################################################
