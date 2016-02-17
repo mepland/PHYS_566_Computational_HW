@@ -25,7 +25,9 @@ max_Dtheta = np.pi/100.0 # TODO Maximum radial distance allowed between time ste
 # compute omega0
 omega0 = g/l
 
-# TODO list of 10 good driving frequencies for res plot
+# compute resonant omega from theory 
+omega_res_theory = np.sqrt( omega0 - 2*np.square(gamma) )
+
 
 ########################################################
 # Print out starting values
@@ -34,11 +36,13 @@ print '\nFixed Parameters are:'
 print '---------------------------------------------'
 print 'g = %.5f [m/s^2]' % g
 print 'l = %.5f [m]' % l
-print 'omega0 = %.5f [radians/s]' % omega0
 print 'Dampening Constant gamma = %.5f [s^-1]' % gamma
 
 print '\nPossible Driving Amplitudes alphaD [radians/s^2]'
 print possible_alphaD
+
+print '\nomega0 = %.2f [radians/s]' % omega0
+print 'omega res theory = %.5f [radians/s]' % omega_res_theory
 
 print '\nSimulation Time Step = %.5f [s]' % Dt
 print 'Simulation Max Step Size = %.3f [radians]' % max_Dtheta
@@ -82,9 +86,6 @@ class time_step:
 	self.sim_method = ''
 	self.lin_case = ''
 
-	self.omega_res_theory = -99.0
-
-
     # Define a function to set theta while forcing -pi < theta <= pi 
     # WARNING do not use object.theta = X to set theta!!!
     # I may clean this up using python properties, at the very end... TODO 
@@ -122,8 +123,6 @@ def run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case):
 	run[0].tmax = periodsD*((2.0*np.pi)/omegaD)
 	run[0].sim_method = sim_method
 	run[0].lin_case = lin_case
-
-	run[0].omega_res_theory = np.sqrt( omega0 - 2*np.square(gamma) )
 	
 	# Set the initial values
 	run[0].set_theta(theta0)
@@ -160,7 +159,7 @@ def run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case):
 			print 'On time step %d the pendulum moved to far, Dtheta = %.3f\nProgram Exiting' % (n+1, Dtheta )
 			sys.exit()
 
-		n = n+1 # increment time step
+		n += 1 # increment time step
 	# end while loop
 
 	print 'Run Completed!'
@@ -175,6 +174,7 @@ def run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case):
 # Runs should have the same driving force and run time
 # Should be used to compare Euler-Cromer to Runge-Kutta and linear to nonlinear, or different starting angles
 def compare_runs(run1, run1_name, run2, run2_name, title, fname):
+	print 'Beginning Compare Runs:'
 	if( run1[0].alphaD != run2[0].alphaD and run1[0].omegaD != run2[0].omegaD and run1[0].tmax != run2[0].tmax ):
 		print 'SERIOUS ERROR: Comparing incompatible runs!!!!'
 
@@ -318,7 +318,7 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 
 
 
-	print 'compare_runs completed'
+	print 'Compare Runs completed'
 # end def for compare_runs
 
 ########################################################
@@ -377,7 +377,7 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	fig = plt.figure('res_run') # get a separate figure
 	theta_ax = fig.add_subplot(111) # Get the axes, effectively
 
-	theta_title = '$\\theta\left(t\\right)$, $\Omega_{D} = $ %.4f [radians/s] = %.2f $\Omega_{Res Theory}$' % (omegaD, omegaD/run[0].omega_res_theory) 
+	theta_title = '$\\theta\left(t\\right)$, $\Omega_{D} = $ %.4f [radians/s] = %.2f $\Omega_{Res Theory}$' % (omegaD, omegaD/omega_res_theory) 
 	theta_ax.set_title(theta_title)
 	theta_ax.set_xlabel('$t$ [s]')
 	theta_ax.set_ylabel('$\\theta$ [radians]')
@@ -438,8 +438,8 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 
 	# Write out the fit parameters
 	fit_text = '$\\theta_{P Theory} =$ %.5f, $\\theta_{P Fit} =$  %.5f' % (m_p0[0], op_par[0])
-	fit_text = fit_text+'\n$\\Omega_{D} =$ %.5f, $\\Omega_{D Fit} =$ %.5f' % (m_p0[1], op_par[1])
-	fit_text = fit_text+'\n$\phi_{Theory} =$ %.5f, $\phi_{Fit} =$ %.5f' % (m_p0[2], op_par[2])
+	fit_text += '\n$\\Omega_{D} =$ %.5f, $\\Omega_{D Fit} =$ %.5f' % (m_p0[1], op_par[1])
+	fit_text += '\n$\phi_{Theory} =$ %.5f, $\phi_{Fit} =$ %.5f' % (m_p0[2], op_par[2])
 	plt.figtext(0.61, 0.13, fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
 
 	# draw final legend, set the x range, and print it out!
@@ -447,12 +447,12 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 
 	# full view
 	theta_ax.set_xlim((0.0, run[0].tmax))
-	fname = 'res_run_omegaD_over_omega_res_theory_%.2f.pdf' % (omegaD/run[0].omega_res_theory)
+	fname = 'res_run_omegaD_over_omega_res_theory_%.2f.pdf' % (omegaD/omega_res_theory)
 	fig.savefig(m_path+'/'+fname)
 
 	# fit region only
 	theta_ax.set_xlim((0.9*fit_range_min, 1.05*fit_range_max))
-	fname = 'res_run_omegaD_over_omega_res_theory_%.2f_fit_region.pdf' % (omegaD/run[0].omega_res_theory)
+	fname = 'res_run_omegaD_over_omega_res_theory_%.2f_fit_region.pdf' % (omegaD/omega_res_theory)
 	fig.savefig(m_path+'/'+fname)
 
 	# Clear the figure for the next res_sweep
@@ -468,7 +468,8 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 ########################################################
 # Define a function to sweep for resonances
 def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case):
-	
+	print 'Beginning Resonance Sweep:'
+
 	# make paths
 	m_path = output_path+'/res_sweep'
 	make_path(m_path)
@@ -476,16 +477,12 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 	m_path2 = m_path+'/res_runs'
 	make_path(m_path2)
 
-
-	# Compute omega_res_theory locally to setup omegaD list
-	m_omega_res_theory = np.sqrt( omega0 - 2*np.square(gamma) )
-
 	# make num runs odd so we always hit omega res theory in the middle
 	if(num_runs % 2 == 0): num_runs = num_runs + 1
 
 	# make a ndarray of omegaD's to sweep over, our spectrum
-	m_omegaD_min = (1.0-omegaD_percent_range)*m_omega_res_theory
-	m_omegaD_max = (1.0+omegaD_percent_range)*m_omega_res_theory
+	m_omegaD_min = (1.0-omegaD_percent_range)*omega_res_theory
+	m_omegaD_max = (1.0+omegaD_percent_range)*omega_res_theory
 	omegaD_spectrum_ndarray = np.linspace(m_omegaD_min, m_omegaD_max, num=num_runs)
 
 	# Create empty list to store lists of fit parameters
@@ -510,67 +507,81 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 	thetaP_fits_ndarray = np.array(thetaP_fits)
 	phi_fits_ndarray = np.array(phi_fits)
 
+
 	########################################################
+	# Define a plotting function for our spectrum sweeps 
+	def spectrum_plot_function(y_variable_ndarray, y_variable_name, fname):
+
+		fig = plt.figure('res_sweep_fig') # get a separate figure
+		ax = fig.add_subplot(111) # Get the axes, effectively
+
+		ax.set_title(y_variable_name+' vs $\Omega_{D}$')
+		ax.set_xlabel('$\Omega_{D}$ [radians/s]')
+		ax.set_ylabel(y_variable_name+' [radians]')
+
+		# Create the base plot
+		ax.scatter(omegaD_spectrum_ndarray, y_variable_ndarray, marker='o', label=y_variable_name, c='blue')
+
+		# Add a vertical line at omega res theory
+		ax.axvline(x=omega_res_theory, ls = 'dashed', label='$\Omega_{Resonance Theory}$', c='gray')
+
+
+		'''
+		# Fitting 
+		########################################################
+		# Define a TODO fit function
+		def sine_fit_function(theta, thetaP_fit, omegaD_fit, phiP_fit):
+			return thetaP_fit*np.sin(omegaD_fit*theta - phiP_fit)
+		# end def sine_fit_function
+
+		# Set fit color
+		fit_color = 'green'
+	
+		# set them as the initial/guess fit parameters
+		m_p0 = [thetaP_theory, omegaD, phiP_theory]
+
+		# actually perform the fit
+		# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
+		op_par, covar_matrix = curve_fit(sine_fit_function, t_fit, theta_fit, p0=m_p0)
+
+		# plot the fit
+		ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, *op_par), ls='None', markevery=num_points//70, marker='s', markersize=7, label='Fit', c=fit_color)
+
+		# Write out the fit parameters
+		fit_text = '$\\theta_{P Theory} =$ %.5f, $\\theta_{P Fit} =$  %.5f' % (m_p0[0], op_par[0])
+		plt.figtext(0.61, 0.13, fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
+		'''
+		# Write out the simulation parameters
+		sim_text = '$\\alpha_{D} =$ %.1f [radians/$s^2$], $\\theta_{0} =$  %.1f$^{\circ}$' % (alphaD, theta0*(180.0/np.pi))
+		if( sim_method == 'euler_cromer'): m_sim_method = 'Euler-Cromer'
+		if( sim_method == 'runge_kutta'): m_sim_method = 'Runge-Kutta'
+		if( lin_case == 'linear'): m_lin_case = 'Linear'
+		if( lin_case == 'nonlinear'): m_lin_case = 'Nonlinear'
+		sim_text += '\nSim. Method = %s\nLinearity = %s' % (m_sim_method, m_lin_case)
+		plt.figtext(0.15, 0.13, sim_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
+
+		# draw final legend
+		# ax.legend(bbox_to_anchor=(0.025, 0.92, 0.925, 0.10), loc=3, ncol=5, mode="expand", borderaxespad=0.0, fontsize='small')
+		ax.legend()
+
+		# set the x range
+		#ax.set_xlim((0.0, run[0].tmax))
+
+		# print it out
+		fig.savefig(m_path+'/res_sweep_'+fname+'.pdf')
+
+		# Clear the figure for the next spectrum
+		fig.clf()
+
+		# end def spectrum_plot_function 
+
+	########################################################
+
 	# Make amplitude vs omegaD plot
-	thetaP_fig = plt.figure('res_sweep_thetaP') # get a separate figure
-	thetaP_ax = thetaP_fig.add_subplot(111) # Get the axes, effectively
+	spectrum_plot_function(thetaP_fits_ndarray, '$\\theta_{P Fit}$', 'thetaP')
 
-	thetaP_ax.set_title('$\\theta_{P}$ vs $\Omega_{D}$')
-	thetaP_ax.set_xlabel('$\Omega_{D}$ [radians/s]')
-	thetaP_ax.set_ylabel('$\\theta_{P}$ [radians]')
-
-	# Create the base plot
-	thetaP_ax.plot(omegaD_spectrum_ndarray, thetaP_fits_ndarray, ls='None' , marker='o', markersize=8, label='$\\theta_{P Fit}$', c='blue')
-
-	# Add a vertical line at omega res theory
-	thetaP_ax.axvline(x=m_omega_res_theory, ls = 'dashed', label='$\Omega_{Resonance Theory}$', c='gray')
-
-
-	'''
-	# Fitting 
-	########################################################
-	# Define a TODO fit function
-	def sine_fit_function(theta, thetaP_fit, omegaD_fit, phiP_fit):
-		return thetaP_fit*np.sin(omegaD_fit*theta - phiP_fit)
-	# end def sine_fit_function
-
-	# Set fit color
-	fit_color = 'green'
-
-	# set them as the initial/guess fit parameters
-	m_p0 = [thetaP_theory, omegaD, phiP_theory]
-
-	# actually perform the fit
-	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
-	op_par, covar_matrix = curve_fit(sine_fit_function, t_fit, theta_fit, p0=m_p0)
-
-	# plot the fit
-	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, *op_par), ls='None', markevery=num_points//70, marker='s', markersize=7, label='Fit', c=fit_color)
-
-	# Write out the fit parameters
-	fit_text = '$\\theta_{P Theory} =$ %.5f, $\\theta_{P Fit} =$  %.5f' % (m_p0[0], op_par[0])
-	fit_text = fit_text+'\n$\\Omega_{D} =$ %.5f, $\\Omega_{D Fit} =$ %.5f' % (m_p0[1], op_par[1])
-	fit_text = fit_text+'\n$\phi_{Theory} =$ %.5f, $\phi_{Fit} =$ %.5f' % (m_p0[2], op_par[2])
-	plt.figtext(0.61, 0.13, fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
-	'''
-
-	# draw final legend
-	# thetaP_ax.legend(bbox_to_anchor=(0.025, 0.92, 0.925, 0.10), loc=3, ncol=5, mode="expand", borderaxespad=0.0, fontsize='small')
-	thetaP_ax.legend()
-
-	# set the x range
-	#thetaP_ax.set_xlim((0.0, run[0].tmax))
-
-	# print it out
-	thetaP_fig.savefig(m_path+'/res_sweep_thetaP.pdf')
-
-	# Clear the figure to be nice... 
-	thetaP_fig.clf()
-
-
-
-	# TODO phase plot
-
+	# Make phase vs omegaD plot
+	spectrum_plot_function(phi_fits_ndarray, '$\phi_{Fit}$', 'phi')
 
 	print 'Resonance Sweep Completed!!!!'
 
@@ -616,9 +627,10 @@ res_run(1.5*np.sqrt( omega0 - 2*np.square(gamma) ), possible_alphaD[0], 0.0, 6, 
 
 # res_sweep
 # res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case)
-res_sweep(11, 0.6, possible_alphaD[0], 0.0, 6, 10, 'euler_cromer', 'linear')
 
+# res_sweep(3, 0.6, possible_alphaD[0], 0.0, 12, 16, 'euler_cromer', 'linear')
 
+res_sweep(33, 0.8, possible_alphaD[0], 0.0, 12, 16, 'euler_cromer', 'linear')
 
 
 
