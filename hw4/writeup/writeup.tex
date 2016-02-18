@@ -150,7 +150,7 @@ TODO
 
 \section{Theory}
 \label{sec:theory}
-The equation of motion of a damped, driven pendulum (\ref{eq:diff_eq}) is a TODO second order linear equation. As written all of the constants are positive real numbers. It is helpful to rewrite (\ref{eq:diff_eq}) as (\ref{eq:diff_eq2}) where $\omega_{0}^2 = \frac{g}{l}$ and $F\left(t\right)$ is the external driving force.
+The equation of motion of a damped, driven pendulum (\ref{eq:diff_eq}) for small angles\footnote{Where $\sin\left(\theta\right) \approx \theta + \orderof\left(\theta^2\right)$} is a second order linear equation. As written all of the constants are positive real numbers. It is helpful to rewrite (\ref{eq:diff_eq}) as (\ref{eq:diff_eq2}) where $\omega_{0}^2 = g/l$ and $F\left(t\right)$ is the external driving force.
 
 \begin{equation} \label{eq:diff_eq}
 \frac{d^2 \theta}{d t^2} = -\frac{g}{l}\theta - 2\gamma\frac{d \theta}{d t} + \alpha_{D}\sin\left(\Omega_{D} t\right)
@@ -171,33 +171,67 @@ r_{\pm} = -\gamma \pm \sqrt{\gamma^2 - \omega_{0}^2} \label{eq:r_pm}
 \end{gather}
 
 \begin{equation} \label{eq:homogeneous_soln}
-\theta\left(t\right)_{\text{homogeneous}} =
+\theta\left(t\right)_{\text{Homogeneous}} =
 \begin{cases}
 A e^{r_{+} t} + B e^{r_{-} t} & \text{if } \gamma \neq \omega_{0} \\
 \left(A + B t\right) e^{-\gamma t} & \text{if } \gamma = \omega_{0}
 \end{cases}
 \end{equation}
 
-It is easy to see from (\ref{eq:r_pm}) that $\operatorname{Re}\left(r_{\pm}\right) < 0$ for all $\gamma$ and $\omega_{0}$, therefore the homogeneous solution (\ref{eq:homogeneous_soln}) always decays away to nothing; it is a transient solution. As we are primary interested in the steady state behavior of the pendulum in this assignment, we therefore need only be concerned with the particular solution from here on out.
+It is easy to see from (\ref{eq:r_pm}) that $\operatorname{Re}\left(r_{\pm}\right) < 0$ for all $\gamma$ and $\omega_{0}$, therefore the homogeneous solution (\ref{eq:homogeneous_soln}) always decays away to nothing; it is a transient solution\footnote{The homogeneous solutions importance in this case lies in it's ability to match the initial conditions of the pendulum, regardless of what the driving force is doing.}. As we are primary interested in the steady state behavior of the pendulum in this assignment we therefore need only be concerned with the particular solution from here on out.
 
-We can find a particular solution (\ref{eq:particular_soln}) that works by trial and error. Plugging (\ref{eq:particular_soln}) into (\ref{eq:diff_eq2}) with $F\left(t\right) \neq 0$ results in (\ref{eq:part_work}).
+We can find a particular, or steady state, solution (\ref{eq:particular_soln}) that works by trial and error. Plugging (\ref{eq:particular_soln}) into (\ref{eq:diff_eq2}) with $F\left(t\right) = \alpha_{D} \sin\left(\Omega_{D} t\right)$ results in (\ref{eq:particular_work}).
 
 \begin{equation} \label{eq:particular_soln}
-\theta\left(t\right)_{\text{particular}} = \theta_{p} \sin\left(\Omega_{D} t - \phi\right)
+\theta\left(t\right)_{\text{Particular}} = \theta_{P} \sin\left(\Omega_{D} t - \phi\right)
 \end{equation}
 
-\begin{equation} \label{eq:part_work}
-TODO
+\begin{equation} \label{eq:particular_work}
+\frac{\alpha_{D}}{\theta_{P}} \sin\left(\Omega_{D} t\right) = \left(\omega_{0}^2 - \Omega_{D}^2\right) \sin\left(\Omega_{D} t - \phi\right) + 2 \gamma \Omega_{D} \cos\left(\Omega_{D} t - \phi\right)
 \end{equation}
+
+While (\ref{eq:particular_work}) may look messy, we can extract the steady state amplitude $\theta_{P}\left(\Omega_{D}\right)$ and phase $\phi\left(\Omega_{D}\right)$ by making use of the trigonometric identity (\ref{eq:trig_identity}) with $\alpha = \Omega_{D} t - \phi$ and $\beta = \phi$. Rearranging (\ref{eq:particular_work}) into (\ref{eq:particular_work2}), we can identify (\ref{eq:particular_work3}) term by term.
 
 \begin{equation} \label{eq:trig_identity}
-\sin\left(\alpha + \phi\right) = \sin\left(\alpha\right) \cos\left(\phi\right) + \cos\left(\alpha\right) \sin\left(\phi\right)
+\sin\left(\alpha + \beta\right) = \sin\left(\alpha\right) \cos\left(\beta\right) + \cos\left(\alpha\right) \sin\left(\beta\right)
 \end{equation}
 
+\begin{equation} \label{eq:particular_work2}
+\sin\left(\alpha + \beta\right) = \sin\left(\alpha\right) \bigg(\frac{\theta_{P}}{\alpha_{D}} \left(\omega_{0}^2 - \Omega_{D}^2\right)\bigg) + \cos\left(\alpha\right) \bigg(\frac{2 \gamma \Omega_{D} \theta_{P}}{\alpha_{D}}\bigg)
+\end{equation}
+
+\begin{align}
+\label{eq:particular_work3}
+\cos\left(\phi\right) &= \frac{\theta_{P}}{\alpha_{D}} \left(\omega_{0}^2 - \Omega_{D}^2\right)
+&
+\sin\left(\phi\right) &=  \frac{2 \gamma \Omega_{D} \theta_{P}}{\alpha_{D}}
+\end{align}
+
+Now that $\sin\left(\phi\right)$ and $\cos\left(\phi\right)$ are known, $\theta_{P}\left(\Omega_{D}\right)$ and $\phi\left(\Omega_{D}\right)$ (\ref{eq:thetaP} and \ref{eq:phi}) can be found from the sum of their squares and their ratio, respectively.
+
+\begin{equation} \label{eq:thetaP}
+\theta_{P}\left(\Omega_{D}\right) = \frac{\alpha_{D}}{\sqrt{ \left(\omega_{0}^2 - \Omega_{D}^2\right)^2 + 4 \gamma^2 \Omega_{D}^2 }}
+\end{equation}
+
+\begin{equation} \label{eq:phi}
+\phi\left(\Omega_{D}\right) = \arctan\left(\frac{2 \gamma \Omega_{D}}{\omega_{0}^2 - \Omega_{D}^2}\right)
+\end{equation}
 
 \subsection{Resonance}
 \label{subsec:resonance}
-TODO
+As our pendulum is a driven oscillator we can expect it to exhibit resonant behavior at some driving frequency, $\Omega_{\text{Res}}$. To find $\Omega_{\text{Res}}$ analytically we can employ the usual maximization method\footnote{Of course this result could be a minimum of $\theta_{P}\left(\Omega_{D}\right)$, but in this case it is indeed a maximum as later figures show.} of solving for where the first derivative is zero (\ref{eq:resonance_derivative}).
+
+\begin{equation} \label{eq:resonance_derivative}
+0 = \left.\frac{d \theta_{P}}{d \Omega_{D}}\right|_{\Omega_{D} = \Omega_{\text{Res}}}
+= -\frac{\alpha_{D}}{2} \bigg( \left(\omega_{0}^2 - \Omega_{\text{Res}}^2\right)^2 + 4 \gamma^2 \Omega_{\text{Res}}^2 \bigg)^{-3/2}
+\bigg(- 4 \left(\omega_{0}^2 - \Omega_{\text{Res}}^2\right) \Omega_{\text{Res}} + 8 \gamma^2 \Omega_{\text{Res}} \bigg)
+\end{equation}
+
+\begin{equation} \label{eq:omegaD_resonance}
+\Omega_{\text{Res}} = \sqrt{ \omega_{0}^2 - 2 \gamma^2} 
+\end{equation}
+
+Lastly, note that $\Omega_{\text{Res}}$ of (\ref{eq:omegaD_resonance}) solves (\ref{eq:resonance_derivative}) when $\omega_{0} \neq \gamma$. If $\omega_{0} \approx \gamma$ the $(\cdots)^{-3/2}$ term diverges and we would need to set $\gamma = \omega_{0}$ at the beginning of the problem and redo the derivation. Fortunately for the parameters used in this assignment we have $\omega_{0} = 1.0~s^{-1} \neq \gamma = 0.25~s^{-1}$, so this is not an issue.
 
 \subsection{Euler--Cromer}
 \label{subsec:eulercromer}

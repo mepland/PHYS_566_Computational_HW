@@ -26,7 +26,7 @@ max_Dtheta = np.pi/100.0 # TODO Maximum radial distance allowed between time ste
 omega0 = g/l
 
 # compute resonant omega from theory 
-omega_res_theory = np.sqrt( omega0 - 2*np.square(gamma) )
+omega_res_theory = np.sqrt( np.square(omega0) - 2*np.square(gamma) )
 
 
 ########################################################
@@ -224,6 +224,8 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 	m_path = output_path+'/'+fname
 	make_path(m_path)
 
+	# TODO if time, make these plots functions as well...
+
 	# theta
 	theta_fig = plt.figure('theta') # get a separate figure
 	theta_ax = theta_fig.add_subplot(111) # Get the axes, effectively
@@ -259,7 +261,7 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 
 	omega_ax.set_title(title)
 	omega_ax.set_xlabel('$t$ [s]')
-	omega_ax.set_ylabel('$\\omega$ [radians/s]')
+	omega_ax.set_ylabel('$\\omega$ [radians/$s$]')
 	omega_ax.set_xlim((0.0, run1[0].tmax))
 
 	force_omega_ax = omega_ax.twinx() # Get a new axes for the force
@@ -377,7 +379,7 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	fig = plt.figure('res_run') # get a separate figure
 	theta_ax = fig.add_subplot(111) # Get the axes, effectively
 
-	theta_title = '$\\theta\left(t\\right)$, $\Omega_{D} = $ %.4f [radians/s] = %.2f $\Omega_{Res Theory}$' % (omegaD, omegaD/omega_res_theory) 
+	theta_title = '$\\theta\left(t\\right)$, $\Omega_{D} = $ %.4f [radians/$s$] = %.2f $\Omega_{Res Theory}$' % (omegaD, omegaD/omega_res_theory) 
 	theta_ax.set_title(theta_title)
 	theta_ax.set_xlabel('$t$ [s]')
 	theta_ax.set_ylabel('$\\theta$ [radians]')
@@ -417,7 +419,7 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 
 	# compute particular solution parameters from theory
 	thetaP_theory = alphaD/np.sqrt(np.square(np.square(omega0) - np.square(omegaD)) + 4*np.square(gamma)*np.square(omegaD) ) 
-	phiP_theory = np.arctan((2*gamma*omegaD)/(np.square(omega0) - np.square(omegaD)))
+	phiP_theory = np.arctan2( (2*gamma*omegaD), (np.square(omega0) - np.square(omegaD)) )
 	# omegaP theory is just omegaD...
 
 	# set them as the initial/guess fit parameters
@@ -433,7 +435,7 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	# plot the fit
 	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, *op_par), ls='None', markevery=num_points//70, marker='s', markersize=7, label='Fit', c=fit_color)
 
-	# plot the theory particular/steady state solution
+	# plot the theory particular / steady state solution
 	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, *m_p0), ls='None', markevery=num_points//70, marker='d', markersize=6, label='$\\theta\left(t\\right)_{Particular}$', c='maroon')
 
 	# Write out the fit parameters
@@ -516,7 +518,7 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 		ax = fig.add_subplot(111) # Get the axes, effectively
 
 		ax.set_title(y_variable_name+' vs $\Omega_{D}$')
-		ax.set_xlabel('$\Omega_{D}$ [radians/s]')
+		ax.set_xlabel('$\Omega_{D}$ [radians/$s$]')
 		ax.set_ylabel(y_variable_name+' [radians]')
 
 		# Create the base plot
@@ -525,6 +527,9 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 		# Add a vertical line at omega res theory
 		ax.axvline(x=omega_res_theory, ls = 'dashed', label='$\Omega_{Resonance Theory}$', c='gray')
 
+		# Adjust axes
+		x1,x2,y1,y2 = ax.axis()
+    		ax.set_ylim((0.0, 1.2*y2))
 
 		'''
 		# Fitting 
@@ -552,20 +557,19 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 		plt.figtext(0.61, 0.13, fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
 		'''
 		# Write out the simulation parameters
-		sim_text = '$\\alpha_{D} =$ %.1f [radians/$s^2$], $\\theta_{0} =$  %.1f$^{\circ}$' % (alphaD, theta0*(180.0/np.pi))
+		sim_text = '$\\alpha_{D} =$ %.1f [radians/$s^2$], $\\theta_{0} =$ %.1f$^{\circ}$' % (alphaD, theta0*(180.0/np.pi))
 		if( sim_method == 'euler_cromer'): m_sim_method = 'Euler-Cromer'
 		if( sim_method == 'runge_kutta'): m_sim_method = 'Runge-Kutta'
 		if( lin_case == 'linear'): m_lin_case = 'Linear'
 		if( lin_case == 'nonlinear'): m_lin_case = 'Nonlinear'
 		sim_text += '\nSim. Method = %s\nLinearity = %s' % (m_sim_method, m_lin_case)
-		plt.figtext(0.15, 0.13, sim_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
+		if(fname == 'thetaP'): sim_x_loc = 0.145
+		if(fname == 'phi'): sim_x_loc = 0.65
+		plt.figtext(sim_x_loc, 0.13, sim_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
 
 		# draw final legend
 		# ax.legend(bbox_to_anchor=(0.025, 0.92, 0.925, 0.10), loc=3, ncol=5, mode="expand", borderaxespad=0.0, fontsize='small')
 		ax.legend()
-
-		# set the x range
-		#ax.set_xlim((0.0, run[0].tmax))
 
 		# print it out
 		fig.savefig(m_path+'/res_sweep_'+fname+'.pdf')
@@ -628,9 +632,9 @@ res_run(1.5*np.sqrt( omega0 - 2*np.square(gamma) ), possible_alphaD[0], 0.0, 6, 
 # res_sweep
 # res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case)
 
-# res_sweep(3, 0.6, possible_alphaD[0], 0.0, 12, 16, 'euler_cromer', 'linear')
+#res_sweep(3, 0.6, possible_alphaD[0], 0.0, 12, 16, 'euler_cromer', 'linear')
 
-res_sweep(33, 0.8, possible_alphaD[0], 0.0, 12, 16, 'euler_cromer', 'linear')
+res_sweep(80, 0.95, possible_alphaD[0], 0.0, 12, 16, 'euler_cromer', 'linear')
 
 
 
