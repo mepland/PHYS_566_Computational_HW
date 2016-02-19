@@ -38,14 +38,14 @@ print 'g = %.5f [m/s^2]' % g
 print 'l = %.5f [m]' % l
 print 'Dampening Constant gamma = %.5f [s^-1]' % gamma
 
-print '\nPossible Driving Amplitudes alphaD [radians/s^2]'
+print '\nPossible Driving Amplitudes alphaD [rad/s^2]'
 print possible_alphaD
 
-print '\nomega0 = %.2f [radians/s]' % omega0
-print 'omega res theory = %.5f [radians/s]' % omega_res_theory
+print '\nomega0 = %.2f [rad/s]' % omega0
+print 'omega res theory = %.5f [rad/s]' % omega_res_theory
 
 print '\nSimulation Time Step = %.5f [s]' % Dt
-print 'Simulation Max Step Size = %.3f [radians]' % max_Dtheta
+print 'Simulation Max Step Size = %.3f [rad]' % max_Dtheta
 print '---------------------------------------------'
 print '---------------------------------------------\n'
 
@@ -217,18 +217,18 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 
 	theta_ax.set_title(title)
 	theta_ax.set_xlabel('$t$ [s]')
-	theta_ax.set_ylabel('$\\theta\left(t\\right)$ [radians]')
+	theta_ax.set_ylabel('$\\theta\left(t\\right)$ [rad]')
 
 	theta_ax.set_xlim((0.0, run1[0].tmax))
 
 	force_theta_ax = theta_ax.twinx() # Get a new axes for the force
 	force_theta_color = 'darkmagenta'
-	force_theta_ax.set_ylabel('$F_{Driving}/\\alpha_{D}$', color=force_theta_color, rotation=-90)
+	force_theta_ax.set_ylabel('$F_{\mathrm{Driving}}/\\alpha_{D}$', color=force_theta_color, rotation=-90)
 	force_theta_ax.set_ylim(-1.5, 1.5)
 
 	theta_ax.plot(t_ndarray, run1_theta, ls='solid', label=run1_name, c='blue')
 	theta_ax.plot(t_ndarray, run2_theta, ls='solid', label=run2_name, c='green')
-	force_theta_ax.plot(t_ndarray, driving_force/run1[0].alphaD, ls='dotted', label='$F_{Driving}/\\alpha_{D}$', c=force_theta_color)
+	force_theta_ax.plot(t_ndarray, driving_force/run1[0].alphaD, ls='dotted', label='$F_{\mathrm{Driving}}/\\alpha_{D}$', c=force_theta_color)
 
 	x1_theta,x2_theta,y1_theta,y2_theta = theta_ax.axis()
 	theta_ax.set_ylim(-1.2*max(y1_theta,y2_theta), 1.2*max(y1_theta,y2_theta))
@@ -238,7 +238,7 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 	for tl in force_theta_ax.get_yticklabels():
 		tl.set_color(force_theta_color)
 
-	theta_fig.savefig(m_path+'/'+fname+'_theta.pdf')
+	theta_fig.savefig(m_path+'/'+'theta_'+fname+'.pdf')
 
 	# omega
 	omega_fig = plt.figure('omega') # get a separate figure
@@ -246,17 +246,17 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 
 	omega_ax.set_title(title)
 	omega_ax.set_xlabel('$t$ [s]')
-	omega_ax.set_ylabel('$\\omega\left(t\\right)$ [radians/$s$]')
+	omega_ax.set_ylabel('$\\omega\left(t\\right)$ [rad/$s$]')
 	omega_ax.set_xlim((0.0, run1[0].tmax))
 
 	force_omega_ax = omega_ax.twinx() # Get a new axes for the force
 	force_omega_color = 'darkmagenta'
-	force_omega_ax.set_ylabel('$F_{Driving}/\\alpha_{D}$', color=force_omega_color, rotation=-90)
+	force_omega_ax.set_ylabel('$F_{\mathrm{Driving}}/\\alpha_{D}$', color=force_omega_color, rotation=-90)
 	force_omega_ax.set_ylim(-1.5, 1.5)
 
 	omega_ax.plot(t_ndarray, run1_omega, ls='solid', label=run1_name, c='blue')
 	omega_ax.plot(t_ndarray, run2_omega, ls='solid', label=run2_name, c='green')
-	force_omega_ax.plot(t_ndarray, driving_force/run1[0].alphaD, ls='dotted', label='$F_{Driving}/\\alpha_{D}$', c=force_omega_color)
+	force_omega_ax.plot(t_ndarray, driving_force/run1[0].alphaD, ls='dotted', label='$F_{\mathrm{Driving}}/\\alpha_{D}$', c=force_omega_color)
 
 	x1_omega,x2_omega,y1_omega,y2_omega = omega_ax.axis()
 	omega_ax.set_ylim(-1.2*max(y1_omega,y2_omega), 1.2*max(y1_omega,y2_omega))
@@ -266,7 +266,7 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 	for tl in force_omega_ax.get_yticklabels():
 		tl.set_color(force_omega_color)
 
-	omega_fig.savefig(m_path+'/'+fname+'_omega.pdf')
+	omega_fig.savefig(m_path+'/'+'omega_'+fname+'.pdf')
 
 	print 'Compare Runs completed'
 # end def for compare_runs
@@ -333,7 +333,7 @@ def energy_run(run_name, omegaD, alphaD, theta0, run_end_periodsD, sim_method, l
 	if( lin_case == 'linear'): m_lin_case = 'Linear'
 	if( lin_case == 'nonlinear'): m_lin_case = 'Nonlinear'
 	sim_text += '\nSim. Method = %s\nLinearity = %s' % (m_sim_method, m_lin_case)
-	sim_text += '\n$\\alpha_{D} =$ %.1f [radians/$s^2$], $\Omega_{D} =$ %.5f [radians/$s$]' % (alphaD, omegaD)
+	sim_text += '\n$\\alpha_{D} =$ %.1f [rad/$s^2$], $\Omega_{D} =$ %.5f [rad/$s$]' % (alphaD, omegaD)
 	plt.figtext(0.141, 0.79, sim_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
 	
 	fig.savefig(m_path+'/energy_'+run_name+'.pdf')
@@ -368,6 +368,16 @@ def phi_fit_function(omegaD_x, omega0_fit, gamma_fit):
 	return np.arctan2( (2*gamma_fit*omegaD_x), (np.square(omega0_fit) - np.square(omegaD_x)) )
 # end def thetaP_fit_function
 
+########################################################
+# Define the gaussian fit function
+def gauss_fit_function(x_data, mean, std_dev, amplitude, offset):
+	# Note that WITHOUT OFFSET, FWHM = 2.0*np.sqrt(2.0*np.log(2.0))*std_dev
+	# For reference see: http://mathworld.wolfram.com/GaussianFunction.html
+	# With offset we need to redo the algebra, resulting in:
+	# FWHM = 2.0*std_dev*np.sqrt(-2.0*np.log((1-(offset/amplitude))/2.0))
+	# Note how it correctly reduces to the simple form when offset = 0
+	return offset + amplitude*np.exp(-np.square(x_data - mean)/(2.0*np.square(std_dev))) 
+# end def gaussian_fit_function
 
 ########################################################
 ########################################################
@@ -436,15 +446,15 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	fig = plt.figure('res_run') # get a separate figure
 	theta_ax = fig.add_subplot(111) # Get the axes, effectively
 
-	theta_title = '$\\theta\left(t\\right)$, $\Omega_{D} = $ %.4f [radians/$s$] = %.2f $\Omega_{Res Theory}$' % (omegaD, omegaD/omega_res_theory) 
+	theta_title = '$\\theta\left(t\\right)$, $\Omega_{D} = $ %.4f [rad/$s$] = %.2f $\Omega_{\mathrm{Res. Theory}}$' % (omegaD, omegaD/omega_res_theory) 
 	theta_ax.set_title(theta_title)
 	theta_ax.set_xlabel('$t$ [s]')
-	theta_ax.set_ylabel('$\\theta$ [radians]')
+	theta_ax.set_ylabel('$\\theta$ [rad]')
 
 	# Get a new axes for the force so we can plot it with a different y scale
 	force_theta_ax = theta_ax.twinx()
  	force_theta_color = 'darkmagenta'
-	force_theta_ax.set_ylabel('$F_{Driving}/\\alpha_{D}$', color=force_theta_color, rotation=-90)
+	force_theta_ax.set_ylabel('$F_{\mathrm{Driving}}/\\alpha_{D}$', color=force_theta_color, rotation=-90)
 	# we known driving_force/alphaD = 1 should be the force y max, so set y axis range now
 	force_theta_ax.set_ylim(-1.5, 1.5)
 	for tl in force_theta_ax.get_yticklabels():
@@ -453,7 +463,7 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	# Create the three base plots
 	theta_ax.plot(t_nofit_ndarray, theta_nofit_ndarray, ls='dashed', label='Unfitted $\\theta\left(t\\right)$', c='blue')
 	theta_ax.plot(t_fit_ndarray, theta_fit_ndarray, ls='solid', label='Fitted $\\theta\left(t\\right)$', c='blue')
-	force_theta_ax.plot(t_driving_force_ndarray, driving_force_ndarray/alphaD, ls='dotted', label='$F_{Driving}/\\alpha_{D}$', c=force_theta_color)
+	force_theta_ax.plot(t_driving_force_ndarray, driving_force_ndarray/alphaD, ls='dotted', label='$F_{\mathrm{Driving}}/\\alpha_{D}$', c=force_theta_color)
 
 	# Now that they have been plotted, clean up the theta y range
 	x1_theta,x2_theta,y1_theta,y2_theta = theta_ax.axis()
@@ -490,14 +500,13 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, *op_par), ls='None', markevery=num_points//70, marker='s', markersize=7, label='Fit', c=fit_color)
 
 	# plot the theory particular / steady state solution
-	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, *m_p0), ls='None', markevery=num_points//70, marker='d', markersize=6, label='$\\theta\left(t\\right)_{Particular}$', c='maroon')
+	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, *m_p0), ls='None', markevery=num_points//70, marker='d', markersize=6, label='$\\theta\left(t\\right)_{\mathrm{Particular}}$', c='maroon')
 
 	# Write out the fit parameters
-	fit_text = '$\\theta_{P Theory} =$ %.5f, $\\theta_{P Fit} =$  %.5f' % (m_p0[0], op_par[0])
-	fit_text += '\n$\\Omega_{D} =$ %.5f, $\\Omega_{D Fit} =$ %.5f' % (m_p0[1], op_par[1])
-	fit_text += '\n$\phi_{Theory} =$ %.5f, $\phi_{Fit} =$ %.5f' % (m_p0[2], op_par[2])
-#	plt.figtext(0.61, 0.13, fit_text, backgroundcolor='white', alpha=1.0, size='x-small' )
-	plt.figtext(0.61, 0.13, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), backgroundcolor='white', alpha=1.0, size='x-small' )
+	fit_text = '$\\theta_{P\,\mathrm{Theory}} =$ %.5f [rad], $\\theta_{P\,\mathrm{Fit}} =$  %.5f [rad]' % (m_p0[0], op_par[0])
+	fit_text += '\n$\\Omega_{D} =$ %.5f [rad/$s$], $\\Omega_{D\,\mathrm{Fit}} =$ %.5f [rad/$s$]' % (m_p0[1], op_par[1])
+	fit_text += '\n$\phi_{\mathrm{Theory}} =$ %.5f [rad], $\phi_{\mathrm{Fit}} =$ %.5f [rad]' % (m_p0[2], op_par[2])
+	plt.figtext(0.55, 0.13, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), backgroundcolor='white', alpha=1.0, size='x-small' )
 
 	# draw final legend, set the x range, and print it out!
 	theta_ax.legend(bbox_to_anchor=(0.025, 0.92, 0.925, 0.10), loc=3, ncol=5, mode="expand", borderaxespad=0.0, fontsize='small')
@@ -573,19 +582,18 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 		ax = fig.add_subplot(111) # Get the axes, effectively
 
 		ax.set_title(y_variable_name+' vs $\Omega_{D}$')
-		ax.set_xlabel('$\Omega_{D}$ [radians/$s$]')
-		ax.set_ylabel(y_variable_name+' [radians]')
+		ax.set_xlabel('$\Omega_{D}$ [rad/$s$]')
+		ax.set_ylabel(y_variable_name+' [rad]')
 
 		# Create the base plot
 		ax.scatter(omegaD_spectrum_ndarray, y_variable_ndarray, marker='o', label=y_variable_name, c='blue')
 
 		# Add a vertical line at omega res theory
-		omega_res_theory_label = '$\Omega_{Res. Theory}$ = %.3f [radians/$s$]' % omega_res_theory
+		omega_res_theory_label = '$\Omega_{\mathrm{Res. Theory}}$ = %.3f [rad/$s$]' % omega_res_theory
 		ax.axvline(x=omega_res_theory, ls = 'dashed', label=omega_res_theory_label, c='gray')
 
-		# Adjust axes
+		# Get axes range
 		x1,x2,y1,y2 = ax.axis()
-    		# ax.set_ylim((0.0, 1.2*y2))
 
 		# Create fine grained x axis ndarray of 200 points to use to plot the fits and theory
 		x_ax_fine_ndarray = np.linspace(x1, x2, 200)
@@ -596,9 +604,14 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 		# Set fit color
 		fit_color = 'green'
 
+		# list for setting sim text position
+		sim_pos = [0.0, 0.0]
+
 		# fit the thetaP plot
 		if(fname == 'thetaP'):
-		
+			# Adjust the y axis		
+    			ax.set_ylim((0.0, 1.25*y2))
+
 			# set the initial/guess fit parameters
 			thetaP_p0 = [omega0, gamma, alphaD]
 
@@ -613,10 +626,39 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 			ax.plot(x_ax_fine_ndarray, thetaP_fit_function(x_ax_fine_ndarray, *thetaP_p0), ls='dotted', label='$\\theta_{P}\left(\Omega_{D}\\right)$ Theory', c='maroon')
 
 			# Write out the fit parameters
-			thetaP_fit_text = '$\omega_{0 Actual} =$ %.2f, $\omega_{0 Fit} =$ %.5f [radians/$s$]' % (thetaP_p0[0], thetaP_op_par[0])
-			thetaP_fit_text += '\n$\gamma_{Actual} =$ %.2f, $\gamma_{Fit} =$ %.5f [$s^{-1}$]' % (thetaP_p0[1], thetaP_op_par[1])
-			thetaP_fit_text += '\n$\\alpha_{D Actual} =$ %.2f, $\\alpha_{D Fit} =$ %.5f [radians/$s^2$]' % (thetaP_p0[2], thetaP_op_par[2])
+			thetaP_fit_text = 'Spectrum Fit Parameters:'
+			thetaP_fit_text += '\n$\omega_{0\,\mathrm{Actual}} =$ %.2f, $\omega_{0\,\mathrm{Fit}} =$ %.5f [rad/$s$]' % (thetaP_p0[0], thetaP_op_par[0])
+			thetaP_fit_text += '\n$\gamma_{\mathrm{Actual}} =$ %.2f, $\gamma_{\mathrm{Fit}} =$ %.5f [$s^{-1}$]' % (thetaP_p0[1], thetaP_op_par[1])
+			thetaP_fit_text += '\n$\\alpha_{D\,\mathrm{Actual}} =$ %.2f, $\\alpha_{D\,\mathrm{Fit}} =$ %.5f [rad/$s^2$]' % (thetaP_p0[2], thetaP_op_par[2])
 			plt.figtext(0.141, 0.13, thetaP_fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
+
+			#####################
+			# Also fit with gaussian function to get a FWHM
+			# gauss_fit_function(x_data, mean, std_dev, amplitude, offset)
+			# set the guess fit parameters
+			gauss_p0 = [omega_res_theory, gamma, 0.95*y2, 0.05*y2]
+
+			# actually perform the fit
+			# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
+			gauss_op_par, gauss_covar_matrix = curve_fit(gauss_fit_function, omegaD_spectrum_ndarray, y_variable_ndarray, p0=gauss_p0)
+
+			# plot the fit
+			ax.plot(x_ax_fine_ndarray, gauss_fit_function(x_ax_fine_ndarray, *gauss_op_par), ls='solid', label='$\\theta_{P}\left(\Omega_{D}\\right)$ Gaussian Fit', c='darkcyan')
+
+			# Write out the fit parameters
+			# gauss_FWHM = 2.0*np.sqrt(2.0*np.log(2.0))*gauss_op_par[1] # No offset
+			gauss_FWHM = 2.0*gauss_op_par[1]*np.sqrt(-2.0*np.log((1-(gauss_op_par[3]/gauss_op_par[2]))/2.0)) # With offset
+
+			gauss_fit_text = 'Gaussian Fit Parameters:'
+			gauss_fit_text += '\n$\mu =$ %.4f [rad/$s$], $\sigma =$ %.4f [rad/$s$]' % (gauss_op_par[0], gauss_op_par[1])
+			gauss_fit_text += '\nAmplitude = %.4f [rad]\nOffset = %.4f [rad]' % (gauss_op_par[2], gauss_op_par[3])
+			gauss_fit_text += '\nFWHM = %.4f' % (gauss_FWHM)
+			gauss_fit_text += '\n$\mu/\Omega_{\mathrm{Res. Theory}} =$ %.3f, FWHM/$\gamma$ = %.3f' % ((gauss_op_par[0]/omega_res_theory), (gauss_FWHM/gamma))
+			plt.figtext(0.589, 0.755, gauss_fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
+
+			# Set sim text pos
+			sim_pos[0] = 0.141 # x pos
+			sim_pos[1] = 0.625 # y pos
 
 			# end fit the thetaP plot
 
@@ -637,9 +679,14 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 			ax.plot(x_ax_fine_ndarray, phi_fit_function(x_ax_fine_ndarray, *phi_p0), ls='dotted', label='$\phi\left(\Omega_{D}\\right)$ Theory', c='maroon')
 
 			# Write out the fit parameters
-			phi_fit_text = '$\omega_{0 Actual} =$ %.2f, $\omega_{0 Fit} =$ %.5f [radians/$s$]' % (phi_p0[0], phi_op_par[0])
-			phi_fit_text += '\n$\gamma_{Actual} =$ %.2f, $\gamma_{Fit} =$ %.5f [$s^{-1}$]' % (phi_p0[1], phi_op_par[1])
-			plt.figtext(0.58, 0.13, phi_fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
+			phi_fit_text = 'Spectrum Fit Parameters:'
+			phi_fit_text += '\n$\omega_{0\,\mathrm{Actual}} =$ %.2f, $\omega_{0\,\mathrm{Fit}} =$ %.5f [rad/$s$]' % (phi_p0[0], phi_op_par[0])
+			phi_fit_text += '\n$\gamma_{\mathrm{Actual}} =$ %.2f, $\gamma_{\mathrm{Fit}} =$ %.5f [$s^{-1}$]' % (phi_p0[1], phi_op_par[1])
+			plt.figtext(0.59, 0.13, phi_fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
+
+			# Set sim text pos
+			sim_pos[0] = 0.141 # x pos
+			sim_pos[1] = 0.66  # y pos
 	
 		# end fit the phi plot
 
@@ -651,7 +698,7 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 		if( lin_case == 'linear'): m_lin_case = 'Linear'
 		if( lin_case == 'nonlinear'): m_lin_case = 'Nonlinear'
 		sim_text += '\nSim. Method = %s\nLinearity = %s' % (m_sim_method, m_lin_case)
-		plt.figtext(0.141, 0.66, sim_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
+		plt.figtext(sim_pos[0], sim_pos[1], sim_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small' )
 
 		# draw final legend
 		ax.legend(loc=2, fontsize='small')
@@ -690,6 +737,7 @@ output_path = './output'
 
 # run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case)
 # compare_runs(run1, run1_name, run2, run2_name, title, fname) 
+# energy_run(run_name, omegaD, alphaD, theta0, run_end_periodsD, sim_method, lin_case)
 # res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case)
 
 # vary theta0
@@ -707,21 +755,24 @@ compare_runs(ec_run, 'Linear', ec_run2, 'Nonlinear', 'Vary Linearity', 'vary_lin
 '''
 
 # energy
-# energy_run(run_name, omegaD, alphaD, theta0, run_end_periodsD, sim_method, lin_case)
-energy_run('Reference', 0.9*omega_res_theory, possible_alphaD[0], 0.0*(np.pi/180.0), 10, 'euler_cromer','linear')
+# energy_run('Reference', 0.9*omega_res_theory, possible_alphaD[0], 0.0*(np.pi/180.0), 10, 'euler_cromer','linear')
 
 # res_sweep
-# res_sweep(6, 0.95, possible_alphaD[0], 0.0, 12, 18, 'euler_cromer', 'linear')
+#res_sweep(6, 0.95, possible_alphaD[0], 0.0, 12, 18, 'euler_cromer', 'linear')
 
 
 ########################################################
 # Production Runs 
 
-ec_run = run_sim(possible_alphaD[0], 1.0, 0.0, 18, 'euler_cromer','linear')
-ec_run2 = run_sim(possible_alphaD[0], 1.0, 30.0*(np.pi/180.0), 18, 'euler_cromer','linear')
-compare_runs(ec_run, '$\\theta_{0} = 0.0^{\circ}$', ec_run2, '$\\theta_{0} = 30.0^{\circ}$', 'Vary $\\theta_{0}$', 'vary_theta0')
+#ec_run = run_sim(possible_alphaD[0], 1.0, 0.0, 18, 'euler_cromer','linear')
+#ec_run2 = run_sim(possible_alphaD[0], 1.0, 30.0*(np.pi/180.0), 18, 'euler_cromer','linear')
+#compare_runs(ec_run, '$\\theta_{0} = 0.0^{\circ}$', ec_run2, '$\\theta_{0} = 30.0^{\circ}$', 'Vary $\\theta_{0}$', 'vary_theta0')
 
-# res_sweep(30, 0.95, possible_alphaD[0], 0.0, 12, 18, 'euler_cromer', 'linear')
+#energy_run('Reference', 0.9*omega_res_theory, possible_alphaD[0], 0.0*(np.pi/180.0), 10, 'euler_cromer','linear')
+
+
+
+#res_sweep(30, 0.95, possible_alphaD[0], 0.0, 12, 18, 'euler_cromer', 'linear')
 
 
 ########################################################
