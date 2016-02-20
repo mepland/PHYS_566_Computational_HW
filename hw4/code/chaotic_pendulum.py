@@ -9,6 +9,7 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.ticker import MultipleLocator
 from scipy.optimize import curve_fit
 
 ########################################################
@@ -246,7 +247,7 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 
 	omega_ax.set_title(title)
 	omega_ax.set_xlabel('$t$ [s]')
-	omega_ax.set_ylabel('$\\omega\left(t\\right)$ [rad/$s$]')
+	omega_ax.set_ylabel('$\\omega\left(t\\right)$ [rad/s]')
 	omega_ax.set_xlim((0.0, run1[0].tmax))
 
 	force_omega_ax = omega_ax.twinx() # Get a new axes for the force
@@ -333,7 +334,7 @@ def energy_run(run_name, omegaD, alphaD, theta0, run_end_periodsD, sim_method, l
 	if( lin_case == 'linear'): m_lin_case = 'Linear'
 	if( lin_case == 'nonlinear'): m_lin_case = 'Nonlinear'
 	sim_text += '\nSim. Method = %s\nLinearity = %s' % (m_sim_method, m_lin_case)
-	sim_text += '\n$\\alpha_{D} =$ %.1f [rad/$s^2$], $\Omega_{D} =$ %.5f [rad/$s$]' % (alphaD, omegaD)
+	sim_text += '\n$\\alpha_{D} =$ %.1f [rad/s$^2$], $\Omega_{D} =$ %.5f [rad/s]' % (alphaD, omegaD)
 	plt.figtext(0.141, 0.79, sim_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
 	
 	fig.savefig(m_path+'/energy_'+run_name+'.pdf')
@@ -446,7 +447,7 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	fig = plt.figure('res_run') # get a separate figure
 	theta_ax = fig.add_subplot(111) # Get the axes, effectively
 
-	theta_title = '$\\theta\left(t\\right)$, $\Omega_{D} = $ %.4f [rad/$s$] = %.2f $\Omega_{\mathrm{Res. Theory}}$' % (omegaD, omegaD/omega_res_theory) 
+	theta_title = '$\\theta\left(t\\right)$, $\Omega_{D} =$ %.4f [rad/s] = %.2f $\Omega_{\mathrm{Res. Theory}}$' % (omegaD, omegaD/omega_res_theory) 
 	theta_ax.set_title(theta_title)
 	theta_ax.set_xlabel('$t$ [s]')
 	theta_ax.set_ylabel('$\\theta$ [rad]')
@@ -480,9 +481,7 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	theta_ax.axvline(x=fit_range_min, ls = 'solid', label='Fit Begins', c='gray')
 
 	# compute particular solution parameters from theory
-#	thetaP_theory = alphaD/np.sqrt(np.square(np.square(omega0) - np.square(omegaD)) + 4*np.square(gamma)*np.square(omegaD) ) 
 	thetaP_theory = thetaP_fit_function(omegaD, omega0, gamma, alphaD)
-#	phi_theory = np.arctan2( (2*gamma*omegaD), (np.square(omega0) - np.square(omegaD)) )
 	phi_theory = phi_fit_function(omegaD, omega0, gamma) 
 	# omegaP theory is just omegaD...
 
@@ -504,7 +503,7 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 
 	# Write out the fit parameters
 	fit_text = '$\\theta_{P\,\mathrm{Theory}} =$ %.5f [rad], $\\theta_{P\,\mathrm{Fit}} =$  %.5f [rad]' % (m_p0[0], op_par[0])
-	fit_text += '\n$\\Omega_{D} =$ %.5f [rad/$s$], $\\Omega_{D\,\mathrm{Fit}} =$ %.5f [rad/$s$]' % (m_p0[1], op_par[1])
+	fit_text += '\n$\\Omega_{D} =$ %.5f [rad/s], $\\Omega_{D\,\mathrm{Fit}} =$ %.5f [rad/s]' % (m_p0[1], op_par[1])
 	fit_text += '\n$\phi_{\mathrm{Theory}} =$ %.5f [rad], $\phi_{\mathrm{Fit}} =$ %.5f [rad]' % (m_p0[2], op_par[2])
 	plt.figtext(0.55, 0.13, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), backgroundcolor='white', alpha=1.0, size='x-small' )
 
@@ -582,14 +581,14 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 		ax = fig.add_subplot(111) # Get the axes, effectively
 
 		ax.set_title(y_variable_name+' vs $\Omega_{D}$')
-		ax.set_xlabel('$\Omega_{D}$ [rad/$s$]')
+		ax.set_xlabel('$\Omega_{D}$ [rad/s]')
 		ax.set_ylabel(y_variable_name+' [rad]')
 
 		# Create the base plot
 		ax.scatter(omegaD_spectrum_ndarray, y_variable_ndarray, marker='o', label=y_variable_name, c='blue')
 
 		# Add a vertical line at omega res theory
-		omega_res_theory_label = '$\Omega_{\mathrm{Res. Theory}}$ = %.3f [rad/$s$]' % omega_res_theory
+		omega_res_theory_label = '$\Omega_{\mathrm{Res. Theory}}$ = %.3f [rad/s]' % omega_res_theory
 		ax.axvline(x=omega_res_theory, ls = 'dashed', label=omega_res_theory_label, c='gray')
 
 		# Get axes range
@@ -627,9 +626,9 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 
 			# Write out the fit parameters
 			thetaP_fit_text = 'Spectrum Fit Parameters:'
-			thetaP_fit_text += '\n$\omega_{0\,\mathrm{Actual}} =$ %.2f, $\omega_{0\,\mathrm{Fit}} =$ %.5f [rad/$s$]' % (thetaP_p0[0], thetaP_op_par[0])
-			thetaP_fit_text += '\n$\gamma_{\mathrm{Actual}} =$ %.2f, $\gamma_{\mathrm{Fit}} =$ %.5f [$s^{-1}$]' % (thetaP_p0[1], thetaP_op_par[1])
-			thetaP_fit_text += '\n$\\alpha_{D\,\mathrm{Actual}} =$ %.2f, $\\alpha_{D\,\mathrm{Fit}} =$ %.5f [rad/$s^2$]' % (thetaP_p0[2], thetaP_op_par[2])
+			thetaP_fit_text += '\n$\omega_{0\,\mathrm{Actual}} =$ %.2f, $\omega_{0\,\mathrm{Fit}} =$ %.5f [rad/s]' % (thetaP_p0[0], thetaP_op_par[0])
+			thetaP_fit_text += '\n$\gamma_{\mathrm{Actual}} =$ %.2f, $\gamma_{\mathrm{Fit}} =$ %.5f [s$^{-1}$]' % (thetaP_p0[1], thetaP_op_par[1])
+			thetaP_fit_text += '\n$\\alpha_{D\,\mathrm{Actual}} =$ %.2f, $\\alpha_{D\,\mathrm{Fit}} =$ %.5f [rad/s$^2$]' % (thetaP_p0[2], thetaP_op_par[2])
 			plt.figtext(0.141, 0.13, thetaP_fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
 
 			#####################
@@ -650,7 +649,7 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 			gauss_FWHM = 2.0*gauss_op_par[1]*np.sqrt(-2.0*np.log((1-(gauss_op_par[3]/gauss_op_par[2]))/2.0)) # With offset
 
 			gauss_fit_text = 'Gaussian Fit Parameters:'
-			gauss_fit_text += '\n$\mu =$ %.4f [rad/$s$], $\sigma =$ %.4f [rad/$s$]' % (gauss_op_par[0], gauss_op_par[1])
+			gauss_fit_text += '\n$\mu =$ %.4f [rad/s], $\sigma =$ %.4f [rad/s]' % (gauss_op_par[0], gauss_op_par[1])
 			gauss_fit_text += '\nAmplitude = %.4f [rad]\nOffset = %.4f [rad]' % (gauss_op_par[2], gauss_op_par[3])
 			gauss_fit_text += '\nFWHM = %.4f' % (gauss_FWHM)
 			gauss_fit_text += '\n$\mu/\Omega_{\mathrm{Res. Theory}} =$ %.3f, FWHM/$\gamma$ = %.3f' % ((gauss_op_par[0]/omega_res_theory), (gauss_FWHM/gamma))
@@ -680,8 +679,8 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 
 			# Write out the fit parameters
 			phi_fit_text = 'Spectrum Fit Parameters:'
-			phi_fit_text += '\n$\omega_{0\,\mathrm{Actual}} =$ %.2f, $\omega_{0\,\mathrm{Fit}} =$ %.5f [rad/$s$]' % (phi_p0[0], phi_op_par[0])
-			phi_fit_text += '\n$\gamma_{\mathrm{Actual}} =$ %.2f, $\gamma_{\mathrm{Fit}} =$ %.5f [$s^{-1}$]' % (phi_p0[1], phi_op_par[1])
+			phi_fit_text += '\n$\omega_{0\,\mathrm{Actual}} =$ %.2f, $\omega_{0\,\mathrm{Fit}} =$ %.5f [rad/s]' % (phi_p0[0], phi_op_par[0])
+			phi_fit_text += '\n$\gamma_{\mathrm{Actual}} =$ %.2f, $\gamma_{\mathrm{Fit}} =$ %.5f [s$^{-1}$]' % (phi_p0[1], phi_op_par[1])
 			plt.figtext(0.59, 0.13, phi_fit_text, bbox=dict(edgecolor='black', fill=False), size='x-small' )
 
 			# Set sim text pos
@@ -725,6 +724,139 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 
 # end def for res_sweep
 
+
+########################################################
+# Define the lyapunov lin fit function
+def lyapunov_fit_function(t_data, offset, lambda_fit):
+	# for fitting the forcibly linearized data, include an offset just in case
+	return offset + lambda_fit*t_data
+# end def lyapunov_fit_function
+
+########################################################
+# Define a function to plot the difference between two close runs
+def lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_path, fit_range_min, fit_range_max):
+	print 'Beginning Lyapunov Run:'
+
+	# always want the same omegaD, just hard code it
+	m_omegaD = 0.666
+
+	# TODO move to wrapper function eventually
+	# make path
+	m_path = output_path+'/lyapunov/runs/'
+	make_path(m_path)
+
+	# Perform the runs
+	run1 = run_sim(alphaD, m_omegaD, theta0, run_end_periodsD, sim_method, 'nonlinear')
+	run2 = run_sim(alphaD, m_omegaD, theta0+Delta_theta0, run_end_periodsD, sim_method, 'nonlinear')
+
+	########################################################
+	# Create ndarrays that we can plot
+
+	# Declare the lists
+	fit_t = []
+	fit_Delta_theta = []
+	left_nofit_t = []
+	left_nofit_Delta_theta = []
+	right_nofit_t = []
+	right_nofit_Delta_theta = []
+
+	# Fill the lists
+	for i in range(len(run1)):
+		if( run1[i].t < fit_range_min ):
+			left_nofit_t.append(run1[i].t)
+			left_nofit_Delta_theta.append(np.log(abs((run1[i].theta - run2[i].theta)/Delta_theta0)))
+		elif( run1[i].t > fit_range_max):
+			right_nofit_t.append(run1[i].t)
+			right_nofit_Delta_theta.append(np.log(abs((run1[i].theta - run2[i].theta)/Delta_theta0)))
+		elif( run1[i].t >= fit_range_min and run1[i].t <= fit_range_max):
+			fit_t.append(run1[i].t)
+			fit_Delta_theta.append(np.log(abs((run1[i].theta - run2[i].theta)/Delta_theta0)))
+
+	# Create the ndarrays
+	fit_t_ndarray = np.array(fit_t)
+	fit_Delta_theta_ndarray = np.array(fit_Delta_theta)
+	left_nofit_t_ndarray = np.array(left_nofit_t)
+	left_nofit_Delta_theta_ndarray = np.array(left_nofit_Delta_theta)
+	right_nofit_t_ndarray = np.array(right_nofit_t)
+	right_nofit_Delta_theta_ndarray = np.array(right_nofit_Delta_theta)
+
+	########################################################
+	# Create the abs(Delta theta) plot
+	fig = plt.figure('lyapunov_run') # get a separate figure
+	ax = fig.add_subplot(111) # Get the axes, effectively
+
+	Delta_theta_title = 'Linearized $\\left|\Delta\\theta\left(t\\right)\\right|$: $\Delta\\theta_{0} =$ %.2E [rad]' % (Delta_theta0)
+	ax.set_title(Delta_theta_title)
+	ax.set_xlabel('$t$ [s]')
+	ax.set_ylabel('$\ln\left(\left|\Delta\\theta\left(t\\right)/\Delta\\theta_{0}\\right|\\right)$ [rad]')
+
+	# Create the plots
+	ax.plot(fit_t_ndarray, fit_Delta_theta_ndarray, ls='solid', label='Fitted $\ln\left(\left|\Delta\\theta\left(t\\right)/\Delta\\theta_{0}\\right|\\right)$', c='black')
+	ax.plot(left_nofit_t_ndarray, left_nofit_Delta_theta_ndarray, ls='dotted', label='Unfitted $\ln\left(\left|\Delta\\theta\left(t\\right)/\Delta\\theta_{0}\\right|\\right)$', c='grey')
+	ax.plot(right_nofit_t_ndarray, right_nofit_Delta_theta_ndarray, ls='dotted', label=None, c='grey')
+
+
+	# Grab the auto fit axis range now before fitting
+	x1,x2,y1,y2 = ax.axis()
+
+	# Fitting 
+	########################################################
+
+	# Add vertical line at where the fit range begins and ends
+	ax.axvline(x=fit_range_min, ls = 'solid', label='Fit Bounds', c='gray')
+	ax.axvline(x=fit_range_max, ls = 'solid', label=None, c='gray')
+
+	# set the initial/guess fit parameters
+	# m_p0 = [abs(Delta_theta0), 1.0]
+
+	# actually perform the fit
+	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
+	op_par, covar_matrix = curve_fit(lyapunov_fit_function, fit_t_ndarray, fit_Delta_theta_ndarray, p0=None)
+
+	# plot the fit
+	ax.plot(fit_t_ndarray, lyapunov_fit_function(fit_t_ndarray, *op_par), ls='solid', label='Fit', c='green')
+	ax.plot(left_nofit_t_ndarray, lyapunov_fit_function(left_nofit_t_ndarray, *op_par), ls='dashed', label=None, c='green')
+	ax.plot(right_nofit_t_ndarray, lyapunov_fit_function(right_nofit_t_ndarray, *op_par), ls='dashed', label=None, c='green')
+
+	# Write out the fit parameters
+	# lyapunov_fit_function(t_data, offset, lambda_fit)
+	fit_text = 'Fit Function: $\ln\left(\left|\Delta\\theta\left(t\\right)/\Delta\\theta_{0}\\right|\\right) = \lambda t + c$'
+	fit_text += '\n$\lambda_{\mathrm{Fit}} =$  %.5f [s$^{-1}$]' % (op_par[1])
+	fit_text += '\n$c_{\mathrm{Fit}} =$  %.5f' % (op_par[0])
+	plt.figtext(0.637, 0.13, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), backgroundcolor='white', alpha=1.0, size='x-small' )
+
+	# Write out the simulation parameters
+	sim_text = '$\\theta_{0} =$ %.1f$^{\circ}$' % (theta0*(180.0/np.pi))
+	sim_text += ', $\\alpha_{D} =$ %.1f [rad/s]' % (alphaD)
+	sim_text += '\nFit Range: %.1f $\leq t \leq$ %.1f [s]' % (fit_range_min, fit_range_max)
+	if( sim_method == 'euler_cromer'): m_sim_method = 'Euler-Cromer'
+	if( sim_method == 'runge_kutta'): m_sim_method = 'Runge-Kutta'
+	sim_text += '\nSim. Method = %s' % (m_sim_method)
+	plt.figtext(0.665, 0.23, sim_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small' )
+
+	# draw final legend, set the axis range, and print it out!
+	ax.legend(bbox_to_anchor=(0.648, 0.25), loc='lower left', fontsize='small')
+	
+	ax.set_xlim((0.0, run1[0].tmax))
+	ax.set_ylim(y1, y2)
+
+	majorLocator = MultipleLocator(25) # major ticks on multiples of 25
+	minorLocator = MultipleLocator(5) # minor ticks on multiples of 5
+	ax.xaxis.set_major_locator(majorLocator)
+	ax.xaxis.set_minor_locator(minorLocator)
+
+	fname = 'alphaD_%.1f_theta0_%.3f_Delta_theta0_%.6f_%s.pdf' % (alphaD, theta0, Delta_theta0, sim_method)
+	fig.savefig(m_path+'/'+fname)
+
+	# Clear the figure for the next lyapunov_run
+	fig.clf()
+
+	print 'Lyapunov Run Completed!!'
+
+	# TODO Return fit values to wrapper function
+
+# end def for lyapunov_run
+
 ########################################################
 ########################################################
 ########################################################
@@ -760,6 +892,12 @@ compare_runs(ec_run, 'Linear', ec_run2, 'Nonlinear', 'Vary Linearity', 'vary_lin
 # res_sweep
 #res_sweep(6, 0.95, possible_alphaD[0], 0.0, 12, 18, 'euler_cromer', 'linear')
 
+
+# lyapunov_run
+# lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_path, fit_range_min, fit_range_max)
+
+lyapunov_run(possible_alphaD[2], 0.0*(np.pi/180.0), 0.001, 20, 'euler_cromer', 'hard coded for now', 15.0, 80.0)
+#lyapunov_run(possible_alphaD[2], 20.0*(np.pi/180.0), 0.001, 20, 'euler_cromer', 'hard coded for now', 40.0, 80.0)
 
 ########################################################
 # Production Runs 
