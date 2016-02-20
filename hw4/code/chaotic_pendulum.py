@@ -502,7 +502,7 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	theta_ax.plot(t_fit_ndarray, sine_fit_function(t_fit_ndarray, *m_p0), ls='None', markevery=num_points//70, marker='d', markersize=6, label='$\\theta\left(t\\right)_{\mathrm{Particular}}$', c='maroon')
 
 	# Write out the fit parameters
-	fit_text = '$\\theta_{P\,\mathrm{Theory}} =$ %.5f [rad], $\\theta_{P\,\mathrm{Fit}} =$  %.5f [rad]' % (m_p0[0], op_par[0])
+	fit_text = '$\\theta_{P\,\mathrm{Theory}} =$ %.5f [rad], $\\theta_{P\,\mathrm{Fit}} =$ %.5f [rad]' % (m_p0[0], op_par[0])
 	fit_text += '\n$\\Omega_{D} =$ %.5f [rad/s], $\\Omega_{D\,\mathrm{Fit}} =$ %.5f [rad/s]' % (m_p0[1], op_par[1])
 	fit_text += '\n$\phi_{\mathrm{Theory}} =$ %.5f [rad], $\phi_{\mathrm{Fit}} =$ %.5f [rad]' % (m_p0[2], op_par[2])
 	plt.figtext(0.55, 0.13, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), backgroundcolor='white', alpha=1.0, size='x-small' )
@@ -727,9 +727,9 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 
 ########################################################
 # Define the lyapunov lin fit function
-def lyapunov_fit_function(t_data, offset, lambda_fit):
+def lyapunov_fit_function(t_data, lambda_fit, offset_fit):
 	# for fitting the forcibly linearized data, include an offset just in case
-	return offset + lambda_fit*t_data
+	return offset_fit + lambda_fit*t_data
 # end def lyapunov_fit_function
 
 ########################################################
@@ -739,11 +739,6 @@ def lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_p
 
 	# always want the same omegaD, just hard code it
 	m_omegaD = 0.666
-
-	# TODO move to wrapper function eventually
-	# make path
-	m_path = output_path+'/lyapunov/runs/'
-	make_path(m_path)
 
 	# Perform the runs
 	run1 = run_sim(alphaD, m_omegaD, theta0, run_end_periodsD, sim_method, 'nonlinear')
@@ -806,9 +801,6 @@ def lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_p
 	ax.axvline(x=fit_range_min, ls = 'solid', label='Fit Bounds', c='gray')
 	ax.axvline(x=fit_range_max, ls = 'solid', label=None, c='gray')
 
-	# set the initial/guess fit parameters
-	# m_p0 = [abs(Delta_theta0), 1.0]
-
 	# actually perform the fit
 	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
 	op_par, covar_matrix = curve_fit(lyapunov_fit_function, fit_t_ndarray, fit_Delta_theta_ndarray, p0=None)
@@ -819,10 +811,10 @@ def lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_p
 	ax.plot(right_nofit_t_ndarray, lyapunov_fit_function(right_nofit_t_ndarray, *op_par), ls='dashed', label=None, c='green')
 
 	# Write out the fit parameters
-	# lyapunov_fit_function(t_data, offset, lambda_fit)
-	fit_text = 'Fit Function: $\ln\left(\left|\Delta\\theta\left(t\\right)/\Delta\\theta_{0}\\right|\\right) = \lambda t + c$'
-	fit_text += '\n$\lambda_{\mathrm{Fit}} =$  %.5f [s$^{-1}$]' % (op_par[1])
-	fit_text += '\n$c_{\mathrm{Fit}} =$  %.5f' % (op_par[0])
+	# lyapunov_fit_function(t_data, lambda_fit, offset_fit)
+	fit_text = 'Fit Function: $\ln\left(\left|\Delta\\theta\left(t\\right)/\Delta\\theta_{0}\\right|\\right) = c + \lambda t$'
+	fit_text += '\n$\lambda_{\mathrm{Fit}} =$ %.5f [s$^{-1}$]' % (op_par[0])
+	fit_text += '\n$c_{\mathrm{Fit}} =$ %.5f' % (op_par[1])
 	plt.figtext(0.637, 0.13, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), backgroundcolor='white', alpha=1.0, size='x-small' )
 
 	# Write out the simulation parameters
@@ -851,11 +843,129 @@ def lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_p
 	# Clear the figure for the next lyapunov_run
 	fig.clf()
 
+	# make a list with Delta_theta0 in [2] so we can return it
+	m_op_par_list = op_par.tolist() # op_par is a np ndarray...
+	m_op_par_list.append(Delta_theta0)
+
 	print 'Lyapunov Run Completed!!'
 
-	# TODO Return fit values to wrapper function
+	# Return fit values to wrapper function
+	return m_op_par_list
 
 # end def for lyapunov_run
+
+########################################################
+# Define a function to run and average multiple lyapunov runs 
+def lyapunov_ave(alphaD, theta0, run_end_periodsD, sim_method):
+	print 'Beginning Lyapunov Averaging:'
+
+	# make paths
+	run_name = 'ave_of_alphaD_%.1f_theta0_%.3f_%s' % (alphaD, theta0, sim_method)
+	m_path = output_path+'/lyapunov_ave/'+run_name
+	m_path2 = m_path+'/runs'
+	make_path(m_path2)
+
+	# Make list to hold the fit values
+	m_op_pars = []
+
+	# Perform the runs, save the lambdas
+	# Don't run in a for loop as we may need to adjust fit ranges by hand...
+	m_op_pars.append(lyapunov_run(alphaD, theta0, 0.001, run_end_periodsD, sim_method, m_path2, 20.0, 75.0))
+	m_op_pars.append(lyapunov_run(alphaD, theta0, 0.002, run_end_periodsD, sim_method, m_path2, 20.0, 75.0))
+	m_op_pars.append(lyapunov_run(alphaD, theta0, 0.003, run_end_periodsD, sim_method, m_path2, 20.0, 75.0))
+	m_op_pars.append(lyapunov_run(alphaD, theta0, 0.004, run_end_periodsD, sim_method, m_path2, 20.0, 75.0))
+	m_op_pars.append(lyapunov_run(alphaD, theta0, 0.005, run_end_periodsD, sim_method, m_path2, 20.0, 75.0))
+	m_op_pars.append(lyapunov_run(alphaD, theta0, 0.006, run_end_periodsD, sim_method, m_path2, 20.0, 75.0))
+
+	# For reference...
+	# lyapunov_fit_function(t_data, lambda_fit, offset_fit)
+
+	# get number of runs
+	num_runs = len(m_op_pars)
+
+	# Make the empty 1D arrays
+	lambdas = []
+	offsets = []      
+	Delta_theta0s = []
+	
+	# Fill the 1D lists
+	for i in range(num_runs):
+		lambdas.append(m_op_pars[i][0])
+		offsets.append(m_op_pars[i][1])
+		Delta_theta0s.append(m_op_pars[i][2])
+
+	# Create the ndarrays
+	lambdas_ndarray = np.array(lambdas)
+	offsets_ndarray = np.array(offsets)
+	Delta_theta0_ndarray = np.array(Delta_theta0s)
+
+	# Compute the means
+	mean_lambda = np.mean(lambdas_ndarray)
+	mean_offset = np.mean(offsets_ndarray)
+
+	########################################################
+	# Plotting
+	fig = plt.figure('lyapunov_ave') # get a separate figure
+	ax = fig.add_subplot(111) # Get the axes, effectively
+
+        if( sim_method == 'euler_cromer'): m_sim_method = 'Euler-Cromer'
+        if( sim_method == 'runge_kutta'): m_sim_method = 'Runge-Kutta'
+	title = 'Fit Values for: $\\alpha_{D} =$ %.1f [rad/s$^2$], $\\theta_{0} =$ %.1f$^{\circ}$, %s' % (alphaD, theta0*(180.0/np.pi), m_sim_method)
+	ax.set_title(title)
+	ax.set_xlabel('$\Delta\\theta_{0}$ [rad]')
+	ax.set_ylabel('$\lambda_{\mathrm{Fit}}$ [s$^{-1}$]')
+
+	# offset axis
+	offset_ax = ax.twinx()
+	offset_color = 'green'
+	# offset_ax.set_ylabel('$c_{\mathrm{Fit}}$', color=offset_color, rotation=-90)
+
+	# Create the plots
+	lambda_plot = ax.scatter(Delta_theta0_ndarray, lambdas_ndarray, marker='o', label='$\lambda_{\mathrm{Fit}}$', c='blue')
+	offset_plot = offset_ax.scatter(Delta_theta0_ndarray, offsets_ndarray, marker='^', label='$c_{\mathrm{Fit}}$', c=offset_color)
+	
+	# Add horizontal lines line at mean
+	mean_lambda_str = 'Mean $\lambda_{\mathrm{Fit}} =$ %.4f [s$^{-1}$]' % (mean_lambda)
+	lambda_line = ax.axhline(y=mean_lambda, ls = 'solid', label=mean_lambda_str, c='darkblue')
+	mean_offset_str = 'Mean $c_{\mathrm{Fit}} =$ %.4f' % (mean_offset)
+	offset_line = offset_ax.axhline(y=mean_offset, ls = 'solid', label=mean_offset_str, c='dark'+offset_color)
+
+	# Set second y axis color, make tick labels small so the axis label fits
+	for tl in offset_ax.get_yticklabels():
+		tl.set_color(offset_color)
+		# tl.set_fontsize('small')
+	
+	# Draw final legend, set the axis range, and print it out!
+	fig.legend((lambda_plot, lambda_line, offset_plot, offset_line), (lambda_plot.get_label(), lambda_line.get_label(), offset_plot.get_label(), offset_line.get_label()), fontsize='small', bbox_to_anchor=(0.2, 0.805, 0.625, 0.10), loc=3, ncol=2, mode="expand", borderaxespad=0.0)
+
+	# Adjust Axes
+	x1,x2,y1,y2 = ax.axis()
+	ax.set_ylim((y1, 1.1*y2))
+	ax.set_xlim((0.0, 1.1*max(Delta_theta0s)))
+
+	# offset_x1,offset_x2,offset_y1,offset_y2 = offset_ax.axis()
+	# offset_y_range = abs(offset_y2-offset_y1)
+	# offset_ax.set_ylim(-0.1*offset_y_range+offset_y1, 0.08*offset_y_range+offset_y2)
+
+	fig.savefig(m_path+'/'+run_name+'_means_plot.pdf')
+
+	# Clear the figure for the next lyapunov_ave
+	fig.clf()
+
+	# Print averages, to screen and file
+	means_string = 'Mean Lambda_Fit = %.5f [s^-1]' % (mean_lambda)
+	means_string += '\nMean Offset_Fit = %.5f' % (mean_offset)
+	print '\n'+means_string+'\n'
+
+	output_file = open(m_path+'/'+run_name+'_fit_means.txt','w')
+	output_file.write(means_string)
+	output_file.close()
+
+	print 'Lyapunov Averaging Completed!!!'
+
+
+# end def lyapunov_ave
+
 
 ########################################################
 ########################################################
@@ -871,6 +981,7 @@ output_path = './output'
 # compare_runs(run1, run1_name, run2, run2_name, title, fname) 
 # energy_run(run_name, omegaD, alphaD, theta0, run_end_periodsD, sim_method, lin_case)
 # res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case)
+# lyapunov_ave(alphaD, theta0, run_end_periodsD, sim_method)
 
 # vary theta0
 '''
@@ -892,12 +1003,8 @@ compare_runs(ec_run, 'Linear', ec_run2, 'Nonlinear', 'Vary Linearity', 'vary_lin
 # res_sweep
 #res_sweep(6, 0.95, possible_alphaD[0], 0.0, 12, 18, 'euler_cromer', 'linear')
 
-
-# lyapunov_run
-# lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_path, fit_range_min, fit_range_max)
-
-lyapunov_run(possible_alphaD[2], 0.0*(np.pi/180.0), 0.001, 20, 'euler_cromer', 'hard coded for now', 15.0, 80.0)
-#lyapunov_run(possible_alphaD[2], 20.0*(np.pi/180.0), 0.001, 20, 'euler_cromer', 'hard coded for now', 40.0, 80.0)
+# lyapunov_ave
+# lyapunov_ave(alphaD, theta0, run_end_periodsD, sim_method)
 
 ########################################################
 # Production Runs 
@@ -908,9 +1015,9 @@ lyapunov_run(possible_alphaD[2], 0.0*(np.pi/180.0), 0.001, 20, 'euler_cromer', '
 
 #energy_run('Reference', 0.9*omega_res_theory, possible_alphaD[0], 0.0*(np.pi/180.0), 10, 'euler_cromer','linear')
 
-
-
 #res_sweep(30, 0.95, possible_alphaD[0], 0.0, 12, 18, 'euler_cromer', 'linear')
+
+lyapunov_ave(possible_alphaD[2], 0.0, 18, 'euler_cromer')
 
 
 ########################################################
