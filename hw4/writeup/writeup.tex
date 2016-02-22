@@ -124,9 +124,8 @@
 
 \newcommand{\degree}{\ensuremath{^{\circ}}}
 
-% TODO
 % Select between raw and saved plots here
-\graphicspath{{../code/output/}} % raw plots
+\graphicspath{{../code/output/plots_for_paper/}} % raw plots
 %\graphicspath{{./output/}} % saved plots
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -178,7 +177,7 @@ A e^{r_{+} t} + B e^{r_{-} t} & \text{if } \gamma \neq \omega_{0} \\
 \end{cases}
 \end{equation}
 
-It is easy to see from (\ref{eq:r_pm}) that $\operatorname{Re}\left(r_{\pm}\right) < 0$ for all $\gamma$ and $\omega_{0}$, therefore the homogeneous solution (\ref{eq:homogeneous_soln}) always decays away to nothing; it is a transient solution\footnote{The homogeneous solutions importance in this case lies in it's ability to match the initial conditions of the pendulum, regardless of what the driving force is doing.}. As we are primary interested in the steady state behavior of the pendulum in this assignment we therefore need only be concerned with the particular solution from here on out.
+It is easy to see from (\ref{eq:r_pm}) that $\operatorname{Re}\left(r_{\pm}\right) < 0$ for all $\gamma$ and $\omega_{0}$, therefore the homogeneous solution (\ref{eq:homogeneous_soln}) always decays away to nothing; it is a transient solution\footnote{The homogeneous solutions importance in this case lies in it's ability to match the initial conditions of the pendulum, regardless of what the driving force is doing. For our pendulum the initial conditions are $\theta\left(t=0\right)=\theta_{0},~\omega\left(t=0\right)=0$}. As we are primary interested in the steady state behavior of the pendulum in this assignment we therefore need only be concerned with the particular solution from here on out.
 
 We can find a particular, or steady state, solution (\ref{eq:particular_soln}) that works by trial and error. Plugging (\ref{eq:particular_soln}) into (\ref{eq:diff_eq2}) with $F\left(t\right) = \alpha_{D} \sin\left(\Omega_{D} t\right)$ results in (\ref{eq:particular_work}).
 
@@ -231,50 +230,285 @@ As our pendulum is a driven oscillator we can expect it to exhibit resonant beha
 \Omega_{\text{Res}} = \sqrt{ \omega_{0}^2 - 2 \gamma^2} 
 \end{equation}
 
-Lastly, note that $\Omega_{\text{Res}}$ of (\ref{eq:omegaD_resonance}) solves (\ref{eq:resonance_derivative}) when $\omega_{0} \neq \gamma$. If $\omega_{0} \approx \gamma$ the $(\cdots)^{-3/2}$ term diverges and we would need to set $\gamma = \omega_{0}$ at the beginning of the problem and redo the derivation. Fortunately for the parameters used in this assignment we have $\omega_{0} = 1.0~s^{-1} \neq \gamma = 0.25~s^{-1}$, so this is not an issue.
+Lastly, note that $\Omega_{\text{Res}}$ of (\ref{eq:omegaD_resonance}) solves (\ref{eq:resonance_derivative}) when $\omega_{0} \neq \gamma$. If $\omega_{0} \approx \gamma$ the $(\cdots)^{-3/2}$ term diverges and we would need to set $\gamma = \omega_{0}$ at the beginning of the problem and redo the derivation. Fortunately for the parameters used in this assignment we have $\omega_{0} = 1.0~s^{-1} \neq \gamma = 0.25~s^{-1} \rightarrow \Omega_{\text{Res}} =$ 0.93541 [rad/s], so this is not an issue.
 
+\clearpage
 \subsection{Euler--Cromer}
 \label{subsec:eulercromer}
-In the past we have used the Euler method solve differential equations time step to time step. The advantage of using the Euler method is its simplicity, however its solutions usually do not conserve energy but increase in total energy over time. We can remedy this by switching to the Euler--Cromer method, also known as the semi-implicit Euler method\footnote{The name semi-implicit comes from the fact that $n+1$ data in the form of $\omega_{n+1}$ is being used to compute $\theta_{n+1}$. Also note that like the unmodified Euler method, the Euler--Cromer method is still only a TODO $\orderof\big(\left(\Delta t\right)^2\big)$ method.}, by modifying the Euler method to use $\omega_{n+1}$ instead of $\omega_{n}$ when computing $\theta_{n+1}$, see (\ref{eq:euler_chromer1}, \ref{eq:euler_chromer2}).
+In the past we have used the Euler method solve differential equations time step to time step. The advantage of using the Euler method is its simplicity, however its solutions usually do not conserve energy but increase in total energy over time. We can remedy this by switching to the Euler--Cromer method, also known as the semi-implicit Euler method\footnote{The name semi-implicit comes from the fact that $n+1$ data in the form of $\omega_{n+1}$ is being used to compute $\theta_{n+1}$. Also note that like the unmodified Euler method, the Euler--Cromer method is still only a $\orderof\big(\left(\Delta t\right)^2\big)$ method.}, by modifying the Euler method to use $\omega_{n+1}$ instead of $\omega_{n}$ when computing $\theta_{n+1}$, see (\ref{eq:euler_chromer1}, \ref{eq:euler_chromer2}).
 
 \begin{align}
-\frac{d \theta}{d t} &= f\left(t, \omega\right) &
-\frac{d \omega}{d t} &= \frac{d^2 \theta}{d t^2} = g\left(t, \theta\right) \label{eq:euler_chromer1} \\
-\omega_{n+1} &= \omega_{n} + g\left(t_{n}, \theta_{n};~\omega_{n}\right) \Delta t & 
-\theta_{n+1} &= \theta_{n} + f\left(t_{n}, \underline{\omega_{n+1}}\right) \Delta t \label{eq:euler_chromer2}
+\frac{d \theta}{d t} &= f\left(t, \theta;~\omega\right) &
+\frac{d \omega}{d t} &= \frac{d^2 \theta}{d t^2} = g\left(t, \omega;~\theta\right) \label{eq:euler_chromer1} \\
+\theta_{n+1} &= \theta_{n} + f\left(t_{n}, \theta_{n};~\underline{\omega_{n+1}}\right) \Delta t & 
+\omega_{n+1} &= \omega_{n} + g\left(t_{n}, \omega_{n};~\theta_{n}\right) \Delta t \label{eq:euler_chromer2}
 \end{align}
 
-Applying the Euler--Cromer method to our pendulum problem, we have:
+\begin{equation} \label{eq:tn} 
+t_{n} = t_{0} + n \Delta t = n \Delta t
+\end{equation}
 
-\begin{align} \label{eq:euler_chromer_applied}
-\omega_{n+1} &= \omega_{n} + \bigg( -\frac{g}{l}\theta_{n} - 2\gamma \omega_{n} + \alpha_{D}\sin\left(\Omega_{D} t_{n}\right) \bigg) \Delta t \\
-\theta_{n+1} &= \theta_{n} + \omega_{n+1} \Delta t \\
-t_{n} &= t_{0} + n \Delta t = n \Delta t
+For our pendulum we have:
+\begin{align} \label{eq:f_g_applied}
+f\left(t, \theta;~\omega\right) &=  \omega &
+g\left(t, \omega;~\theta\right) &= -\omega_{0}^2 \theta - 2\gamma \omega + \alpha_{D}\sin\left(\Omega_{D} t\right)
 \end{align}
-
 
 \subsection{Runge--Kutta}
 \label{subsec:runge_kutta}
-TODO
-Runge--Kutta method
+The Euler and Euler--Cromer methods work by sampling the differential equation once at the beginning of each time step interval, which when worked out gives them a final error of $\orderof\big(\left(\Delta t\right)^2\big)$. As such, an easy way to improve on the Euler method is to sample the differential equation more than once per time step. The family of numerical solutions of this type are called Runge--Kutta methods, of which the Euler method is the simplest member. For this assignment in addition to the Euler--Cromer method we will be using \textit{The} Runge--Kutta method, or RK4, which samples the differential equation four times per time step. The four samples are used in a weighted average in place of $f\left(t\right)$ and $g\left(t\right)$ in the Euler method, compare (\ref{eq:euler_chromer1}, \ref{eq:euler_chromer2}) to (\ref{eq:RK4_1}, \ref{eq:RK4_2}). By averaging over four samples per time step the RK4 method decreases the error to $\orderof\big(\left(\Delta t\right)^4\big)$, quite a nice improvement for relatively little effort.\footnote{Naturally we could also alter the RK4 method to be an implicit method like the Euler--Cromer method, but will not in this assignment to avoid further complexity.} For our pendulum $f\left(t\right)$ and $g\left(t\right)$ remain the same as before (\ref{eq:f_g_applied}).
+
+\begin{align}
+\theta_{n+1} &= \theta_{n} + \frac{1}{6}\left(k_{1} + 2k_{2} +2k_{3} +k_{4}\right)\Delta t &
+\omega_{n+1} &= \omega_{n} + \frac{1}{6}\left(l_{1} + 2l_{2} +2l_{3} +l_{4}\right)\Delta t \label{eq:RK4_1} \\
+\begin{split}
+k_{1} &= f\left(t_{n}, \theta_{n};~\omega_{n}\right) \\
+k_{2} &= f\left(t_{n} +\Delta t/2, \theta_{n}+k_{1}\Delta t/2;~\omega_{n}+l_{1}\Delta t/2\right) \\
+k_{3} &= f\left(t_{n} +\Delta t/2, \theta_{n}+k_{2}\Delta t/2;~\omega_{n}+l_{2}\Delta t/2\right) \\
+k_{4} &= f\left(t_{n} +\Delta t, \theta_{n}+k_{3}\Delta t;~\omega_{n}+l_{3}\Delta t\right)
+\end{split} &
+\begin{split}
+l_{1} &= g\left(t_{n}, \omega_{n};~\theta_{n}\right) \\
+l_{2} &= g\left(t_{n} +\Delta t/2, \omega_{n}+l_{1}\Delta t/2;~\theta_{n}+k_{1}\Delta t/2\right) \\
+l_{3} &= g\left(t_{n} +\Delta t/2, \omega_{n}+l_{2}\Delta t/2;~\theta_{n}+k_{2}\Delta t/2\right) \\
+l_{4} &= g\left(t_{n} +\Delta t, \omega_{n}+l_{3}\Delta t;~\theta_{n}+k_{3}\Delta t\right)
+\end{split} \label{eq:RK4_2}
+\end{align}
+
+
+
 
 
 \clearpage
 \section{Results}
 \label{sec:results}
-TODO
 
+\subsection{Parts B and C: Vary Simulation Methods}
+\label{subsec:vary_sim_methods}
+We will begin by comparing the results of the two simulation methods, Euler--Cromer and RK4, by looking at plots of $\theta\left(t\right), \omega\left(t\right)$, and energy versus time. As you can see in Figures~\ref{fig:theta_vary_sim_method},~\ref{fig:omega_vary_sim_method},~\ref{fig:energy_Euler-Cromer}, and~\ref{fig:energy_RK4}, both methods produced virtually identical results in every case for this pendulum.
 
-\begin{comment}
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.7\textwidth]{}
+  \includegraphics[width=.65\textwidth]{part_b/compare_runs_vary_sim_method/theta_vary_sim_method.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{}
-	\label{fig:}
+	\caption{$\theta\left(t\right)$ for the Euler--Cromer and RK4 methods.}
+	\label{fig:theta_vary_sim_method}
 \end{figure}
-\end{comment}
 
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{part_b/compare_runs_vary_sim_method/omega_vary_sim_method.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\omega\left(t\right)$ for the Euler--Cromer and RK4 methods.}
+	\label{fig:omega_vary_sim_method}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{part_c/energy/energy_Euler-Cromer.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Kinetic, potential and total energy when using the Euler--Cromer method.}
+	\label{fig:energy_Euler-Cromer}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{part_c/energy/energy_RK4.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Kinetic, potential and total energy when using the RK4 method.}
+	\label{fig:energy_RK4}
+\end{figure}
+
+\clearpage
+\subsection{Part B: Resonance}
+\label{subsec:resonance_results}
+For the rest of the results we will use the RK4 method to simulate the pendulum. By fitting the steady state $\theta\left(t\right)$ curve with a sinusoid we are able to extract $\theta_{P}\left(\Omega_{D}\right)$ and $\phi\left(\Omega_{D}\right)$ for many different value of $\Omega_{D}$ about $\Omega_{\text{Res}}$, see Figures~\ref{fig:res_sweep_thetaP_1} and~\ref{fig:res_sweep_phi_1}. The code was written to do this automatically after waiting a preset number of driving force periods to ensure the steady state had been reached. Supporting plots were made for each $\Omega_{D}$ tested to confirm the fit was good and only included the steady state wave, see Figures~\ref{fig:res_run_omegaD_over_omega_res_theory_1} and~\ref{fig:res_run_omegaD_over_omega_res_theory_fit_region_1} for one example.
+
+TODO talk about theory curves; gamma, FWHM
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{part_b/res_sweep_rk4_linear/res_sweep_thetaP.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\theta_{P}\left(\Omega_{D}\right)$ resonance curve and fits.}
+	\label{fig:res_sweep_thetaP_1}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{part_b/res_sweep_rk4_linear/res_sweep_phi.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\phi\left(\Omega_{D}\right)$ resonance curve and fit.}
+	\label{fig:res_sweep_phi_1}
+\end{figure}
+
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{{part_b/res_sweep_rk4_linear/res_runs/res_run_omegaD_over_omega_res_theory_1.78}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\theta\left(t\right)$ at $\Omega_{D} = 1.6688$ [rad/s], full view. Note how the fit is performed on data well into the steady state region.}
+	\label{fig:res_run_omegaD_over_omega_res_theory_1}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{{part_b/res_sweep_rk4_linear/res_runs/res_run_omegaD_over_omega_res_theory_1.78_fit_region}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\theta\left(t\right)$ at $\Omega_{D} = 1.6688$ [rad/s], fit region. The sinusoidal fit typically matched the theory predictions to all the shown decimal places. This $\Omega_{D}$ plot was chosen to be included in particular to illustrate that the data was really being fit -- you can see a difference in the last decimal place of the $\phi$ values.}
+	\label{fig:res_run_omegaD_over_omega_res_theory_fit_region_1}
+\end{figure}
+
+
+\clearpage
+\subsection{Part D: Nonlinear Effects}
+\label{subsec:nonlinear_effects}
+As we are running a numerical simulation there is no problem in abandoning the small angle approximation and having the restoring force go as $-\omega_{0}^2 \sin\left(\theta\right)$. We only need to change $g\left(t, \omega;~\theta\right)$ to (\ref{eq:nonlinear_g}) and the Euler--Cromer and RK4 methods will run as easily as before. This is in sharp contrast to the difficultly of attempting to redo the analytical derivation.
+
+\begin{equation}
+\label{eq:nonlinear_g}
+g\left(t, \omega;~\theta\right)_{\text{nonlinear}} = -\omega_{0}^2 \sin\left(\theta\right) - 2\gamma \omega + \alpha_{D}\sin\left(\Omega_{D} t\right)
+\end{equation}
+
+We can compare the TODO
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{part_d/compare_runs_vary_linearity_low_alphaD/theta_vary_linearity_low_alphaD.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\theta\left(t\right)$ for the linear and nonlinear restoring force, $\alpha_{D} = 0.2$ [rad/s$^2$].}
+	\label{fig:theta_vary_linearity_low_alphaD}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{part_d/compare_runs_vary_linearity_low_alphaD/omega_vary_linearity_low_alphaD.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\omega\left(t\right)$ for the linear and nonlinear restoring force, $\alpha_{D} = 0.2$ [rad/s$^2$].}
+	\label{fig:omega_vary_linearity_low_alphaD}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{part_d/compare_runs_vary_linearity_high_alphaD/theta_vary_linearity_high_alphaD.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\theta\left(t\right)$ for the linear and nonlinear restoring force, $\alpha_{D} = 1.2$ [rad/s$^2$].}
+	\label{fig:theta_vary_linearity_high_alphaD}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{part_d/compare_runs_vary_linearity_high_alphaD/omega_vary_linearity_high_alphaD.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\omega\left(t\right)$ for the linear and nonlinear restoring force, $\alpha_{D} = 1.2$ [rad/s$^2$].}
+	\label{fig:omega_vary_linearity_high_alphaD}
+\end{figure}
+
+\clearpage
+Since the code is already written we can also see what the nonlinear restoring force does to the resonance curves, Figures~\ref{fig:res_sweep_thetaP_nonlinear} and~\ref{fig:res_sweep_phi_nonlinear}. For this resonance sweep $\alpha_{D}$ was left at 1.2 [rad/s$^2$] while $\theta_{0}$ was increased to $45^{\circ}$ to make the pendulum as nonlinear as possible. Note that the theory curves are still using the linear, small angle approximation out of necessity, but this is alright as it allows us to see how far the resonance spectrums diverge from the linear theory. With these parameters the pendulum exhibits very interesting behavior; seemingly standing on end at low driving frequencies, Figure~\ref{fig:res_sweep_rk4_nonlinear_low}, periodically swinging over the top at intermediate driving frequencies, Figure~\ref{fig:res_sweep_rk4_nonlinear_medium}, and behaving somewhat linear at high driving frequencies, Figure~\ref{fig:res_sweep_rk4_nonlinear_high}.
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{{part_d/res_sweep_rk4_nonlinear/res_runs/res_run_omegaD_over_omega_res_theory_0.09_fit_region}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Nonlinear $\theta\left(t\right)$ at low $\Omega_{D} = 0.0798$ [rad/s].}
+	\label{fig:res_sweep_rk4_nonlinear_low}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{{part_d/res_sweep_rk4_nonlinear/res_runs/res_run_omegaD_over_omega_res_theory_0.48_fit_region}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Nonlinear $\theta\left(t\right)$ at intermediate $\Omega_{D} = 0.4465$ [rad/s].}
+	\label{fig:res_sweep_rk4_nonlinear_medium}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{{part_d/res_sweep_rk4_nonlinear/res_runs/res_run_omegaD_over_omega_res_theory_1.33_fit_region}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Nonlinear $\theta\left(t\right)$ at high $\Omega_{D} = 1.2410$ [rad/s].}
+	\label{fig:res_sweep_rk4_nonlinear_high}
+\end{figure}
+
+
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{part_d/res_sweep_rk4_nonlinear/res_sweep_thetaP.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\theta_{P}\left(\Omega_{D}\right)$ resonance curve and fits, nonlinear restoring force. Points at low to intermediate $\Omega_{D}$ should be disregarded as the sinusoidal fits are clearly non--convergent there.}
+	\label{fig:res_sweep_thetaP_nonlinear}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{part_d/res_sweep_rk4_nonlinear/res_sweep_phi.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\phi\left(\Omega_{D}\right)$ resonance curve and fit, nonlinear restoring force. Points at low to intermediate $\Omega_{D}$ should be disregarded as the sinusoidal fits are clearly non--convergent there.}
+	\label{fig:res_sweep_phi_nonlinear}
+\end{figure}
+
+
+\clearpage
+\subsection{Part E: Chaos and Lyapunov Exponents}
+\label{subsec:lyapunov}
+
+TODO
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.2_theta0_0.000_rk4/runs/alphaD_0.2_theta0_0.000_Delta_theta0_0.002000_rk4}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\big|\Delta\theta\left(t\right)\big|$ curve and linear fit, $\alpha_{D} = 0.2$ [rad/s$^2$], non-chaotic regime.}
+	\label{fig:Dtheta_0.2}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.2_theta0_0.000_rk4/ave_of_alphaD_0.2_theta0_0.000_rk4_means_plot}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\lambda_{\text{Fit}}$ curve and mean, $\alpha_{D} = 0.2$ [rad/s$^2$], nonchaotic regime.}
+	\label{fig:lambda_0.2}
+\end{figure}
+
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.5_theta0_0.000_rk4/runs/alphaD_0.5_theta0_0.000_Delta_theta0_0.002000_rk4}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\big|\Delta\theta\left(t\right)\big|$ curve and linear fit, $\alpha_{D} = 0.5$ [rad/s$^2$], TODO regime.}
+	\label{fig:Dtheta_0.5}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.5_theta0_0.000_rk4/ave_of_alphaD_0.5_theta0_0.000_rk4_means_plot}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\lambda_{\text{Fit}}$ curve and mean, $\alpha_{D} = 0.5$ [rad/s$^2$], TODO regime.}
+	\label{fig:lambda_0.5}
+\end{figure}
+
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_1.2_theta0_0.000_rk4/runs/alphaD_1.2_theta0_0.000_Delta_theta0_0.002000_rk4}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\big|\Delta\theta\left(t\right)\big|$ curve and linear fit, $\alpha_{D} = 1.2$ [rad/s$^2$], chaotic regime.}
+	\label{fig:Dtheta_1.2}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_1.2_theta0_0.000_rk4/ave_of_alphaD_1.2_theta0_0.000_rk4_means_plot}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\lambda_{\text{Fit}}$ curve and mean, $\alpha_{D} = 1.2$ [rad/s$^2$], chaotic regime.}
+	\label{fig:lambda_1.2}
+\end{figure}
+
+
+
+\clearpage
 \section{Conclusions}
 \label{sec:Conclusions}
 TODO
@@ -285,9 +519,8 @@ The Python source code used to produce these results can be found online at \url
 \section{Supporting Material}
 \label{sec:Supporting_Material}
 
-% TODO
-%\lstinputlisting[style=output,label={lst:output}]{../code/output.log} % raw
-%\lstinputlisting[style=output,label={lst:output}]{./output/output.log} % saved 
+\lstinputlisting[style=output,label={lst:output}]{../code/output/output.log} % raw
+
 
 \clearpage
 \includepdf{../homework4.pdf}
@@ -296,7 +529,6 @@ The Python source code used to produce these results can be found online at \url
 \section{Code}
 \label{sec:code}
 
-%TODO add more if there are multiple .py's
 \lstinputlisting[style=python]{../code/chaotic_pendulum.py}
 
 \end{document} %%% end of doc %%%

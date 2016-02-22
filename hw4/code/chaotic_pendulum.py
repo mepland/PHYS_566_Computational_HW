@@ -20,8 +20,8 @@ gamma = 0.25 # gamma, dampening constant [s^-1]
 possible_alphaD = [0.2, 0.5, 1.2] # driving force amplitude [rad/s^2]
 
 # Euler-Cromer method parameters
-Dt = 0.001 # Time step of TODO simulation
-max_Dtheta = np.pi/100.0 # TODO Maximum radial distance allowed between time steps
+Dt = 0.001 # Time step of simulation
+max_Dtheta = np.pi/100.0 # Maximum radial distance allowed between time steps
 
 # compute omega0
 omega0 = g/l
@@ -89,7 +89,7 @@ class time_step:
 
     # Define a function to set theta while forcing -pi < theta <= pi 
     # WARNING do not use object.theta = X to set theta!!!
-    # I may clean this up using python properties, at the very end... TODO 
+    # Could have cleaned this up using python properties, no time, no real need 
     def set_theta(self, new_theta):
 	self.rawtheta = new_theta
 
@@ -113,7 +113,24 @@ def linearity(theta, lin_case):
 ########################################################
 # Define a function to run the simulation
 def run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case):
+
+	########################################################
+	# Define a function sim_kernel_f to hold (part) of the differential equation 
+	# See writeup section on Euler-Cromer/RK4 for details
+	#
+	# Clearly we didn't need to define this... but it makes things look nice
+	# and it will help if we need to reuse this code on a different diff eq
+	def sim_kernel_f(time, theta, omega):
+		return omega
+	# end def for sim_kernel_f 
 	
+	########################################################
+	# Define a function sim_kernel_g to hold (part) of the differential equation 
+	# See writeup section on Euler-Cromer/RK4 for details
+	def sim_kernel_g(time, omega, theta):
+		return -omega0*linearity(theta, lin_case) -2*gamma*omega + alphaD*np.sin(omegaD*time)
+	# end def for sim_kernel_g
+
 	# Start the list of time_steps
 	run = [time_step(0.0)]
 
@@ -140,19 +157,43 @@ def run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case):
 
 		run[n+1].forceD = alphaD*np.sin(omegaD*run[n+1].t)
 
-		if(sim_method == 'euler_cromer'): # Euler-Cromer method
+		'''
+		if(sim_method == 'euler_cromer_OLD_REMOVE'): # INITIALLY CODED Euler-Cromer method
 
 			# Compute the new velocity, see writeup for details...
 			run[n+1].omega = run[n].omega + ( -omega0*linearity(run[n].theta, lin_case) -2*gamma*run[n].omega + alphaD*np.sin(omegaD*run[n].t) )*Dt
 	
 			# Compute the new position
 			run[n+1].set_theta( run[n].theta + run[n+1].omega*Dt )
+		'''
 
-		#if(sim_method == 'runge_kutta'): # Runge-Kutta method
+		if(sim_method == 'ec'): # Euler-Cromer method, see writeup for details
 
-			# TODO
+			# Compute the new velocity and position
+			# Need to do omega first, implicit method...
+			run[n+1].omega = run[n].omega + sim_kernel_g(run[n].t, run[n].omega, run[n].theta) *Dt
+			run[n+1].set_theta( run[n].theta + sim_kernel_f(run[n].t, run[n].theta, run[n+1].omega)*Dt )
 
 
+		if(sim_method == 'rk4'): # Runge-Kutta method, see writeup for details
+
+			# compute the four (*2) samples:
+			k1 = sim_kernel_f(run[n].t, run[n].theta, run[n].omega)
+			l1 = sim_kernel_g(run[n].t, run[n].omega, run[n].theta)
+
+			k2 = sim_kernel_f(run[n].t + 0.5*Dt, run[n].theta + k1*0.5*Dt, run[n].omega + l1*0.5*Dt)
+			l2 = sim_kernel_g(run[n].t + 0.5*Dt, run[n].omega + l1*0.5*Dt, run[n].theta + k1*0.5*Dt)
+
+			k3 = sim_kernel_f(run[n].t + 0.5*Dt, run[n].theta + k2*0.5*Dt, run[n].omega + l2*0.5*Dt)
+			l3 = sim_kernel_g(run[n].t + 0.5*Dt, run[n].omega + l2*0.5*Dt, run[n].theta + k2*0.5*Dt)
+
+			k4 = sim_kernel_f(run[n].t + Dt, run[n].theta + k3*Dt, run[n].omega + l3*Dt)
+			l4 = sim_kernel_g(run[n].t + Dt, run[n].omega + l3*Dt, run[n].theta + k3*Dt)
+
+			# Compute the new velocity and position
+			# Order doesn't matter, explicit
+			run[n+1].set_theta( run[n].theta + (1.0/6.0)*(k1+ 2.0*k2 + 2.0*k3 + k4)*Dt )
+			run[n+1].omega = run[n].omega + (1.0/6.0)*(l1+ 2.0*l2 + 2.0*l3 + l4)*Dt
 
 		# Make sure we didn't move to far, notify user and exit if we did
 		Dtheta = abs(run[n+1].rawtheta - run[n].theta) # Use rawtheta to avoid branch cut problems
@@ -163,7 +204,7 @@ def run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case):
 		n += 1 # increment time step
 	# end while loop
 
-	print 'Run Completed!'
+	# print 'Run Completed!'
 
 	return run
 # end def for run_sim
@@ -239,6 +280,10 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 	for tl in force_theta_ax.get_yticklabels():
 		tl.set_color(force_theta_color)
 
+	# Write out the shared simulation parameters
+	sim_text = '$\\alpha_{D} =$ %.1f [rad/s$^2$], $\Omega_{D} =$ %.5f [rad/s]' % (run1[0].alphaD, run1[0].omegaD)
+	plt.figtext(0.55, 0.13, sim_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), backgroundcolor='white', alpha=1.0, size='x-small' )
+
 	theta_fig.savefig(m_path+'/'+'theta_'+fname+'.pdf')
 
 	# omega
@@ -267,7 +312,13 @@ def compare_runs(run1, run1_name, run2, run2_name, title, fname):
 	for tl in force_omega_ax.get_yticklabels():
 		tl.set_color(force_omega_color)
 
+	plt.figtext(0.55, 0.13, sim_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), backgroundcolor='white', alpha=1.0, size='x-small' )
+
 	omega_fig.savefig(m_path+'/'+'omega_'+fname+'.pdf')
+
+	# Clear the figures for the next comparison
+	theta_fig.clf()
+	omega_fig.clf()
 
 	print 'Compare Runs completed'
 # end def for compare_runs
@@ -312,9 +363,9 @@ def energy_run(run_name, omegaD, alphaD, theta0, run_end_periodsD, sim_method, l
 	ax = fig.add_subplot(111) # Get the axes, effectively
 
 	# make the plots
-	plt.plot(t_ndarray, kenetic_ndarray, ls='solid', label='$T$', c='blue')
-	plt.plot(t_ndarray, potential_ndarray, ls='solid', label='$V$', c='green')
-	plt.plot(t_ndarray, total_ndarray, ls='solid', label='$E = T + V$', c='black')
+	ax.plot(t_ndarray, kenetic_ndarray, ls='solid', label='$T$', c='blue')
+	ax.plot(t_ndarray, potential_ndarray, ls='solid', label='$V$', c='green')
+	ax.plot(t_ndarray, total_ndarray, ls='solid', label='$E = T + V$', c='black')
 
 	# Adjust the axis
 	x1,x2,y1,y2 = ax.axis()
@@ -329,8 +380,8 @@ def energy_run(run_name, omegaD, alphaD, theta0, run_end_periodsD, sim_method, l
 
 	# Write out the simulation parameters
 	sim_text = '$\\theta_{0} =$ %.1f$^{\circ}$' % (theta0*(180.0/np.pi))
-	if( sim_method == 'euler_cromer'): m_sim_method = 'Euler-Cromer'
-	if( sim_method == 'runge_kutta'): m_sim_method = 'Runge-Kutta'
+	if( sim_method == 'ec'): m_sim_method = 'Euler-Cromer'
+	if( sim_method == 'rk4'): m_sim_method = 'RK4'
 	if( lin_case == 'linear'): m_lin_case = 'Linear'
 	if( lin_case == 'nonlinear'): m_lin_case = 'Nonlinear'
 	sim_text += '\nSim. Method = %s\nLinearity = %s' % (m_sim_method, m_lin_case)
@@ -523,7 +574,7 @@ def res_run(omegaD, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_me
 	# Clear the figure for the next res_sweep
 	fig.clf()
 
-	print 'Resonance Run Completed!!'
+	# print 'Resonance Run Completed!!'
 
 	# Return the list of fit parameters
 	return op_par
@@ -566,7 +617,7 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 		phi_fits.append(all_op_pars[i][2])
 
 	# Note you must manually view each res_run output plot to make sure the fit isn't bad
-	# TODO could implement auto Rsquared check of some kind... very end
+	# Could have implement auto Rsquared check of some kind... over kill though
 
 	# Create ndarrays of the amplitudes and phases we can plot nicely, no bugs!
 	thetaP_fits_ndarray = np.array(thetaP_fits)
@@ -692,8 +743,8 @@ def res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD
 
 		# Write out the simulation parameters
 		sim_text = '$\\theta_{0} =$ %.1f$^{\circ}$' % (theta0*(180.0/np.pi))
-		if( sim_method == 'euler_cromer'): m_sim_method = 'Euler-Cromer'
-		if( sim_method == 'runge_kutta'): m_sim_method = 'Runge-Kutta'
+		if( sim_method == 'ec'): m_sim_method = 'Euler-Cromer'
+		if( sim_method == 'rk4'): m_sim_method = 'RK4'
 		if( lin_case == 'linear'): m_lin_case = 'Linear'
 		if( lin_case == 'nonlinear'): m_lin_case = 'Nonlinear'
 		sim_text += '\nSim. Method = %s\nLinearity = %s' % (m_sim_method, m_lin_case)
@@ -735,7 +786,7 @@ def lyapunov_fit_function(t_data, lambda_fit, offset_fit):
 ########################################################
 # Define a function to plot the difference between two close runs
 def lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_path, fit_range_min, fit_range_max):
-	print 'Beginning Lyapunov Run:'
+	# print 'Beginning Lyapunov Run:'
 
 	# always want the same omegaD, just hard code it
 	m_omegaD = 0.666
@@ -757,15 +808,42 @@ def lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_p
 
 	# Fill the lists
 	for i in range(len(run1)):
+		# Compute the y axis value we want to fill
+
+		# For alphaD = 0.5 where the pendulum is not chaotic and the runs converge I ran into a log(0) error
+		# It's a numpy warning, so regular python try, except doesn't work
+		# So just continue if we find a 0.0 difference, so log(0) warnings don't appear
+		# and the curve_fit doesn't crash when it hits the -Inf
+
+		m_abs = abs((run1[i].theta - run2[i].theta)/Delta_theta0)
+
+		# Debugging
+		# if( m_abs < 1.121e-13):
+		#	print 'i = %d, m_abs = %E, m_abs/sys.float_info.min = %E' % (i, m_abs, m_abs/sys.float_info.min)
+		if(m_abs == 0.0):	
+			continue
+
+		m_loged_y_value = np.log(m_abs)
+
+		'''
+		# Numpy warning so this doesn't work...
+		try:
+			m_loged_y_value = np.log(abs((run1[i].theta - run2[i].theta)/Delta_theta0))
+		except ZeroDivisionError:
+			print 'Caught a ZeroDivisionError, skipping this point, i=%d' % i
+			m_loged_y_value = None
+			continue
+		'''
+
 		if( run1[i].t < fit_range_min ):
 			left_nofit_t.append(run1[i].t)
-			left_nofit_Delta_theta.append(np.log(abs((run1[i].theta - run2[i].theta)/Delta_theta0)))
+			left_nofit_Delta_theta.append(m_loged_y_value)
 		elif( run1[i].t > fit_range_max):
 			right_nofit_t.append(run1[i].t)
-			right_nofit_Delta_theta.append(np.log(abs((run1[i].theta - run2[i].theta)/Delta_theta0)))
+			right_nofit_Delta_theta.append(m_loged_y_value)
 		elif( run1[i].t >= fit_range_min and run1[i].t <= fit_range_max):
 			fit_t.append(run1[i].t)
-			fit_Delta_theta.append(np.log(abs((run1[i].theta - run2[i].theta)/Delta_theta0)))
+			fit_Delta_theta.append(m_loged_y_value)
 
 	# Create the ndarrays
 	fit_t_ndarray = np.array(fit_t)
@@ -821,8 +899,8 @@ def lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_p
 	sim_text = '$\\theta_{0} =$ %.1f$^{\circ}$' % (theta0*(180.0/np.pi))
 	sim_text += ', $\\alpha_{D} =$ %.1f [rad/s]' % (alphaD)
 	sim_text += '\nFit Range: %.1f $\leq t \leq$ %.1f [s]' % (fit_range_min, fit_range_max)
-	if( sim_method == 'euler_cromer'): m_sim_method = 'Euler-Cromer'
-	if( sim_method == 'runge_kutta'): m_sim_method = 'Runge-Kutta'
+	if( sim_method == 'ec'): m_sim_method = 'Euler-Cromer'
+	if( sim_method == 'rk4'): m_sim_method = 'RK4'
 	sim_text += '\nSim. Method = %s' % (m_sim_method)
 	plt.figtext(0.665, 0.23, sim_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small' )
 
@@ -847,7 +925,7 @@ def lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_p
 	m_op_par_list = op_par.tolist() # op_par is a np ndarray...
 	m_op_par_list.append(Delta_theta0)
 
-	print 'Lyapunov Run Completed!!'
+	# print 'Lyapunov Run Completed!!'
 
 	# Return fit values to wrapper function
 	return m_op_par_list
@@ -856,8 +934,12 @@ def lyapunov_run(alphaD, theta0, Delta_theta0, run_end_periodsD, sim_method, m_p
 
 ########################################################
 # Define a function to run and average multiple lyapunov runs 
-def lyapunov_ave(alphaD, theta0, run_end_periodsD, sim_method):
+def lyapunov_ave(alphaD_num, theta0, run_end_periodsD, sim_method):
 	print 'Beginning Lyapunov Averaging:'
+
+	# Pick alphaD, do it this way so we can set the fit bounds
+	# in different cases if we need to...
+	alphaD = possible_alphaD[alphaD_num]
 
 	# make paths
 	run_name = 'ave_of_alphaD_%.1f_theta0_%.3f_%s' % (alphaD, theta0, sim_method)
@@ -875,7 +957,6 @@ def lyapunov_ave(alphaD, theta0, run_end_periodsD, sim_method):
 	m_op_pars.append(lyapunov_run(alphaD, theta0, 0.003, run_end_periodsD, sim_method, m_path2, 20.0, 75.0))
 	m_op_pars.append(lyapunov_run(alphaD, theta0, 0.004, run_end_periodsD, sim_method, m_path2, 20.0, 75.0))
 	m_op_pars.append(lyapunov_run(alphaD, theta0, 0.005, run_end_periodsD, sim_method, m_path2, 20.0, 75.0))
-	m_op_pars.append(lyapunov_run(alphaD, theta0, 0.006, run_end_periodsD, sim_method, m_path2, 20.0, 75.0))
 
 	# For reference...
 	# lyapunov_fit_function(t_data, lambda_fit, offset_fit)
@@ -908,8 +989,8 @@ def lyapunov_ave(alphaD, theta0, run_end_periodsD, sim_method):
 	fig = plt.figure('lyapunov_ave') # get a separate figure
 	ax = fig.add_subplot(111) # Get the axes, effectively
 
-        if( sim_method == 'euler_cromer'): m_sim_method = 'Euler-Cromer'
-        if( sim_method == 'runge_kutta'): m_sim_method = 'Runge-Kutta'
+        if( sim_method == 'ec'): m_sim_method = 'Euler-Cromer'
+        if( sim_method == 'rk4'): m_sim_method = 'RK4'
 	title = 'Fit Values for: $\\alpha_{D} =$ %.1f [rad/s$^2$], $\\theta_{0} =$ %.1f$^{\circ}$, %s' % (alphaD, theta0*(180.0/np.pi), m_sim_method)
 	ax.set_title(title)
 	ax.set_xlabel('$\Delta\\theta_{0}$ [rad]')
@@ -940,7 +1021,8 @@ def lyapunov_ave(alphaD, theta0, run_end_periodsD, sim_method):
 
 	# Adjust Axes
 	x1,x2,y1,y2 = ax.axis()
-	ax.set_ylim((y1, 1.1*y2))
+	if(y2 > 0): ax.set_ylim((y1, 1.1*y2))
+	elif(y2 < 0): ax.set_ylim((y1, 0.9*y2))
 	ax.set_xlim((0.0, 1.1*max(Delta_theta0s)))
 
 	# offset_x1,offset_x2,offset_y1,offset_y2 = offset_ax.axis()
@@ -977,47 +1059,88 @@ output_path = './output'
 ########################################################
 # Development Runs 
 
+# vary theta0
+'''
+ec_run = run_sim(possible_alphaD[0], 1.0, 0.0, 25, 'ec','linear')
+ec_run2 = run_sim(possible_alphaD[0], 1.0, 20.0*(np.pi/180.0), 25, 'ec','linear')
+compare_runs(ec_run, '$\\theta_{0} = 0.0^{\circ}$', ec_run2, '$\\theta_{0} = 10.0^{\circ}$', 'Vary $\\theta_{0}$', 'vary_theta0')
+'''
+
+# energy
+# energy_run('Reference', 0.9*omega_res_theory, possible_alphaD[0], 0.0*(np.pi/180.0), 10, 'ec','linear')
+
+# res_sweep
+#res_sweep(6, 0.95, possible_alphaD[0], 0.0, 12, 18, 'ec', 'linear')
+
+
+########################################################
+########################################################
+# Production Runs for paper 
+
 # run_sim(alphaD, omegaD, theta0, periodsD, sim_method, lin_case)
 # compare_runs(run1, run1_name, run2, run2_name, title, fname) 
 # energy_run(run_name, omegaD, alphaD, theta0, run_end_periodsD, sim_method, lin_case)
 # res_sweep(num_runs, omegaD_percent_range, alphaD, theta0, fit_begin_periodsD, run_end_periodsD, sim_method, lin_case)
-# lyapunov_ave(alphaD, theta0, run_end_periodsD, sim_method)
+# lyapunov_ave(alphaD_num, theta0, run_end_periodsD, sim_method)
 
-# vary theta0
-'''
-ec_run = run_sim(possible_alphaD[0], 1.0, 0.0, 25, 'euler_cromer','linear')
-ec_run2 = run_sim(possible_alphaD[0], 1.0, 20.0*(np.pi/180.0), 25, 'euler_cromer','linear')
-compare_runs(ec_run, '$\\theta_{0} = 0.0^{\circ}$', ec_run2, '$\\theta_{0} = 10.0^{\circ}$', 'Vary $\\theta_{0}$', 'vary_theta0')
-'''
+if(True):
+	top_output_path = output_path+'/plots_for_paper'
 
-# vary linearity 
-'''
-ec_run = run_sim(possible_alphaD[0], 1.0, np.pi, 25, 'euler_cromer','linear')
-ec_run2 = run_sim(possible_alphaD[0], 1.0, np.pi, 25, 'euler_cromer','nonlinear')
-compare_runs(ec_run, 'Linear', ec_run2, 'Nonlinear', 'Vary Linearity', 'vary_linearity')
-'''
+	# Part a
+	########################################################
+	print '\nPart a:'
+	print 'omega res theory = %.5f [rad/s]' % omega_res_theory
 
-# energy
-# energy_run('Reference', 0.9*omega_res_theory, possible_alphaD[0], 0.0*(np.pi/180.0), 10, 'euler_cromer','linear')
+	# Part b
+	########################################################
+	print '\nPart b:' 
+	output_path = top_output_path+'/part_b'	
 
-# res_sweep
-#res_sweep(6, 0.95, possible_alphaD[0], 0.0, 12, 18, 'euler_cromer', 'linear')
+	# Vary sim method
+	ec_run = run_sim(possible_alphaD[0], 0.8*omega_res_theory, 0.0, 18, 'ec','linear')
+	rk4_run = run_sim(possible_alphaD[0], 0.8*omega_res_theory, 0.0, 18, 'rk4','linear')
+	compare_runs(ec_run, 'Euler-Cromer', rk4_run, 'RK4', 'Vary Sim. Method', 'vary_sim_method')
 
-# lyapunov_ave
-# lyapunov_ave(alphaD, theta0, run_end_periodsD, sim_method)
+	# Sweep for resonances
+	res_sweep(30, 0.98, possible_alphaD[0], 0.0, 12, 18, 'rk4', 'linear')
 
-########################################################
-# Production Runs 
+	# Part c
+	########################################################
+	print '\nPart c:'
+	output_path = top_output_path+'/part_c'
 
-#ec_run = run_sim(possible_alphaD[0], 1.0, 0.0, 18, 'euler_cromer','linear')
-#ec_run2 = run_sim(possible_alphaD[0], 1.0, 30.0*(np.pi/180.0), 18, 'euler_cromer','linear')
-#compare_runs(ec_run, '$\\theta_{0} = 0.0^{\circ}$', ec_run2, '$\\theta_{0} = 30.0^{\circ}$', 'Vary $\\theta_{0}$', 'vary_theta0')
+	# Look at energies
+	energy_run('Euler-Cromer', 0.95*omega_res_theory, possible_alphaD[0], 10.0*(np.pi/180.0), 10, 'ec','linear')
+	energy_run('RK4', 0.95*omega_res_theory, possible_alphaD[0], 10.0*(np.pi/180.0), 10, 'rk4','linear')
 
-#energy_run('Reference', 0.9*omega_res_theory, possible_alphaD[0], 0.0*(np.pi/180.0), 10, 'euler_cromer','linear')
+	# Part d
+	########################################################
+	print '\nPart d:'
+	output_path = top_output_path+'/part_d'
 
-#res_sweep(30, 0.95, possible_alphaD[0], 0.0, 12, 18, 'euler_cromer', 'linear')
+	# Vary linearity, two different alphaD's
+	title = 'Vary Linearity: $\\alpha_{D} =$ %.1f [rad/s$^2$]' % (possible_alphaD[0])
+	linear_run = run_sim(possible_alphaD[0], 0.8*omega_res_theory, 0.0, 18, 'rk4','linear')
+	nonlinear_run = run_sim(possible_alphaD[0], 0.8*omega_res_theory, 0.0, 18, 'rk4','nonlinear')
+	compare_runs(linear_run, 'Linear', nonlinear_run, 'Nonlinear', title, 'vary_linearity_low_alphaD')
 
-lyapunov_ave(possible_alphaD[2], 0.0, 18, 'euler_cromer')
+	title = 'Vary Linearity: $\\alpha_{D} =$ %.1f [rad/s$^2$]' % (possible_alphaD[2])
+	linear_run = run_sim(possible_alphaD[2], 0.8*omega_res_theory, 0.0, 18, 'rk4','linear')
+	nonlinear_run = run_sim(possible_alphaD[2], 0.8*omega_res_theory, 0.0, 18, 'rk4','nonlinear')
+	compare_runs(linear_run, 'Linear', nonlinear_run, 'Nonlinear', title, 'vary_linearity_high_alphaD')
+
+	# Sweep for resonances with the large alphaD, non linear, high theta0, worst case nonlinear scenario just for fun
+	res_sweep(30, 0.98, possible_alphaD[2], 45.0*(np.pi/180.0), 14, 20, 'rk4', 'nonlinear')
+
+	# Part e
+	########################################################
+	print '\nPart e:'
+	output_path = top_output_path+'/part_e'
+
+	lyapunov_ave(0, 0.0, 18, 'rk4')
+	lyapunov_ave(1, 0.0, 18, 'rk4')
+	lyapunov_ave(2, 0.0, 18, 'rk4')
+
 
 
 ########################################################
