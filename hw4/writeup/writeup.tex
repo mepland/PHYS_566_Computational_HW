@@ -138,14 +138,13 @@
 \date{\today}
 
 \begin{abstract}
-TODO
-
+In this assignment the behavior of a dampened, driven simple pendulum was investigated numerically via the $\orderof\big(\left(\Delta t\right)^2\big)$ Euler--Cromer and $\orderof\big(\left(\Delta t\right)^4\big)$ Rung--Kutta methods. The pendulum's resonance curves, nonlinear behavior, and chaotic properties were studied for a variety of driving frequencies, amplitudes, and initial conditions.
 \end{abstract}\maketitle
 
 
 \section{Introduction}
 \label{sec:intro}
-TODO
+Damped, driven pendulums are a rich second order system for study, exhibiting many interesting behaviors such as resonance, nonlinear equations, and chaos. Furthermore they are a good system to model computationally as analytical solutions can be derived, in the limit of the linear, small angle approximation. In this assignment a damped, driven simple pendulum was simulated with the Euler--Cromer and Rung--Kutta methods. By varying parameters of the system resonance, nonlinear effects and chaos were studied in turn, as well as the differences between the two simulation methods themselves.
 
 \section{Theory}
 \label{sec:theory}
@@ -232,7 +231,6 @@ As our pendulum is a driven oscillator we can expect it to exhibit resonant beha
 
 Lastly, note that $\Omega_{\text{Res}}$ of (\ref{eq:omegaD_resonance}) solves (\ref{eq:resonance_derivative}) when $\omega_{0} \neq \gamma$. If $\omega_{0} \approx \gamma$ the $(\cdots)^{-3/2}$ term diverges and we would need to set $\gamma = \omega_{0}$ at the beginning of the problem and redo the derivation. Fortunately for the parameters used in this assignment we have $\omega_{0} = 1.0~s^{-1} \neq \gamma = 0.25~s^{-1} \rightarrow \Omega_{\text{Res}} =$ 0.93541 [rad/s], so this is not an issue.
 
-\clearpage
 \subsection{Euler--Cromer}
 \label{subsec:eulercromer}
 In the past we have used the Euler method solve differential equations time step to time step. The advantage of using the Euler method is its simplicity, however its solutions usually do not conserve energy but increase in total energy over time. We can remedy this by switching to the Euler--Cromer method, also known as the semi-implicit Euler method\footnote{The name semi-implicit comes from the fact that $n+1$ data in the form of $\omega_{n+1}$ is being used to compute $\theta_{n+1}$. Also note that like the unmodified Euler method, the Euler--Cromer method is still only a $\orderof\big(\left(\Delta t\right)^2\big)$ method.}, by modifying the Euler method to use $\omega_{n+1}$ instead of $\omega_{n}$ when computing $\theta_{n+1}$, see (\ref{eq:euler_chromer1}, \ref{eq:euler_chromer2}).
@@ -285,11 +283,11 @@ l_{4} &= g\left(t_{n} +\Delta t, \omega_{n}+l_{3}\Delta t;~\theta_{n}+k_{3}\Delt
 
 \subsection{Parts B and C: Vary Simulation Methods}
 \label{subsec:vary_sim_methods}
-We will begin by comparing the results of the two simulation methods, Euler--Cromer and RK4, by looking at plots of $\theta\left(t\right), \omega\left(t\right)$, and energy versus time. As you can see in Figures~\ref{fig:theta_vary_sim_method},~\ref{fig:omega_vary_sim_method},~\ref{fig:energy_Euler-Cromer}, and~\ref{fig:energy_RK4}, both methods produced virtually identical results in every case for this pendulum.
+We will begin by comparing the results of the two simulation methods, Euler--Cromer and RK4, by looking at plots of $\theta\left(t\right)$, $\omega\left(t\right)$, and energy versus time. As you can see in Figures~\ref{fig:theta_vary_sim_method},~\ref{fig:omega_vary_sim_method},~\ref{fig:energy_Euler-Cromer}, and~\ref{fig:energy_RK4}, both methods produced virtually identical results for this pendulum. For the energy plots note that we do not expect total energy to be conserved, even at steady state, because $F_{\text{Driving}}$ and $F_{\text{Dampening}}$ are external forces that continually doing work on the system. If we turn them off, $\alpha_{D} = 0.0$, $\gamma = 0.0$, we do have energy conservation, see Section~\ref{subsec:E_conservation}.
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{part_b/compare_runs_vary_sim_method/theta_vary_sim_method.pdf}
+  \includegraphics[width=.6\textwidth]{part_b/compare_runs_vary_sim_method/theta_vary_sim_method.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\theta\left(t\right)$ for the Euler--Cromer and RK4 methods.}
 	\label{fig:theta_vary_sim_method}
@@ -297,7 +295,7 @@ We will begin by comparing the results of the two simulation methods, Euler--Cro
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{part_b/compare_runs_vary_sim_method/omega_vary_sim_method.pdf}
+  \includegraphics[width=.6\textwidth]{part_b/compare_runs_vary_sim_method/omega_vary_sim_method.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\omega\left(t\right)$ for the Euler--Cromer and RK4 methods.}
 	\label{fig:omega_vary_sim_method}
@@ -305,7 +303,7 @@ We will begin by comparing the results of the two simulation methods, Euler--Cro
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{part_c/energy/energy_Euler-Cromer.pdf}
+  \includegraphics[width=.8\textwidth]{part_c/energy/energy_Euler-Cromer.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{Kinetic, potential and total energy when using the Euler--Cromer method.}
 	\label{fig:energy_Euler-Cromer}
@@ -313,7 +311,7 @@ We will begin by comparing the results of the two simulation methods, Euler--Cro
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{part_c/energy/energy_RK4.pdf}
+  \includegraphics[width=.8\textwidth]{part_c/energy/energy_RK4.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{Kinetic, potential and total energy when using the RK4 method.}
 	\label{fig:energy_RK4}
@@ -322,30 +320,33 @@ We will begin by comparing the results of the two simulation methods, Euler--Cro
 \clearpage
 \subsection{Part B: Resonance}
 \label{subsec:resonance_results}
-For the rest of the results we will use the RK4 method to simulate the pendulum. By fitting the steady state $\theta\left(t\right)$ curve with a sinusoid we are able to extract $\theta_{P}\left(\Omega_{D}\right)$ and $\phi\left(\Omega_{D}\right)$ for many different value of $\Omega_{D}$ about $\Omega_{\text{Res}}$, see Figures~\ref{fig:res_sweep_thetaP_1} and~\ref{fig:res_sweep_phi_1}. The code was written to do this automatically after waiting a preset number of driving force periods to ensure the steady state had been reached. Supporting plots were made for each $\Omega_{D}$ tested to confirm the fit was good and only included the steady state wave, see Figures~\ref{fig:res_run_omegaD_over_omega_res_theory_1} and~\ref{fig:res_run_omegaD_over_omega_res_theory_fit_region_1} for one example.
+For the rest of the results we will use the RK4 method to simulate the pendulum. By fitting the steady state $\theta\left(t\right)$ curve with a sinusoid we are able to extract $\theta_{P}\left(\Omega_{D}\right)$ and $\phi\left(\Omega_{D}\right)$ for many different value of $\Omega_{D}$ about $\Omega_{\text{Res}}$, see Figures~\ref{fig:res_sweep_thetaP_1} and~\ref{fig:res_sweep_phi_1}. The code was written to automatically perform the fit after waiting a preset number of driving force periods to ensure the steady state had been reached. Supporting plots were made for each $\Omega_{D}$ tested to confirm the fit was good and only included the steady state wave, see Figures~\ref{fig:res_run_omegaD_over_omega_res_theory_1} and~\ref{fig:res_run_omegaD_over_omega_res_theory_fit_region_1} for one example at $\Omega_{D} = 1.6688$ [rad/s].
 
-TODO talk about theory curves; gamma, FWHM
+The $\theta_{P}\left(\Omega_{D}\right)$ resonance peak itself was fit twice, to a Gaussian with an offset and to the form of the analytical curve derived earlier (\ref{eq:thetaP}). As you can see in Figure~\ref{fig:res_sweep_thetaP_1} the analytical ``Spectrum Fit'' matched the simulation data and the theory curve extremely well, all the fit parameters match to five decimal places. This validates our analytical derivation in Section~\ref{sec:theory} or our code, depending on which you initially trust more. On the other hand, the Gaussian fit was very poor; which is not surprising considering the analytical curve is not symmetric. The chief reason for fitting with a Gaussian is the assignment asked us to compare the Full Width at Half Maximum\footnote{With the offset included, the FWHM = $2\sigma\sqrt{-2\ln{\left(2^{-1} (1-(\text{offset}/\text{amplitude}))\right)}}$, which reduces to the usual FWHM if offset = 0.} to $\gamma$. The Gaussian fit's FWHM was $\approx 4\gamma$ suggesting that $\gamma^2$ sets the width of the resonance peak, though this is better seen analytically in (\ref{eq:thetaP}) as well as in Section~\ref{subsec:mathematica_plot}.
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{part_b/res_sweep_rk4_linear/res_sweep_thetaP.pdf}
+  \includegraphics[width=.95\textwidth]{part_b/res_sweep_rk4_linear/res_sweep_thetaP.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\theta_{P}\left(\Omega_{D}\right)$ resonance curve and fits.}
 	\label{fig:res_sweep_thetaP_1}
 \end{figure}
 
+\clearpage
+The $\phi\left(\Omega_{D}\right)$ resonance peak was fit with the analytical curve (\ref{eq:phi}). Again there was very good agreement between the simulation data, the analytical fit curve, and the analytical theory.
+
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{part_b/res_sweep_rk4_linear/res_sweep_phi.pdf}
+  \includegraphics[width=.95\textwidth]{part_b/res_sweep_rk4_linear/res_sweep_phi.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\phi\left(\Omega_{D}\right)$ resonance curve and fit.}
 	\label{fig:res_sweep_phi_1}
 \end{figure}
 
-
+\clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{{part_b/res_sweep_rk4_linear/res_runs/res_run_omegaD_over_omega_res_theory_1.78}.pdf}
+  \includegraphics[width=.7\textwidth]{{part_b/res_sweep_rk4_linear/res_runs/res_run_omegaD_over_omega_res_theory_1.78}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\theta\left(t\right)$ at $\Omega_{D} = 1.6688$ [rad/s], full view. Note how the fit is performed on data well into the steady state region.}
 	\label{fig:res_run_omegaD_over_omega_res_theory_1}
@@ -353,7 +354,7 @@ TODO talk about theory curves; gamma, FWHM
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{{part_b/res_sweep_rk4_linear/res_runs/res_run_omegaD_over_omega_res_theory_1.78_fit_region}.pdf}
+  \includegraphics[width=.7\textwidth]{{part_b/res_sweep_rk4_linear/res_runs/res_run_omegaD_over_omega_res_theory_1.78_fit_region}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\theta\left(t\right)$ at $\Omega_{D} = 1.6688$ [rad/s], fit region. The sinusoidal fit typically matched the theory predictions to all the shown decimal places. This $\Omega_{D}$ plot was chosen to be included in particular to illustrate that the data was really being fit -- you can see a difference in the last decimal place of the $\phi$ values.}
 	\label{fig:res_run_omegaD_over_omega_res_theory_fit_region_1}
@@ -370,11 +371,12 @@ As we are running a numerical simulation there is no problem in abandoning the s
 g\left(t, \omega;~\theta\right)_{\text{nonlinear}} = -\omega_{0}^2 \sin\left(\theta\right) - 2\gamma \omega + \alpha_{D}\sin\left(\Omega_{D} t\right)
 \end{equation}
 
-We can compare the TODO
+When the driving force is small, $\alpha_{D} = 0.2$ [rad/s$^2$], the pendulum does not move far from $\theta = 0$. In this case we expect the small angle approximation hold, and indeed there are no real differences between the linear and nonlinear simulations, see Figures~\ref{fig:theta_vary_linearity_low_alphaD} and~\ref{fig:omega_vary_linearity_low_alphaD}. However, when the driving force is increased, $\alpha_{D} = 1.2$ [rad/s$^2$], it drives the pendulum up to higher $\theta$'s, breaking the small angle approximation. In this case significant deviations occur between the linear and nonlinear simulations, see Figures~\ref{fig:theta_vary_linearity_high_alphaD} and~\ref{fig:omega_vary_linearity_high_alphaD}. The nonlinear simulation is the correct method to use here, and really could be used always just to be on the safe side. 
 
+\clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{part_d/compare_runs_vary_linearity_low_alphaD/theta_vary_linearity_low_alphaD.pdf}
+  \includegraphics[width=.75\textwidth]{part_d/compare_runs_vary_linearity_low_alphaD/theta_vary_linearity_low_alphaD.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\theta\left(t\right)$ for the linear and nonlinear restoring force, $\alpha_{D} = 0.2$ [rad/s$^2$].}
 	\label{fig:theta_vary_linearity_low_alphaD}
@@ -382,15 +384,16 @@ We can compare the TODO
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{part_d/compare_runs_vary_linearity_low_alphaD/omega_vary_linearity_low_alphaD.pdf}
+  \includegraphics[width=.75\textwidth]{part_d/compare_runs_vary_linearity_low_alphaD/omega_vary_linearity_low_alphaD.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\omega\left(t\right)$ for the linear and nonlinear restoring force, $\alpha_{D} = 0.2$ [rad/s$^2$].}
 	\label{fig:omega_vary_linearity_low_alphaD}
 \end{figure}
 
+\clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{part_d/compare_runs_vary_linearity_high_alphaD/theta_vary_linearity_high_alphaD.pdf}
+  \includegraphics[width=.75\textwidth]{part_d/compare_runs_vary_linearity_high_alphaD/theta_vary_linearity_high_alphaD.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\theta\left(t\right)$ for the linear and nonlinear restoring force, $\alpha_{D} = 1.2$ [rad/s$^2$].}
 	\label{fig:theta_vary_linearity_high_alphaD}
@@ -398,101 +401,72 @@ We can compare the TODO
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{part_d/compare_runs_vary_linearity_high_alphaD/omega_vary_linearity_high_alphaD.pdf}
+  \includegraphics[width=.75\textwidth]{part_d/compare_runs_vary_linearity_high_alphaD/omega_vary_linearity_high_alphaD.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\omega\left(t\right)$ for the linear and nonlinear restoring force, $\alpha_{D} = 1.2$ [rad/s$^2$].}
 	\label{fig:omega_vary_linearity_high_alphaD}
-\end{figure}
-
-\clearpage
-Since the code is already written we can also see what the nonlinear restoring force does to the resonance curves, Figures~\ref{fig:res_sweep_thetaP_nonlinear} and~\ref{fig:res_sweep_phi_nonlinear}. For this resonance sweep $\alpha_{D}$ was left at 1.2 [rad/s$^2$] while $\theta_{0}$ was increased to $45^{\circ}$ to make the pendulum as nonlinear as possible. Note that the theory curves are still using the linear, small angle approximation out of necessity, but this is alright as it allows us to see how far the resonance spectrums diverge from the linear theory. With these parameters the pendulum exhibits very interesting behavior; seemingly standing on end at low driving frequencies, Figure~\ref{fig:res_sweep_rk4_nonlinear_low}, periodically swinging over the top at intermediate driving frequencies, Figure~\ref{fig:res_sweep_rk4_nonlinear_medium}, and behaving somewhat linear at high driving frequencies, Figure~\ref{fig:res_sweep_rk4_nonlinear_high}.
-
-\begin{figure}[!htbc]
-  \centering
-  \includegraphics[width=.65\textwidth]{{part_d/res_sweep_rk4_nonlinear/res_runs/res_run_omegaD_over_omega_res_theory_0.09_fit_region}.pdf}
-	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Nonlinear $\theta\left(t\right)$ at low $\Omega_{D} = 0.0798$ [rad/s].}
-	\label{fig:res_sweep_rk4_nonlinear_low}
-\end{figure}
-
-\begin{figure}[!htbc]
-  \centering
-  \includegraphics[width=.65\textwidth]{{part_d/res_sweep_rk4_nonlinear/res_runs/res_run_omegaD_over_omega_res_theory_0.48_fit_region}.pdf}
-	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Nonlinear $\theta\left(t\right)$ at intermediate $\Omega_{D} = 0.4465$ [rad/s].}
-	\label{fig:res_sweep_rk4_nonlinear_medium}
-\end{figure}
-
-\begin{figure}[!htbc]
-  \centering
-  \includegraphics[width=.65\textwidth]{{part_d/res_sweep_rk4_nonlinear/res_runs/res_run_omegaD_over_omega_res_theory_1.33_fit_region}.pdf}
-	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Nonlinear $\theta\left(t\right)$ at high $\Omega_{D} = 1.2410$ [rad/s].}
-	\label{fig:res_sweep_rk4_nonlinear_high}
-\end{figure}
-
-
-
-\begin{figure}[!htbc]
-  \centering
-  \includegraphics[width=.65\textwidth]{part_d/res_sweep_rk4_nonlinear/res_sweep_thetaP.pdf}
-	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{$\theta_{P}\left(\Omega_{D}\right)$ resonance curve and fits, nonlinear restoring force. Points at low to intermediate $\Omega_{D}$ should be disregarded as the sinusoidal fits are clearly non--convergent there.}
-	\label{fig:res_sweep_thetaP_nonlinear}
-\end{figure}
-
-\begin{figure}[!htbc]
-  \centering
-  \includegraphics[width=.65\textwidth]{part_d/res_sweep_rk4_nonlinear/res_sweep_phi.pdf}
-	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{$\phi\left(\Omega_{D}\right)$ resonance curve and fit, nonlinear restoring force. Points at low to intermediate $\Omega_{D}$ should be disregarded as the sinusoidal fits are clearly non--convergent there.}
-	\label{fig:res_sweep_phi_nonlinear}
 \end{figure}
 
 
 \clearpage
 \subsection{Part E: Chaos and Lyapunov Exponents}
 \label{subsec:lyapunov}
+When working through the theory of the linear pendulum we showed that the initial conditions only affected the transient solution which decayed away exponentially to leave the steady state sinusoid. As such two different pendulums, or systems, with slightly different initial conditions are expected to converge over time. However if we force the pendulum to behave nonlinearly, by increasing $\alpha_{D}$ or $\theta_{0}$ till the small angle approximation breaks down, we must use $-\omega_{0}^2 \sin\left(\theta\right)$ as the restoring force and can no longer rely on the linear theory. Now if two nonlinear systems are setup with very slightly different initial conditions they may no longer converge, but instead diverge exponentially over time\footnote{Each system is still fully deterministic once the initial conditions are specified. Chaotic system are just extremely sensitive to the initial conditions}. Systems displaying such exponential divergence for small changes in initial conditions are classified as chaotic and can be quantitatively described by a Lyapunov Exponent $\lambda$, defined in (\ref{eq:lyapunov_exp}) where $\left|\Delta\theta\left(t\right)\right|$ is the difference in position\footnote{In general we can look at the difference in phase space, but position is fine here.} between the systems at time $t$ and $\left|\Delta\theta_{0}\right|$ is the difference in initial position.
 
-TODO
+\begin{equation}
+\label{eq:lyapunov_exp}
+\big|\Delta\theta\left(t\right)\big| = \big|\Delta\theta_{0}\big|e^{\lambda t}
+\end{equation}
 
+While any combination of initial conditions can be altered to produce chaotic behavior, we will only be changing $\theta_{0}$ itself by 0.001 $\leq \Delta\theta_{0} \leq$ 0.005 [rad/s] in our simulation. The resulting $\left|\Delta\theta\left(t\right)\right|$ values are so small we instead plot $\ln\left(\left|\Delta\theta\left(t\right)/\Delta\theta_{0}\right|\right)$ which also helps by linearizing the data. To find $\lambda$ we then fit the linearized plot with (\ref{eq:lyapunov_fit})\footnote{An offset $c$ is included so the fit is not overly constrained, even though $c$ should ideally be 0 as we have already divided by $\Delta\theta_{0}$.} over the region in time where the systems are exponentially diverging.
+
+\begin{equation}
+\label{eq:lyapunov_fit}
+\ln\Bigg(\bigg|\frac{\Delta\theta\left(t\right)}{\Delta\theta_{0}}\bigg|\Bigg) = c_{\text{Fit}} + \lambda_{\text{Fit}} t
+\end{equation}
+
+By repeating the simulation and fit multiple times for small changes in $\Delta\theta_{0}$ we can average the $\lambda_{\text{Fit}}$'s and come up with an estimate of $\lambda$ of the system. Three different driving force amplitudes where considered in turn, $\alpha_{D} =$ 0.2, 0.5, and 1.2 [rad/s$^2$]. The first two where small enough that the system behaved linearly and did not exhibit chaos, indeed the $\lambda_{\text{Fit}}$'s $<$ 0 verified the transient exponential decay, see Figures~\ref{fig:Dtheta_0.2}--\ref{fig:lambda_0.5}.
+
+For $\alpha_{D}$ = 1.2 [rad/s$^2$], previously looked at in Section~\ref{subsec:nonlinear_effects}, the system was again nonlinear and showed chaotic behavior, see Figure~\ref{fig:Dtheta_1.2}. The mean $\lambda_{\text{Fit}}$ was found to be 0.1251 [s$^{-1}$], although the structure in Figure~\ref{fig:lambda_1.2} shows that the mean alone may not adequately describe the situation. For the purposes of this computational assignment we will leave it here, though further work more interested in the particulars of system itself should investigate this issue further.
+
+\clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.2_theta0_0.000_rk4/runs/alphaD_0.2_theta0_0.000_Delta_theta0_0.002000_rk4}.pdf}
+  \includegraphics[width=.75\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.2_theta0_0.000_rk4/runs/alphaD_0.2_theta0_0.000_Delta_theta0_0.002000_rk4}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{$\big|\Delta\theta\left(t\right)\big|$ curve and linear fit, $\alpha_{D} = 0.2$ [rad/s$^2$], non-chaotic regime.}
+	\caption{$\big|\Delta\theta\left(t\right)\big|$ curve and linear fit, $\alpha_{D} = 0.2$ [rad/s$^2$], nonchaotic regime.}
 	\label{fig:Dtheta_0.2}
 \end{figure}
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.2_theta0_0.000_rk4/ave_of_alphaD_0.2_theta0_0.000_rk4_means_plot}.pdf}
+  \includegraphics[width=.75\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.2_theta0_0.000_rk4/ave_of_alphaD_0.2_theta0_0.000_rk4_means_plot}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\lambda_{\text{Fit}}$ curve and mean, $\alpha_{D} = 0.2$ [rad/s$^2$], nonchaotic regime.}
 	\label{fig:lambda_0.2}
 \end{figure}
 
-
+\clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.5_theta0_0.000_rk4/runs/alphaD_0.5_theta0_0.000_Delta_theta0_0.002000_rk4}.pdf}
+  \includegraphics[width=.75\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.5_theta0_0.000_rk4/runs/alphaD_0.5_theta0_0.000_Delta_theta0_0.002000_rk4}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{$\big|\Delta\theta\left(t\right)\big|$ curve and linear fit, $\alpha_{D} = 0.5$ [rad/s$^2$], TODO regime.}
+	\caption{$\big|\Delta\theta\left(t\right)\big|$ curve and linear fit, $\alpha_{D} = 0.5$ [rad/s$^2$], nonchaotic regime.}
 	\label{fig:Dtheta_0.5}
 \end{figure}
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.5_theta0_0.000_rk4/ave_of_alphaD_0.5_theta0_0.000_rk4_means_plot}.pdf}
+  \includegraphics[width=.75\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_0.5_theta0_0.000_rk4/ave_of_alphaD_0.5_theta0_0.000_rk4_means_plot}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{$\lambda_{\text{Fit}}$ curve and mean, $\alpha_{D} = 0.5$ [rad/s$^2$], TODO regime.}
+	\caption{$\lambda_{\text{Fit}}$ curve and mean, $\alpha_{D} = 0.5$ [rad/s$^2$], nonchaotic regime.}
 	\label{fig:lambda_0.5}
 \end{figure}
 
-
+\clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_1.2_theta0_0.000_rk4/runs/alphaD_1.2_theta0_0.000_Delta_theta0_0.002000_rk4}.pdf}
+  \includegraphics[width=.75\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_1.2_theta0_0.000_rk4/runs/alphaD_1.2_theta0_0.000_Delta_theta0_0.002000_rk4}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\big|\Delta\theta\left(t\right)\big|$ curve and linear fit, $\alpha_{D} = 1.2$ [rad/s$^2$], chaotic regime.}
 	\label{fig:Dtheta_1.2}
@@ -500,7 +474,7 @@ TODO
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.65\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_1.2_theta0_0.000_rk4/ave_of_alphaD_1.2_theta0_0.000_rk4_means_plot}.pdf}
+  \includegraphics[width=.75\textwidth]{{part_e/lyapunov_ave/ave_of_alphaD_1.2_theta0_0.000_rk4/ave_of_alphaD_1.2_theta0_0.000_rk4_means_plot}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\lambda_{\text{Fit}}$ curve and mean, $\alpha_{D} = 1.2$ [rad/s$^2$], chaotic regime.}
 	\label{fig:lambda_1.2}
@@ -511,15 +485,94 @@ TODO
 \clearpage
 \section{Conclusions}
 \label{sec:Conclusions}
-TODO
+Over the course of this assignment we have throughly investigated the behavior of a dampened, driven simple pendulum by looking at its resonance curves, nonlinear effects, and chaotic properties. We also compared two different simulation methods, Euler--Cromer and Rung--Kutta, that can numerically solve the pendulum's governing differential equation. Though this assignment was a longer one there is plenty of material left that could be investigated with relatively small extensions to the existing code base. In addition to further studies in to the single pendulum's chaotic behavior, a double pendulum could easily be modeled by updating $g\left(t, \omega;~\theta\right)$ and extending the time step class to hold the second pendulum's position and velocity.
 
 The Python source code used to produce these results can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/hw4/code}, and is included in Section~\ref{sec:code}.
+
+\clearpage
+\section{Extra Material}
+\label{sec:Extra_Material}
+
+\subsection{Nonlinear Resonance Curves}
+\label{subsec:nonlinear_resonance}
+
+Since the code is already written we can also see what the nonlinear restoring force does to the resonance curves, Figures~\ref{fig:res_sweep_thetaP_nonlinear} and~\ref{fig:res_sweep_phi_nonlinear}. For this resonance sweep $\alpha_{D}$ was left at 1.2 [rad/s$^2$] while $\theta_{0}$ was increased to $45^{\circ}$ to make the pendulum as nonlinear as possible. Note that the theory curves are still using the linear, small angle approximation out of necessity, but this is alright as it allows us to see how far the resonance curves diverge from the linear theory. With these parameters the pendulum exhibits very interesting behavior; seemingly standing on end at low driving frequencies, Figure~\ref{fig:res_sweep_rk4_nonlinear_low}, periodically swinging over the top at intermediate driving frequencies, Figure~\ref{fig:res_sweep_rk4_nonlinear_medium}, and behaving somewhat linear at high driving frequencies, Figure~\ref{fig:res_sweep_rk4_nonlinear_high}.
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.58\textwidth]{{extra_material/res_sweep_rk4_nonlinear/res_runs/res_run_omegaD_over_omega_res_theory_0.09_fit_region}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Nonlinear $\theta\left(t\right)$ at low $\Omega_{D} = 0.0798$ [rad/s].}
+	\label{fig:res_sweep_rk4_nonlinear_low}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.58\textwidth]{{extra_material/res_sweep_rk4_nonlinear/res_runs/res_run_omegaD_over_omega_res_theory_0.48_fit_region}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Nonlinear $\theta\left(t\right)$ at intermediate $\Omega_{D} = 0.4465$ [rad/s].}
+	\label{fig:res_sweep_rk4_nonlinear_medium}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.8\textwidth]{{extra_material/res_sweep_rk4_nonlinear/res_runs/res_run_omegaD_over_omega_res_theory_1.33_fit_region}.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Nonlinear $\theta\left(t\right)$ at high $\Omega_{D} = 1.2410$ [rad/s].}
+	\label{fig:res_sweep_rk4_nonlinear_high}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.8\textwidth]{extra_material/res_sweep_rk4_nonlinear/res_sweep_thetaP.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\theta_{P}\left(\Omega_{D}\right)$ resonance curve and fits, nonlinear restoring force. Points at low to intermediate $\Omega_{D}$ should be disregarded as the sinusoidal fits are clearly non--convergent there.}
+	\label{fig:res_sweep_thetaP_nonlinear}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.8\textwidth]{extra_material/res_sweep_rk4_nonlinear/res_sweep_phi.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\phi\left(\Omega_{D}\right)$ resonance curve and fit, nonlinear restoring force. Points at low to intermediate $\Omega_{D}$ should be disregarded as the sinusoidal fits are clearly non--convergent there.}
+	\label{fig:res_sweep_phi_nonlinear}
+\end{figure}
+
+\clearpage
+\subsection{Energy Conservation}
+\label{subsec:E_conservation}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{extra_material/energy/energy_Euler-Cromer.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Free pendulum, $\alpha_{D} = 0.0$, $\gamma = 0.0$: Kinetic, potential and total energy when using the Euler--Cromer method.}
+	\label{fig:energy_conservation_Euler-Cromer}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.65\textwidth]{extra_material/energy/energy_RK4.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Free pendulum, $\alpha_{D} = 0.0$, $\gamma = 0.0$: Kinetic, potential and total energy when using the RK4 method.}
+	\label{fig:energy_conservation_RK4}
+\end{figure}
 
 \clearpage
 \section{Supporting Material}
 \label{sec:Supporting_Material}
 
 \lstinputlisting[style=output,label={lst:output}]{../code/output/output.log} % raw
+
+\clearpage
+\subsection{Analytical Resonance Curves} \label{subsec:mathematica_plot}
+
+\graphicspath{ {../} }
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.95\textwidth]{res_theory.pdf}
+	%\label{fig:energy_conservation_RK4}
+\end{figure}
 
 
 \clearpage

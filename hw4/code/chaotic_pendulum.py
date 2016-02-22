@@ -1129,9 +1129,6 @@ if(True):
 	nonlinear_run = run_sim(possible_alphaD[2], 0.8*omega_res_theory, 0.0, 18, 'rk4','nonlinear')
 	compare_runs(linear_run, 'Linear', nonlinear_run, 'Nonlinear', title, 'vary_linearity_high_alphaD')
 
-	# Sweep for resonances with the large alphaD, non linear, high theta0, worst case nonlinear scenario just for fun
-	res_sweep(30, 0.98, possible_alphaD[2], 45.0*(np.pi/180.0), 14, 20, 'rk4', 'nonlinear')
-
 	# Part e
 	########################################################
 	print '\nPart e:'
@@ -1140,6 +1137,19 @@ if(True):
 	lyapunov_ave(0, 0.0, 18, 'rk4')
 	lyapunov_ave(1, 0.0, 18, 'rk4')
 	lyapunov_ave(2, 0.0, 18, 'rk4')
+
+	# Extra Material 
+	########################################################
+	print '\nExtra Material'
+	output_path = top_output_path+'/extra_material'
+
+	# Sweep for resonances with the large alphaD, non linear, high theta0, worst case nonlinear scenario
+	res_sweep(30, 0.98, possible_alphaD[2], 45.0*(np.pi/180.0), 14, 20, 'rk4', 'nonlinear')
+
+	# Look at energy conservation, no driving force, no dampening
+	gamma = 0.0
+	energy_run('Euler-Cromer', 0.95*omega_res_theory, 0.0, 30.0*(np.pi/180.0), 14, 'ec','nonlinear')
+	energy_run('RK4', 0.95*omega_res_theory, 0.0, 30.0*(np.pi/180.0), 14, 'rk4','nonlinear')
 
 
 
