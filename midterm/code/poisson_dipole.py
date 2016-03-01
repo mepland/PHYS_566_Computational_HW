@@ -66,7 +66,7 @@ def find_spatial(y_index,x_index, L, Dx):
 # epsilon is the tolerance convergence condition/limit
 # fixed_accuracy is the accuracy convergence condition/limit
 # Debugging prints some extra info and makes the initial plot
-def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots):
+def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots, extra_plots_fname):
 	if(debugging): print 'Beginning run_sim:'	
 
 	# Check that L is odd
@@ -157,7 +157,7 @@ def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots
 	# if desired, make initial V and boundary value plots 
 	if(extra_plots):
 		artificial_run = [V, -99, L, Dx, alpha, sim_method, halt_method, epsilon, fixed_accuracy]
-		plot_V(' Initial', 'initial', 10, './output/plots_for_paper/extra_material/poisson_dipole', artificial_run)
+		plot_V(' Initial', 'initial'+extra_plots_fname, 10, './output/plots_for_paper/poisson_dipole/extra_material', artificial_run)
 
 		# Make a boundary_V filling every allowed point with 7.7
 		boundary_V = np.zeros((L,L))
@@ -166,7 +166,7 @@ def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots
 				# Check if we can edit this cell
 				if(write_allowed(l_y,l_x)): boundary_V[l_y][l_x] = 7.7
 		artificial_run[0] = boundary_V
-		plot_V(' Boundary', 'boundary', -99, './output/plots_for_paper/extra_material/poisson_dipole', artificial_run)
+		plot_V(' Boundary', 'boundary'+extra_plots_fname, 3, './output/plots_for_paper/poisson_dipole/extra_material', artificial_run)
 
 
 	########################################################
@@ -224,7 +224,8 @@ def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots
 		A_sweep = 0.0
 
 		# loop over the array
-		# TODO if time snake search
+		# Future work, spiral 'snake' style out from origin to not bias towards better
+		# values in the lower right corner compared to the rest of the simulation region 
 		for l_y in range(L-1):
 			for l_x in range(L-1):
 				# Check if we can edit this cell
@@ -389,7 +390,6 @@ def plot_V(optional_title, fname, n_contours, m_path, run=[]):
 	if(debugging): print 'V plot printed'
 # end def for plot_V
 
-# TODO write V(r) plotting function
 ########################################################
 # Define a function to plot V(r) along the dipoles axis 
 def plot_Vr_dipole_axis(optional_title, fname, m_path, run=[]):
@@ -415,6 +415,7 @@ def plot_Vr_dipole_axis(optional_title, fname, m_path, run=[]):
         ax.set_xlabel('$r$ [m]')
         ax.set_ylabel('$V$ [V]')
 
+	########################################################
 	# Define a function for the expected V(r) 
 	def Vr_dipole_axis_theory(r):
  		if(abs(r) == a/2.0):
@@ -503,7 +504,7 @@ def plot_N_vs_epsilon(L, Dx, epsilon_low, epsilon_step0, tipping_point1, epsilon
 	m_epsilon = epsilon_low
 	while m_epsilon <= epsilon_high:
 		fname = 'V_for_epsilon_%4e' % m_epsilon
-		this_run = run_sim(L, Dx, sim_method, halt_method, m_epsilon, fixed_accuracy, False)
+		this_run = run_sim(L, Dx, sim_method, halt_method, m_epsilon, fixed_accuracy, False, '')
 		plot_V('$N_{\mathrm{iter}}\left(n\\right)$ Run', fname, num_contours, m_path+'/runs', this_run)
 
 		print 'For epsilon = %f, Niter = %d' % (m_epsilon, this_run[1])
@@ -602,8 +603,8 @@ def plot_N_vs_epsilon(L, Dx, epsilon_low, epsilon_step0, tipping_point1, epsilon
 # end def for plot_N_vs_epsilon
 
 ########################################################
-# Define a function to plot N_iter vs n = L*L for fixed Dx
-def plot_N_vs_n(fixed_accuracy, Dx, L_low, L_step0, tipping_point1, L_step1, L_high, m_path, jacobi_n_fit_cut):
+# Define a function to plot N_iter vs n = L*L for fixed spatial length, variable L -> variable Dx
+def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high, m_path, jacobi_n_fit_cut):
 	print 'Beginning plot_N_vs_n:'	
 	
 	# Set fixed parameters
@@ -624,13 +625,15 @@ def plot_N_vs_n(fixed_accuracy, Dx, L_low, L_step0, tipping_point1, L_step1, L_h
 		m_n = m_L*m_L
 		fname = 'V_for_L_%d' % m_L	
 
-		jacobi_run = run_sim(m_L, Dx, 'jacobi', halt_method, epsilon, fixed_accuracy, False)
+		m_Dx = 2*R/(m_L-1)
+
+		jacobi_run = run_sim(m_L, m_Dx, 'jacobi', halt_method, epsilon, fixed_accuracy, False, '')
 		plot_V(' Jacobi $N_{\mathrm{iter}}\left(n\\right)$ run', 'jacobi_'+fname, num_contours, m_path+'/jacobi_runs', jacobi_run)
 
-		sor_run = run_sim(m_L, Dx, 'SOR', halt_method, epsilon, fixed_accuracy, False)
+		sor_run = run_sim(m_L, m_Dx, 'SOR', halt_method, epsilon, fixed_accuracy, False, '')
 		plot_V(' SOR $N_{\mathrm{iter}}\left(n\\right)$ run', 'sor_'+fname, num_contours, m_path+'/sor_runs', sor_run)
 
-		print 'for L = %d, n = %.4E, Niter = %d (Jacobi), %d (SOR)' % (m_L, m_n, jacobi_run[1], sor_run[1])
+		print 'for L = %d, Dx = %.4f [m], n = %.4E, Niter = %d (Jacobi), %d (SOR)' % (m_L, m_Dx, m_n, jacobi_run[1], sor_run[1])
 
 		if(m_n < jacobi_n_fit_cut or jacobi_n_fit_cut == -99):
 			ns_fit.append(m_n)
@@ -744,8 +747,6 @@ def plot_N_vs_n(fixed_accuracy, Dx, L_low, L_step0, tipping_point1, L_step1, L_h
 			# Draw vertical line where fit ends
 			jacobi_ax.axvline(x=jacobi_n_fit_cut, ls = 'dashed', label='Fit Boundary', c='grey')
 
-			print 'The cut Jacobi fit should be drawn!' # TODO it isn't though...
-
 	# Write out the fit parameters
 	jacobi_fit_text = 'Fit Function: $N_{\mathrm{iter}} = c + b n^{a}$' 
 	if(jacobi_fit_status):
@@ -774,8 +775,7 @@ def plot_N_vs_n(fixed_accuracy, Dx, L_low, L_step0, tipping_point1, L_step1, L_h
 	sor_ax.legend(fontsize='small')
 
 	# Annotate
-	ann_text = '$\Delta x =$ %.3f [m]' % (Dx)
-	ann_text += '\n$R =$ %2.1f [m], $a =$ %1.1f [m]' % (R, a)
+	ann_text = '$R =$ %2.1f [m], $a =$ %1.1f [m]' % (R, a)
 	ann_text += '\n$Q/\epsilon_{0} =$ %1.1f [Vm]' % (Q_over_epsilon0)
 	ann_text += '\nConv. Criteria: $A$ < %.2E [V]' % (fixed_accuracy)
 
@@ -809,30 +809,35 @@ def plot_N_vs_n(fixed_accuracy, Dx, L_low, L_step0, tipping_point1, L_step1, L_h
 output_path = './output/development/poisson_dipole'
 
 debugging = False
-'''
+
 target_Dx = 0.1
 L = int(round(2*R/target_Dx))
 if(L % 2 == 0): L += 1 # ensure L is odd
 Dx = 2*R/(L-1)
-'''
+
 # Part b stuff TODO fix up
-# plot_N_vs_epsilon(L, Dx, 10e-6, 5e-6, 0.00018, 0.00050, 0.005, 0.001, 0.01, output_path)
+# plot_N_vs_epsilon(L, Dx, epsilon_low, epsilon_step0, tipping_point1, epsilon_step1, tipping_point2, epsilon_step2, epsilon_high, m_path) 
+#plot_N_vs_epsilon(L, Dx, 10e-6, 5e-6, 0.00018, 0.00050, 0.005, 0.001, 0.01, output_path)
 
 
-
-
-# Part c stuff
+# OLD part c stuff
 # plot_N_vs_n(0.00001, 0.1, 10, 5, 60, 20, 80, output_path, -99)
 # plot_N_vs_n(0.00001, 0.1, 10, 5, 80, 10, 200, output_path, 1800)
+# fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high, m_path, jacobi_n_fit_cut
+ 
+
+plot_N_vs_n(0.001, 35, 5, 80, 20, 210, output_path, -99)
+
 
 ########################################################
 ########################################################
 # Production Runs for paper 
 
-if(True):
+if(False):
 	top_output_path = './output/plots_for_paper/poisson_dipole'
 	debugging = False
 
+	'''
         # Part a
         ########################################################
         print '\nPart a:'
@@ -844,7 +849,7 @@ if(True):
 	if(L % 2 == 0): L += 1 # ensure L is odd
 
 	# Run and print the sim
-	m_run = run_sim(L, Dx, 'jacobi', 'epsilon', 0.00001, -99.0, True)
+	m_run = run_sim(L, Dx, 'jacobi', 'epsilon', 0.00001, -99.0, True, '_best_jacobi')
 	plot_V('', 'best_jacobi', 60, output_path, m_run)
 	plot_Vr_dipole_axis('', 'best_jacobi', output_path, m_run)
 
@@ -854,16 +859,29 @@ if(True):
         output_path = top_output_path+'/part_b'
 
 	# TODO get fit working, then add here
+	'''
 
         # Part c
         ########################################################
         print '\nPart c:'
         output_path = top_output_path+'/part_c'
 
-	plot_N_vs_n(0.00001, 0.1, 10, 5, 60, 15, 200, output_path, -99)
+	# TODO
 
-	# TODO extra material, that shows the prop boundary
+	'''
+	# Extra Material
+        ########################################################
+        print '\nExtra Material:'
+        output_path = top_output_path+'/extra_material'
 
+	# do a run that shows the prop boundary
+	Dx = 0.1
+	L = int(round(2*R/Dx)) # find the closest L that will work
+	if(L % 2 == 0): L += 1 # ensure L is odd
+	m_run = run_sim(L, Dx, 'jacobi', 'epsilon', 0.02, -99.0, False, '')
+	plot_V('', 'prop_illustration', 60, output_path, m_run)
+
+	'''
 
 ########################################################
 print '\n\nDone!\n'
