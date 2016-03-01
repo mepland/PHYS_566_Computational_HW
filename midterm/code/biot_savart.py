@@ -29,6 +29,7 @@ print '---------------------------------------------'
 
 print '\nSide Length L = %.1f [m]' % L
 print '"Current" mu0*I = %.1f [1257 T nm]' % mu0I
+print 'Conversion Factor (to [T m]) = %.4E' % m_T_conv_factor
 
 print '\n---------------------------------------------'
 print '---------------------------------------------\n'
@@ -94,34 +95,33 @@ def dB(l_hat, r, r_prime):
 ########################################################
 # Define a line integral function to integrate over one of the squares sides
 # Using the Riemann sum method
-def line_integral(l_hat, l_begin, r, Dx, n):
+def line_integral(l_hat, l_begin, r, Dl, n):
 
-	# debugging flagged safety check
-	if(debugging):
-		if( L/n != Dx):
-			print 'ERROR! n and Dx are miss matched! Exiting!'
-			sys.exit()
+	# safety check
+	if( L/n != Dl):
+		print 'ERROR! n and Dl are miss matched! Exiting!'
+		sys.exit()
 
 	# Do the integral
 	integral = np.array([0,0,0])
 	for i in range(1,n):
 		# Find the midpoint vector/location
-		r_prime = l_begin + l_hat*Dx*(i-0.5)
+		r_prime = l_begin + l_hat*Dl*(i-0.5)
 		# add it up
-		integral = integral + dB(l_hat, r, r_prime)*Dx
+		integral = integral + dB(l_hat, r, r_prime)*Dl
 
 	return integral
 # end def for line_integral
 
 ########################################################
 # Define a loop integral function to integrate over the whole square 
-def loop_integral(r, Dx, n):
+def loop_integral(r, Dl, n):
 
 	# sum up the four sides 
-	l1 = line_integral( y, corner_A, r, Dx, n)
-	l2 = line_integral(-x, corner_B, r, Dx, n)
-	l3 = line_integral(-y, corner_C, r, Dx, n)
-	l4 = line_integral( x, corner_D, r, Dx, n)
+	l1 = line_integral( y, corner_A, r, Dl, n)
+	l2 = line_integral(-x, corner_B, r, Dl, n)
+	l3 = line_integral(-y, corner_C, r, Dl, n)
+	l4 = line_integral( x, corner_D, r, Dl, n)
 
 	return l1+l2+l3+l4
 # end def for loop_integral
@@ -129,7 +129,7 @@ def loop_integral(r, Dx, n):
 ########################################################
 # Define a function to plot B along x, y or z
 # fixed_point is a 3 vector, free_var_num is 0,1,2 ~ the var to cycle through
-def plot_B(target_Dx, fixed_point, free_var_num, var_min, var_step1, var_trans1, var_step2, var_max, fname, m_path, optional_title, plot_theory):
+def plot_B(target_Dl, fixed_point, free_var_num, var_min, var_step1, var_trans1, var_step2, var_max, fname, m_path, optional_title, plot_theory):
 	if(debugging): print 'Beginning plot_B for fname: '+fname	
 
 	# Figure out the free and fixed variables...
@@ -156,8 +156,8 @@ def plot_B(target_Dx, fixed_point, free_var_num, var_min, var_step1, var_trans1,
 
 
 	# Set up sim parameters
-	n = int(L/target_Dx)
-	Dx = (L/float(n))
+	n = int(L/target_Dl)
+	Dl = (L/float(n))
 
 	# Set up arrays to hold result
 	free_var_list = []
@@ -174,7 +174,7 @@ def plot_B(target_Dx, fixed_point, free_var_num, var_min, var_step1, var_trans1,
 		test_r[free_var_num] = free_var
 
 		# sim and save data 
-		B_vec = loop_integral(test_r, Dx, n)
+		B_vec = loop_integral(test_r, Dl, n)
 
 		free_var_list.append(free_var)
 		Bx_list.append(B_vec[0])
@@ -196,14 +196,14 @@ def plot_B(target_Dx, fixed_point, free_var_num, var_min, var_step1, var_trans1,
 	# Set up the figure and axes
         fig = plt.figure('fig')
         ax = fig.add_subplot(111)
-        ax.set_title('$B('+free_var_name+')$'+optional_title)
+        ax.set_title('$\mathbf{B}('+free_var_name+')$'+optional_title)
         ax.set_xlabel('$'+free_var_name+'$ [m]')
-        ax.set_ylabel('$B$ ['+B_units+']')
+        ax.set_ylabel('$\mathrm{B}$ ['+B_units+']')
 
 	# plot Bx, By, Bz
-	ax.plot(free_var_ndarray, Bz_ndarray, ls='solid', label='$B_{z}$ Simulation', c='blue', ms = 6, marker='o')
-        ax.plot(free_var_ndarray, Bx_ndarray, ls='solid', label='$B_{x}$ Simulation', c='crimson', ms = 6, marker='v')
-        ax.plot(free_var_ndarray, By_ndarray, ls='solid', label='$B_{y}$ Simulation', c='lime', ms = 6, marker='^')
+	ax.plot(free_var_ndarray, Bz_ndarray, ls='solid', label='$\mathrm{B}_{z}$ Simulation', c='blue', ms = 4, marker='o')
+        ax.plot(free_var_ndarray, Bx_ndarray, ls='solid', label='$\mathrm{B}_{x}$ Simulation', c='crimson', ms = 4, marker='v')
+        ax.plot(free_var_ndarray, By_ndarray, ls='solid', label='$\mathrm{B}_{y}$ Simulation', c='lime', ms = 4, marker='^')
 
 	ann_text_y = 0.685
 
@@ -222,14 +222,14 @@ def plot_B(target_Dx, fixed_point, free_var_num, var_min, var_step1, var_trans1,
 		# end def for Bz_theory
 
 		free_var_fine = np.linspace(var_min,var_max,200)
-		ax.plot(free_var_fine, Bz_theory(free_var_fine), ls='dashed', label='$B_{z}$ Theory', c='black')
+		ax.plot(free_var_fine, Bz_theory(free_var_fine), ls='dashed', label='$\mathrm{B}_{z}$ Theory', c='black')
 		ann_text_y = 0.65
 
 
 	# Annotate
-	ann_text = '$n =$ %3.d, $\Delta %s =$ %.4f [m]' % (n, free_var_name, Dx)
-	ann_text += '\n$%s$ =%.1f [m], $%s$ = %.1f [m]' % (fixed_var1_name, fixed_point[fixed_vars[0]], fixed_var2_name, fixed_point[fixed_vars[1]])
-	ann_text += '\n%.1f < $%s$ < %.1f [m]' % (var_min, free_var_name, var_max) 
+	ann_text = '$n =$ %3.d, $\Delta l =$ %.4f [m]' % (n, Dl)
+	ann_text += '\n$%s =$ %.1f [m], $%s =$ %.1f [m]' % (fixed_var1_name, fixed_point[fixed_vars[0]], fixed_var2_name, fixed_point[fixed_vars[1]])
+	ann_text += '\n%.1f $< %s <$ %.1f [m]' % (var_min, free_var_name, var_max) 
 	plt.figtext(0.697, ann_text_y, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small')
 
 	# adjust axis
@@ -242,7 +242,7 @@ def plot_B(target_Dx, fixed_point, free_var_num, var_min, var_step1, var_trans1,
 
 	# Print it out
 	make_path(m_path)
-	fig.savefig(m_path+'/B_'+free_var_name+'_'+fname+'.pdf')	
+	fig.savefig(m_path+'/'+fname+'Bxyz_of_'+free_var_name+'.pdf')	
 
 	fig.clf() # Clear fig for reuse
 
@@ -265,45 +265,42 @@ debugging = True
 debugging2 = False
 
 # n = 200
-# Dx = L/float(n)
+# Dl = L/float(n)
 
 ########################################################
 ########################################################
 # Production Runs for paper 
 
-# plot_B(target_Dx, fixed_point, free_var_num, var_min, var_step1, var_trans1, var_step2, var_max, fname, m_path, optional_title, plot_theory)
+# plot_B(target_Dl, fixed_point, free_var_num, var_min, var_step1, var_trans1, var_step2, var_max, fname, m_path, optional_title, plot_theory)
 
 if(True):
-	top_output_path = './output/plots_for_paper/biot_savart'
+	output_path = './output/plots_for_paper/biot_savart'
 
 	debugging = False
 	debugging2 = False
 
-	n = 300
-	Dx = L/float(n)
+	n = 500
+	Dl = L/float(n)
 
 	free_var_max = 3.5
 
         # Part a
         ########################################################
         print '\nPart a:'
-        output_path = top_output_path+'/part_a'
 
-	plot_B(Dx, np.array([0.0,0.0,-99.0]), 2, -free_var_max, 0.1, 2.5, 0.5, free_var_max, 'Bxyz', output_path, '', True)
+	plot_B(Dl, np.array([0.0,0.0,-99.0]), 2, -free_var_max, 0.1, 2.5, 0.5, free_var_max, 'part_a_', output_path, '', True)
 
         # Part b
         ########################################################
         print '\nPart b:'
-        output_path = top_output_path+'/part_b'
 
-	plot_B(Dx, np.array([-99.0,0.0,1.0]), 0, -free_var_max, 0.1, 3.0, 0.5, free_var_max, 'Bxyz', output_path, '', False)
+	plot_B(Dl, np.array([-99.0,0.0,1.0]), 0, -free_var_max, 0.1, 3.0, 0.5, free_var_max, 'part_b_', output_path, '', False)
 
         # Part c
         ########################################################
         print '\nPart c:'
-        output_path = top_output_path+'/part_c'
 
-	plot_B(Dx, np.array([0.5,0.0,-99.0]), 2, -free_var_max, 0.05, 2.0, 0.5, free_var_max, 'Bxyz', output_path, '', False)
+	plot_B(Dl, np.array([0.5,0.0,-99.0]), 2, -free_var_max, 0.05, 2.0, 0.5, free_var_max, 'part_c_', output_path, '', False)
 
 ########################################################
 print '\n\nDone!\n'

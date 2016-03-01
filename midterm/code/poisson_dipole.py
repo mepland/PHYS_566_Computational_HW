@@ -9,6 +9,7 @@ import matplotlib.lines as mlines
 #import matplotlib as mpl # We need to import all of matplotlib just to set rcParams once...
 #from matplotlib.ticker import MultipleLocator
 from scipy.optimize import curve_fit
+from matplotlib.ticker import LogFormatterExponent 
 
 ########################################################
 # Set fixed/global parameters [SI units]
@@ -280,7 +281,8 @@ def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots
 			print 'ERROR! Unknown sim_method! Exiting!'
 			sys.exit()
 		n_sweep += 1
-		if(debugging): print 'Sweep number = %5d, tol_current = %.5E, A_current = %.5E' % (n_sweep, sweep[1], sweep[2])
+		
+		if(debugging or n_sweep % 500 == 0): print 'Sweep number = %5d, tol_current = %.5E, A_current = %.5E' % (n_sweep, sweep[1], sweep[2])
 	# end while loop
 
 	if(debugging): print 'run_sim completed'
@@ -314,7 +316,7 @@ def plot_V(optional_title, fname, n_contours, m_path, run=[]):
 	# Set up the figure and axes
         fig = plt.figure('fig')
         ax = fig.add_subplot(111)
-        ax.set_title('$V\left(x,y\\right)$'+optional_title)
+        ax.set_title('$V(x,y)$'+optional_title)
         ax.set_xlabel('$x$ [m]')
         ax.set_ylabel('$y$ [m]')
 
@@ -333,7 +335,7 @@ def plot_V(optional_title, fname, n_contours, m_path, run=[]):
 	# ax.clabel(CS, inline=1, fontsize=10, fmt='%2.2f')
 
 	# Set the color bar
-	CB = plt.colorbar(CS, shrink=0.8, extend='both', filled=True, cmap='inferno', ax=ax, label='$V\left(x,y\\right)$ [V]')
+	CB = plt.colorbar(CS, shrink=0.8, extend='both', filled=True, cmap='inferno', ax=ax, label='$V(x,y)$ [V]')
 
 	legend_handles = []
 	# If it's the initial/diagnostics plot, draw vertical dashed lines at +-a
@@ -353,8 +355,8 @@ def plot_V(optional_title, fname, n_contours, m_path, run=[]):
 	ax.add_artist(boundary_square)
 	legend_handles.append(mlines.Line2D([], [], ls='dashed', color='black', label='Sim. Boundary'))
 
-	if(fname != 'initial' and fname != 'boundary'): 
-		# Add dashed square for the max distance info can propigate in Niter steps
+	if(n_sweep != -99): 
+		# Add dashed square for the max distance info can propagate in Niter steps
 		max_info_prop = a + Dx*n_sweep 
 		info_prop_square = plt.Rectangle((-max_info_prop,-max_info_prop), 2*max_info_prop, 2*max_info_prop, angle=0.0, ls='dotted', color='maroon', fill=False, label='Prop. Boundary')
 		ax.add_artist(info_prop_square)
@@ -368,9 +370,9 @@ def plot_V(optional_title, fname, n_contours, m_path, run=[]):
 	if(fname != 'initial' and fname != 'boundary'): 
 		if(sim_method == 'jacobi'): ann_text += '\nSim. Method = Jacobi'
 		if(sim_method == 'SOR'): ann_text += '\nSim. Method = SOR, $\\alpha =$ %.3f' % (alpha)
-		if(halt_method == 'epsilon'): ann_text += '\nConv. Criteria: $\epsilon <$ %.2E [V]' % (epsilon)
- 		if(halt_method == 'fixed_accuracy'): ann_text += '\nConv. Criteria: $A$ < %.2E [V]' % (fixed_accuracy)
-		ann_text += '\n$N_{\mathrm{iter}} =$ %5.d' % (n_sweep)
+		if(halt_method == 'epsilon'): ann_text += '\nConv. Criteria: $\epsilon <$ %.1E [V]' % (epsilon)
+ 		if(halt_method == 'fixed_accuracy'): ann_text += '\nConv. Criteria: $A <$ %.1E [V]' % (fixed_accuracy)
+		ann_text += '\n$N_{\mathrm{iter}} =$ %.d' % (n_sweep)
 	plt.figtext(0.145, 0.13, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small')
 
 	# set axis
@@ -411,7 +413,7 @@ def plot_Vr_dipole_axis(optional_title, fname, m_path, run=[]):
 	# Set up the figure and axes
         fig = plt.figure('fig')
         ax = fig.add_subplot(111)
-        ax.set_title('$V(r)$ along dipole axis ($\\theta = 0$)'+optional_title)
+        ax.set_title('$V(r)$ along Dipole Axis ($\\theta = 0$)'+optional_title)
         ax.set_xlabel('$r$ [m]')
         ax.set_ylabel('$V$ [V]')
 
@@ -464,9 +466,9 @@ def plot_Vr_dipole_axis(optional_title, fname, m_path, run=[]):
 	ann_text += '\n$Q/\epsilon_{0} =$ %1.1f [Vm]' % (Q_over_epsilon0)
 	if(sim_method == 'jacobi'): ann_text += '\nSim. Method = Jacobi'
 	if(sim_method == 'SOR'): ann_text += '\nSim. Method = SOR, $\\alpha =$ %.3f' % (alpha)
-	if(halt_method == 'epsilon'): ann_text += '\nConv. Criteria: $\epsilon <$ %.2E [V]' % (epsilon)
-	if(halt_method == 'fixed_accuracy'): ann_text += '\nConv. Criteria: $A$ < %.2E [V]' % (fixed_accuracy)
-	ann_text += '\n$N_{\mathrm{iter}} =$ %5.d' % (n_sweep)
+	if(halt_method == 'epsilon'): ann_text += '\nConv. Criteria: $\epsilon <$ %.1E [V]' % (epsilon)
+	if(halt_method == 'fixed_accuracy'): ann_text += '\nConv. Criteria: $A <$ %.1E [V]' % (fixed_accuracy)
+	ann_text += '\n$N_{\mathrm{iter}} =$ %.d' % (n_sweep)
 	plt.figtext(0.145, 0.13, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small')
 
 	# set axis
@@ -479,7 +481,7 @@ def plot_Vr_dipole_axis(optional_title, fname, m_path, run=[]):
 
 	# Print it out
 	make_path(m_path)
-	fig.savefig(m_path+'/Vr_dipole_axis'+fname+'.pdf')	
+	fig.savefig(m_path+'/Vr_dipole_axis_'+fname+'.pdf')	
 
 	fig.clf() # Clear fig for reuse
 
@@ -505,15 +507,15 @@ def plot_N_vs_epsilon(L, Dx, epsilon_low, epsilon_step0, tipping_point1, epsilon
 	while m_epsilon <= epsilon_high:
 		fname = 'V_for_epsilon_%4e' % m_epsilon
 		this_run = run_sim(L, Dx, sim_method, halt_method, m_epsilon, fixed_accuracy, False, '')
-		plot_V('$N_{\mathrm{iter}}\left(n\\right)$ Run', fname, num_contours, m_path+'/runs', this_run)
+		plot_V(' $N_{\mathrm{iter}}(\epsilon)$ Run', fname, num_contours, m_path+'/runs', this_run)
 
 		print 'For epsilon = %f, Niter = %d' % (m_epsilon, this_run[1])
 		epsilons.append(m_epsilon)
 		n_sweeps.append(this_run[1])
 
-		if(m_epsilon < tipping_point1-epsilon_step0):
+		if(m_epsilon < tipping_point1):
 			m_epsilon += epsilon_step0
-		elif(m_epsilon < tipping_point2-epsilon_step1):
+		elif(m_epsilon < tipping_point2):
 			m_epsilon += epsilon_step1
 		else:
 			m_epsilon += epsilon_step2
@@ -530,55 +532,21 @@ def plot_N_vs_epsilon(L, Dx, epsilon_low, epsilon_step0, tipping_point1, epsilon
         fig = plt.figure('fig')
         ax = fig.add_subplot(111)
 
-        ax.set_title('$N_{\mathrm{iter}}\left(\epsilon\\right)$')
+        ax.set_title('$N_{\mathrm{iter}}(\epsilon)$')
         ax.set_xlabel('$\epsilon$ [V]')
         ax.set_ylabel('$N_{\mathrm{iter}}$')
 
+	# scale axis
 	x_scale = 0.1
-	ax.set_xlim((0.0, (1+x_scale)*epsilon_high))
+	ax.set_xlim((0.0, (1+x_scale)*max(epsilons)))
 	y_scale = 0.1
 	ax.set_ylim(((1-y_scale)*min(n_sweeps), (1+x_scale)*max(n_sweeps)))
 
 	# Create the plot
 	ax.scatter(epsilons_ndarray, n_sweeps_ndarray, marker='o', label='$N_{\mathrm{iter}}$', c='blue')
 
-	# Make the plot log log
-	ax.set_xscale('log')
+	# Make the plot semi log, log log doesn't work, x doesn't vary by enough
 	ax.set_yscale('log')
-
-	'''
-	# Fitting 
-	########################################################
-
-	########################################################
-	# Define the epsilon fit function
-	def epsilon_fit_function(epsilon_data, pow_fit, slope_fit, offset_fit):
-	        return offset_fit + slope_fit*pow(epsilon_data, pow_fit)
-	# end def epsilon_fit_function
-
-	# actually perform the fit
-	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
-	m_p0 = [-1.0, 100.0, 0.0]
-
-	op_par, covar_matrix = curve_fit(epsilon_fit_function, epsilons_ndarray, n_sweeps_ndarray, p0=m_p0)
-	
-	# Create fine grain fit x axis
-	fit_x_ndarray = np.linspace(0.0,(1+x_scale)*epsilon_high,150)
-
-	# plot the fit
-	ax.plot(fit_x_ndarray, epsilon_fit_function(fit_x_ndarray, *op_par), ls='solid', label='Fit', c='green')
-	
-	# TODO Write out the fit parameters
-#	fit_text = 'Fit Function: ' 
-#	fit_text = '$\lambda_{\mathrm{Fit}} =$ %.5f [TODO$^{-1}$]' % (op_par[0])
-#	fit_text += '\n$c_{\mathrm{Fit}} =$ %.5f [TODO]' % (op_par[2])
-	fit_text = 'op_par[0] = %.5f' % (op_par[0])
-	fit_text += '\nop_par[1] = %.5f' % (op_par[1])
-	fit_text += '\nop_par[2] = %.5f' % (op_par[2])
-
-	plt.figtext(0.64, 0.5, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small')
-	'''
-
 
 	# Draw the legend
         ax.legend(fontsize='small')
@@ -591,7 +559,7 @@ def plot_N_vs_epsilon(L, Dx, epsilon_low, epsilon_step0, tipping_point1, epsilon
 	if(sim_method == 'SOR'): ann_text += '\nSim. Method = SOR'
 	if(halt_method == 'epsilon'): ann_text += '\n$\epsilon$ Conv. Criteria'
 	if(halt_method == 'fixed_accuracy'): ann_text += '\n$A$ Conv. Criteria'
-	plt.figtext(0.65, 0.7, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small')
+	plt.figtext(0.699, 0.70, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small')
 
 	# Print it out
 	make_path(m_path)
@@ -628,12 +596,12 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 		m_Dx = 2*R/(m_L-1)
 
 		jacobi_run = run_sim(m_L, m_Dx, 'jacobi', halt_method, epsilon, fixed_accuracy, False, '')
-		plot_V(' Jacobi $N_{\mathrm{iter}}\left(n\\right)$ run', 'jacobi_'+fname, num_contours, m_path+'/jacobi_runs', jacobi_run)
+		plot_V(' Jacobi $N_{\mathrm{iter}}(n)$ Run', 'jacobi_'+fname, num_contours, m_path+'/jacobi_runs', jacobi_run)
 
 		sor_run = run_sim(m_L, m_Dx, 'SOR', halt_method, epsilon, fixed_accuracy, False, '')
-		plot_V(' SOR $N_{\mathrm{iter}}\left(n\\right)$ run', 'sor_'+fname, num_contours, m_path+'/sor_runs', sor_run)
+		plot_V(' SOR $N_{\mathrm{iter}}(n)$ Run', 'sor_'+fname, num_contours, m_path+'/sor_runs', sor_run)
 
-		print 'for L = %d, Dx = %.4f [m], n = %.4E, Niter = %d (Jacobi), %d (SOR)' % (m_L, m_Dx, m_n, jacobi_run[1], sor_run[1])
+		print 'For L = %3.d, Dx = %.5f [m], n = %.4E, Niter = %5.d (Jacobi), %5.d (SOR)' % (m_L, m_Dx, m_n, jacobi_run[1], sor_run[1])
 
 		if(m_n < jacobi_n_fit_cut or jacobi_n_fit_cut == -99):
 			ns_fit.append(m_n)
@@ -659,39 +627,61 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 	n_ndarray = np.array(ns_fit+ns_no_fit)
 	sor_sweeps_ndarray = np.array(sor_sweeps)
 
+	########################################################
+	# Plotting
+
+	# Set our colors
+	jacobi_color = 'blue'
+	sor_color = 'green'
+
 	# Set up the figures and axes
-        jacobi_fig = plt.figure('jacobi')
-        jacobi_ax = jacobi_fig.add_subplot(111)
+	fig = plt.figure('fig')
+	jacobi_ax = fig.add_subplot(111)
 
-        jacobi_ax.set_title('$N_{\mathrm{iter}}\left(n\\right)$')
-        jacobi_ax.set_xlabel('$n = L^{2}$')
-        jacobi_ax.set_ylabel('$N_{\mathrm{iter}}$')
+	jacobi_ax.set_title('$N_{\mathrm{iter}}(n)$')
+	jacobi_ax.set_xlabel('$n = L^{2}$')
+	jacobi_ax.set_ylabel('$N_{\mathrm{iter}}$ Jacobi', color=jacobi_color)
 
-        sor_fig = plt.figure('sor')
-        sor_ax = sor_fig.add_subplot(111)
+	sor_ax = jacobi_ax.twinx() # Get a new axes
+	sor_ax.set_ylabel('$N_{\mathrm{iter}}$ SOR', color=sor_color, rotation=-90, labelpad=20)
 
-        sor_ax.set_title('$N_{\mathrm{iter}}\left(n\\right)$')
-        sor_ax.set_xlabel('$n = L^{2}$')
-        sor_ax.set_ylabel('$N_{\mathrm{iter}}$')
+	# Save handles for legend
+	Nn_legend_handles = []
 
 	# Create the plots
-	jacobi_color = 'blue'
-	jacobi_ax.scatter(n_fit_ndarray, jacobi_sweeps_fit_ndarray, marker='o', label='Jacobi $N_{\mathrm{iter}}$', c=jacobi_color)
-	if(jacobi_n_fit_cut != -99): jacobi_ax.scatter(n_no_fit_ndarray, jacobi_sweeps_no_fit_ndarray, marker='o', c=jacobi_color)
-
-	sor_color = 'green'
-	sor_ax.scatter(n_ndarray, sor_sweeps_ndarray, marker='d', label='SOR $N_{\mathrm{iter}}$', c=sor_color)
-
-	# Adjust the axis range
-#	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
-#	ax.set_ylim(0, y2_auto)
-
+	jacobi_data = jacobi_ax.scatter(n_fit_ndarray, jacobi_sweeps_fit_ndarray, marker='o', label='Jacobi $N_{\mathrm{iter}}$', c=jacobi_color)
+	Nn_legend_handles.append(jacobi_data)
+	if(jacobi_n_fit_cut != -99):
+		jacobi_ax.scatter(n_no_fit_ndarray, jacobi_sweeps_no_fit_ndarray, marker='o', c=jacobi_color)
+		
+	sor_data = sor_ax.scatter(n_ndarray, sor_sweeps_ndarray, marker='d', label='SOR $N_{\mathrm{iter}}$', c=sor_color)
+	Nn_legend_handles.append(sor_data)
 
 	# Make the plot log log
 	jacobi_ax.set_xscale('log')
 	jacobi_ax.set_yscale('log')
 	sor_ax.set_xscale('log')
 	sor_ax.set_yscale('log')
+
+	# TODO Adjust the axis
+
+	# x1_jacobi_auto,x2_jacobi_auto,y1_jacobi_auto,y2_jacobi_auto = jacobi_ax.axis()
+	# jacobi_ax.set_xlim(x_min_scale*x1_jacobi_auto, x_max_scale*x2_jacobi_auto)
+	# jacobi_ax.set_ylim(0, y_max_scale*max(jacobi_sweeps_fit+jacobi_sweeps_no_fit))
+
+	x1_sor_auto,x2_sor_auto,y1_sor_auto,y2_sor_auto = sor_ax.axis()
+	# sor_ax.set_xlim(x_min_scale*x1_jacobi_auto, x_max_scale*x2_jacobi_auto)
+	sor_ax.set_ylim(y1_sor_auto, (10**1.02)*y2_sor_auto)
+
+	# Color the y axis
+        for tl in jacobi_ax.get_yticklabels():
+                tl.set_color(jacobi_color)
+        for tl in sor_ax.get_yticklabels():
+                tl.set_color(sor_color)
+        for tl in jacobi_ax.get_yminorticklabels():
+                tl.set_color(jacobi_color)
+        for tl in sor_ax.get_yminorticklabels():
+                tl.set_color(sor_color)
 
 	# Fitting 
 	########################################################
@@ -702,96 +692,99 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 	        return offset_fit + slope_fit*pow(n_data, pow_fit)
 	# end def fit_function
 
+	# Define the fit function2, no offset
+	def fit_function2(n_data, pow_fit, slope_fit):
+	        return slope_fit*pow(n_data, pow_fit)
+	# end def fit_function2
+
 	# actually perform the fits
 	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
-	jacobi_p0 = [2.0, 1.0, 0.0]
 
+	# jacobi_p0 = [1.0, 0.0301, 141.45]
 	sor_p0 = [1.0, 1.0, 0.0]
+
+	jacobi_p02 = [1.0, 0.0301]
+	#sor_p02 = [1.0, 1.0]
 
 	jacobi_fit_status = True
 	sor_fit_status = True
+	maxfev=m_maxfev = 2000
 
 	try:
-		jacobi_op_par, jacobi_covar_matrix = curve_fit(fit_function, n_fit_ndarray, jacobi_sweeps_fit_ndarray, p0=jacobi_p0)
+		jacobi_op_par, jacobi_covar_matrix = curve_fit(fit_function2, n_fit_ndarray, jacobi_sweeps_fit_ndarray, p0=jacobi_p02, maxfev=m_maxfev)
 	except RuntimeError:
+		print sys.exc_info()[1]
 		print 'jacobi curve_fit failed, continuing...'
 		jacobi_fit_status = False 
 
 	try:
-		sor_op_par, sor_covar_matrix = curve_fit(fit_function, n_ndarray, sor_sweeps_ndarray, p0=sor_p0)
+		sor_op_par, sor_covar_matrix = curve_fit(fit_function, n_ndarray, sor_sweeps_ndarray, p0=sor_p0, maxfev=m_maxfev)
 	except RuntimeError:
+		print sys.exc_info()[1]
 		print 'sor curve_fit failed, continuing...'
 		sor_fit_status = False 
-
 
 	# Create fine grain fit x axis
 	x1 = min(ns_fit+ns_no_fit)
 	x2 = max(ns_fit+ns_no_fit)
-	num_points = 100
-	fit_x_ndarray = np.linspace(x1,x2,num_points)
-	if(jacobi_n_fit_cut != -99):
-		left_fit_x_ndarray = np.linspace(x1,jacobi_n_fit_cut,int(num_points*abs((jacobi_n_fit_cut-x1)/(x2-x1))))
-		right_fit_x_ndarray = np.linspace(jacobi_n_fit_cut,x2,int(num_points*abs((x2-jacobi_n_fit_cut)/(x2-x1))))
-
+	fit_x_ndarray = np.linspace(x1,x2,150)
 
 	# plot the fits
-	if(sor_fit_status): sor_ax.plot(fit_x_ndarray, fit_function(fit_x_ndarray, *sor_op_par), ls='solid', label='SOR Fit', c=sor_color)
-
 	if(jacobi_fit_status):
-		if(jacobi_n_fit_cut == -99):
-			jacobi_ax.plot(fit_x_ndarray, fit_function(fit_x_ndarray, *jacobi_op_par), ls='solid', label='Jacobi Fit', c=jacobi_color)
-		else:
-			jacobi_ax.plot(left_fit_x_ndarray, fit_function(left_fit_x_ndarray, *jacobi_op_par), ls='solid', label='Jacobi Fit', c=jacobi_color)
-			jacobi_ax.plot(right_fit_x_ndarray, fit_function(right_fit_x_ndarray, *jacobi_op_par), ls='dashed', label=None, c=jacobi_color)
+		jacobi_fit_line, = jacobi_ax.plot(fit_x_ndarray, fit_function2(fit_x_ndarray, *jacobi_op_par), ls='solid', label='Jacobi Fit', c=jacobi_color)
+		Nn_legend_handles.append(jacobi_fit_line)
 
-			# Draw vertical line where fit ends
-			jacobi_ax.axvline(x=jacobi_n_fit_cut, ls = 'dashed', label='Fit Boundary', c='grey')
+	if(jacobi_n_fit_cut != -99):
+		# Draw vertical line where fit ends
+		jacobi_fit_boundary_line = jacobi_ax.axvline(x=jacobi_n_fit_cut, ls = 'dashed', label='Fit Boundary', c='grey')
+		Nn_legend_handles.append(jacobi_fit_boundary_line)
+
+	if(sor_fit_status):
+		sor_fit_line, = sor_ax.plot(fit_x_ndarray, fit_function(fit_x_ndarray, *sor_op_par), ls='solid', label='SOR Fit', c=sor_color)
+		Nn_legend_handles.append(sor_fit_line)
 
 	# Write out the fit parameters
-	jacobi_fit_text = 'Fit Function: $N_{\mathrm{iter}} = c + b n^{a}$' 
+	# jacobi_fit_text = 'Jacobi Fit Function: $N_{\mathrm{iter}} = c + b n^{a}$' 
+	jacobi_fit_text = 'Jacobi Fit Function: $N_{\mathrm{iter}} = b n^{a}$' 
 	if(jacobi_fit_status):
-		jacobi_fit_text += '\n$a_{\mathrm{Expected}} = 2$, $a_{\mathrm{Fit}} =$ %.5f' % (jacobi_op_par[0])
+		jacobi_fit_text += '\n$a_{\mathrm{Expected}} = 2$\n$a_{\mathrm{Fit}} =$ %.5f' % (jacobi_op_par[0])
 		jacobi_fit_text += '\n$b_{\mathrm{Fit}} =$ %.5f' % (jacobi_op_par[1])
-		jacobi_fit_text += '\n$c_{\mathrm{Fit}} =$ %.5f' % (jacobi_op_par[2])
+		# jacobi_fit_text += '\n$c_{\mathrm{Fit}} =$ %.5f' % (jacobi_op_par[2])
 	else:
 		jacobi_fit_text += '\nJacobi Fit Failed'
 
-	sor_fit_text = 'Fit Function: $N_{\mathrm{iter}} = c + b n^{a}$' 
+	sor_fit_text = '\nSOR Fit Function: $N_{\mathrm{iter}} = c + b n^{a}$' 
+	# sor_fit_text = '\nSOR Fit Function: $N_{\mathrm{iter}} = b n^{a}$' 
 	if(sor_fit_status):
-		sor_fit_text += '\n$a_{\mathrm{Expected}} = 1$, $a_{\mathrm{Fit}} =$ %.5f' % (sor_op_par[0])
+		sor_fit_text += '\n$a_{\mathrm{Expected}} = 1$\n$a_{\mathrm{Fit}} =$ %.5f' % (sor_op_par[0])
 		sor_fit_text += '\n$b_{\mathrm{Fit}} =$ %.5f' % (sor_op_par[1])
 		sor_fit_text += '\n$c_{\mathrm{Fit}} =$ %.5f' % (sor_op_par[2])
 	else:
 		sor_fit_text += '\nSOR Fit Failed'
 
-	fit_text_x = 0.04
-	fit_text_y = 0.85
-
-	jacobi_ax.text(fit_text_x, fit_text_y, jacobi_fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=jacobi_ax.transAxes)
-	sor_ax.text(fit_text_x, fit_text_y, sor_fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=sor_ax.transAxes)
+	jacobi_ax.text(0.025, 0.7, jacobi_fit_text+'\n'+sor_fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=jacobi_ax.transAxes)
 
 	# Draw the legend
-	jacobi_ax.legend(fontsize='small')
-	sor_ax.legend(fontsize='small')
+	jacobi_ax.legend(handles=Nn_legend_handles, loc='upper right', bbox_to_anchor=(0.98, 0.98), borderaxespad=0, fontsize='x-small')
 
 	# Annotate
 	ann_text = '$R =$ %2.1f [m], $a =$ %1.1f [m]' % (R, a)
 	ann_text += '\n$Q/\epsilon_{0} =$ %1.1f [Vm]' % (Q_over_epsilon0)
-	ann_text += '\nConv. Criteria: $A$ < %.2E [V]' % (fixed_accuracy)
+	ann_text += '\nConv. Criteria: $A <$ %.1E [V]' % (fixed_accuracy)
 
-	ann_text_x = 0.67
-	ann_text_y = 0.04
+	jacobi_ax.text(0.679, 0.035, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=jacobi_ax.transAxes)
 
-	jacobi_ax.text(ann_text_x, ann_text_y, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=jacobi_ax.transAxes)
-	sor_ax.text(ann_text_x, ann_text_y, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=sor_ax.transAxes)
+	# Adjust the minor ticks
+	minorFormatter = LogFormatterExponent(labelOnlyBase=False)
+	jacobi_ax.xaxis.set_minor_formatter( minorFormatter )
+	jacobi_ax.yaxis.set_minor_formatter( minorFormatter )
+	sor_ax.yaxis.set_minor_formatter( minorFormatter )
 
 	# Print it out
 	make_path(m_path)
-	jacobi_fig.savefig(m_path+'/Niter_vs_n_jacobi.pdf')	
-	sor_fig.savefig(m_path+'/Niter_vs_n_sor.pdf')	
+	fig.savefig(m_path+'/Niter_vs_n.pdf')	
 
-	jacobi_fig.clf() # Clear fig for reuse
-	sor_fig.clf()
+	fig.clf() # Clear fig for reuse
 
 	print 'plot_N_vs_n completed!!!'
 # end def for plot_N_vs_n
@@ -810,24 +803,26 @@ output_path = './output/development/poisson_dipole'
 
 debugging = False
 
-target_Dx = 0.1
-L = int(round(2*R/target_Dx))
-if(L % 2 == 0): L += 1 # ensure L is odd
-Dx = 2*R/(L-1)
-
-# Part b stuff TODO fix up
-# plot_N_vs_epsilon(L, Dx, epsilon_low, epsilon_step0, tipping_point1, epsilon_step1, tipping_point2, epsilon_step2, epsilon_high, m_path) 
-#plot_N_vs_epsilon(L, Dx, 10e-6, 5e-6, 0.00018, 0.00050, 0.005, 0.001, 0.01, output_path)
-
-
-# OLD part c stuff
-# plot_N_vs_n(0.00001, 0.1, 10, 5, 60, 20, 80, output_path, -99)
-# plot_N_vs_n(0.00001, 0.1, 10, 5, 80, 10, 200, output_path, 1800)
+# DEPRECIATED part c stuff
 # fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high, m_path, jacobi_n_fit_cut
- 
+#plot_N_vs_n(0.001, 35, 5, 80, 20, 238 # Future plot for paper run
 
-plot_N_vs_n(0.001, 35, 5, 80, 20, 210, output_path, -99)
+# TODO
+print 'Testing low n, N_vs_n jacobi'
+plot_N_vs_n(0.001, 35, 1, 50, 20, 80, output_path, 2125) # Low n/L jacobi fit testing
 
+
+
+# target_Dx = 0.1
+# L = int(round(2*R/target_Dx))
+# if(L % 2 == 0): L += 1
+# Dx = float(2*R/L)
+
+# Part b stuff
+# output_path = './output/development/poisson_dipole/part_b_stuff'
+# plot_N_vs_epsilon(L, Dx, 1.0e-5 # for paper
+# print 'Testing N_vs_epsilon'
+# plot_N_vs_epsilon(L, Dx, 6.0e-5, 0.5e-5, 15.0e-5, 15.0e-5, 0.001, 50.0e-5, 0.008, output_path)
 
 ########################################################
 ########################################################
@@ -837,13 +832,12 @@ if(False):
 	top_output_path = './output/plots_for_paper/poisson_dipole'
 	debugging = False
 
-	'''
         # Part a
         ########################################################
         print '\nPart a:'
         output_path = top_output_path+'/part_a'
 
-	# Set the parameters TODO Tweak
+	# Set the parameters
 	Dx = 0.05 # Set the spacing of the grid points in [m]
 	L = int(round(2*R/Dx)) # find the closest L that will work
 	if(L % 2 == 0): L += 1 # ensure L is odd
@@ -853,12 +847,14 @@ if(False):
 	plot_V('', 'best_jacobi', 60, output_path, m_run)
 	plot_Vr_dipole_axis('', 'best_jacobi', output_path, m_run)
 
+
         # Part b
         ########################################################
         print '\nPart b:'
         output_path = top_output_path+'/part_b'
 
-	# TODO get fit working, then add here
+	plot_N_vs_epsilon(L, Dx, 1.0e-5, 0.5e-5, 15.0e-5, 15.0e-5, 0.001, 50.0e-5, 0.008, output_path)
+
 	'''
 
         # Part c
@@ -869,6 +865,7 @@ if(False):
 	# TODO
 
 	'''
+
 	# Extra Material
         ########################################################
         print '\nExtra Material:'
@@ -881,7 +878,6 @@ if(False):
 	m_run = run_sim(L, Dx, 'jacobi', 'epsilon', 0.02, -99.0, False, '')
 	plot_V('', 'prop_illustration', 60, output_path, m_run)
 
-	'''
 
 ########################################################
 print '\n\nDone!\n'

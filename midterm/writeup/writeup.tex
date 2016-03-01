@@ -150,13 +150,114 @@ TODO
 \label{sec:theory}
 TODO
 
+
+\begin{equation} \label{eq:jacobi}
+V_{\mathrm{new}}\left(i,j\right)^{\mathrm{Jacobi}} = \frac{1}{2^2}\big( V_{\mathrm{old}}\left(i+1,j) + V_{\mathrm{old}}\left(i-1,j) +V_{\mathrm{old}}\left(i,j+1) +V_{\mathrm{old}}\left(i,j-1) \big)
+\end{equation}
+
+\begin{equation} \label{eq:GS}
+V_{\mathrm{new}}\left(i,j\right)^{\mathrm{GS}} = \frac{1}{2^2}\big( V_{\mathrm{latest}}\left(i+1,j) + V_{\mathrm{latest}}\left(i-1,j) +V_{\mathrm{latest}}\left(i,j+1) +V_{\mathrm{latest}}\left(i,j-1) \big)
+\end{equation}
+
+\begin{comment
+\begin{align} \label{eq:SOR}
+V_{\mathrm{new}}\left(i,j\right)^{\mathrm{SOR}} = V\left(i,j\right)^{\mathrm{GS}} - V\left(i,j\right)^{\mathrm{GS}} 
+
+\end{equation}
+\end{comment}
+
 \clearpage
 \section{Results}
 \label{sec:results}
 TODO
 
-%\subsection{Parts B and C: Vary Simulation Methods}
-%\label{subsec:vary_sim_methods}
+
+\clearpage
+\subsection{Part 1.A}
+\label{subsec:part_1a}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.7\textwidth]{poisson_dipole/part_a/V_best_jacobi.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$V\left(x, y\right)$, Jacobi method.}
+	\label{fig:part1a_V}
+\end{figure}
+
+\clearpage
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.7\textwidth]{poisson_dipole/part_a/Vr_dipole_axis_best_jacobi.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$V\left(r, \theta=0\right)$, through the dipole's axis, Jacobi method.}
+	\label{fig:part1a_Vr}
+\end{figure}
+
+\clearpage
+\subsection{Part 1.B}
+\label{subsec:part_1b}
+
+% TODO
+\begin{comment}
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.7\textwidth]{poisson_dipole/part_b/
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$N_{\mathrm{iter}}\left(\epsilon\right)$, Jacobi method}
+	\label{fig:part1b}
+\end{figure}
+\end{comment}
+
+\clearpage
+\subsection{Part 1.C}
+\label{subsec:part_1c}
+
+% TODO
+\begin{comment}
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.7\textwidth]{poisson_dipole/part_c/
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$N_{\mathrm{iter}}\left(n\right)$, Jacobi and SOR methods with absolute convergence, $A <$ 0.001.}
+	\label{fig:part1b}
+\end{figure}
+\end{comment}
+
+\clearpage
+\subsection{Part 2.A}
+\label{subsec:part_2a}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.7\textwidth]{biot_savart/part_a_Bxyz_of_z.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\mathbf{B}\left(x=y=0,~z\right)$ with the theoretical result for a similar circular current loop.}
+	\label{fig:part2a}
+\end{figure}
+
+\clearpage
+\subsection{Part 2.B}
+\label{subsec:part_2b}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{biot_savart/part_b_Bxyz_of_x.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\mathbf{B}\left(y=0,~z=1\mathrm{m},~x\right)$}
+	\label{fig:part2b}
+\end{figure}
+
+\subsection{Part 2.C}
+\label{subsec:part_2c}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{biot_savart/part_c_Bxyz_of_z.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$\mathbf{B}\left(x=0.5\mathrm{m},~y=0,~z\right)$}
+	\label{fig:part2c}
+\end{figure}
+
 
 \clearpage
 \section{Conclusions}
@@ -164,6 +265,38 @@ TODO
 TODO
 
 The Python source code used to produce these results can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/midterm/code}, and is included in Section~\ref{sec:code}.
+
+\clearpage
+\section{Extra Material}
+\label{sec:Extra_Material}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.7\textwidth]{poisson_dipole/extra_material/V_boundary_best_jacobi.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Boundary conditions diagnostic test.}
+	\label{fig:boundary_test}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.7\textwidth]{poisson_dipole/extra_material/V_initial_best_jacobi.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Initial array diagnostic test.}
+	\label{fig:initial_array_test}
+\end{figure}
+
+\begin{comment}
+TODO
+\clearpage
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.7\textwidth]{poisson_dipole/extra_material/
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{If the convergence criteria are too loose, $N_{\mathrm{iter}}$ may not be large enough for the information/charge close to the origin to propagate via the average of nearest neighbors through the whole simulated region. A forced $N_{\mathrm{iter}}$ minimum would solve this potential issue, but would also complicate the $N_{\mathrm{iter}}\left(\epsilon\right)$ and $N_{\mathrm{iter}}\left(n\right)$ results.}
+	\label{fig:propegation_test}
+\end{figure}
+\end{comment}
 
 \clearpage
 \section{Supporting Material}
@@ -183,8 +316,8 @@ The Python source code used to produce these results can be found online at \url
 \label{sec:code}
 
 % TODO
-\lstinputlisting[style=python]{../code/poisson_dipole.py}
-% \lstinputlisting[style=python]{../code/}
+% \lstinputlisting[style=python]{../code/poisson_dipole.py}
+% \lstinputlisting[style=python]{../code/biot_savart.py}
 
 \end{document} %%% end of doc %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
