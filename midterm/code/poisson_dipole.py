@@ -5,8 +5,9 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 #import matplotlib as mpl # We need to import all of matplotlib just to set rcParams once...
-from matplotlib.ticker import MultipleLocator
+#from matplotlib.ticker import MultipleLocator
 from scipy.optimize import curve_fit
 
 ########################################################
@@ -24,7 +25,7 @@ print '\nFixed Parameters are:'
 print '---------------------------------------------'
 
 print '\nQ over epsilon0 = %.1f [Vm]' % Q_over_epsilon0
-print 'Dipole Seperation a = %.1f [m]' % a
+print 'Dipole Separation a = %.1f [m]' % a
 print 'Circular Boundary R = %.1f [m]' % R
 
 print '\n---------------------------------------------'
@@ -45,6 +46,19 @@ def make_path(path):
 	    if not os.path.isdir(path):
 	        raise Exception('Problem creating output dir %s !!!\nA file with the same name probably already exists, please fix the conflict and run again.' % output_path)
 # end def for make_path
+
+#######################################################
+# Define a function to take ndarray indexes and return spatial coordinates of the BIN CENTERS 
+def find_spatial(y_index,x_index, L, Dx):
+	l_center = (L-1)/2 # +1 to get to center, -1 as we start from 0
+	# if Dx is optimally chosen, otherwise these aren't R's...
+	# X: 0 ~ - R, l_center=(L-1)/2 ~ 0.0, L-1 ~ R
+	# y: 0 ~ R, l_center=(L-1)/2 ~ 0.0, L-1 ~ -R
+	y_spatial = Dx*(-y_index + l_center)
+	x_spatial = Dx*(x_index - l_center)
+	
+	return [y_spatial,x_spatial]
+# end def for find_spatial 
 
 ########################################################
 # Define a function to run the simulation
@@ -67,18 +81,6 @@ def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots
 	alpha = 2.0/(1+(np.pi/L))
 	if(alpha >=2.0): print 'WARNING ALPHA >= 2.0, SOR WILL NOT CONVERGE'
 	
-	########################################################
-	# Define a function to take ndarray indexes and return spatial coordinates of the BIN CENTERS 
-	# TODO move out of this function?
-	def find_spatial(y_index,x_index):
-		# if Dx is optimal, otherwise these aren't R's...
-		# X: 0 ~ - R, l_center=(L-1)/2 ~ 0.0, L-1 ~ R
-		# y: 0 ~ R, l_center=(L-1)/2 ~ 0.0, L-1 ~ -R
-		y_spatial = Dx*(-y_index + l_center)
-		x_spatial = Dx*(x_index - l_center)
-	
-		return [y_spatial,x_spatial]
-	# end def for find_spatial 
 
 	# Debug the coordinate system...
 	if(False):
@@ -86,7 +88,7 @@ def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots
 		print 'R = %.2f, L*Dx = .5f, Dx = %.5f' % (R, L*Dx, Dx)
 		points = [[0,0],[0,L-1],[L-1,L-1],[L-1,0]]
 		for i in range(len(points)):
-			print '[y_index][x_index]=[%d][%d] ~ (y,x)=(%.3f,%.3f)' %(points[i][0], points[i][1], find_spatial(points[i][0], points[i][1])[0], find_spatial(points[i][0], points[i][1])[1])
+			print '[y_index][x_index]=[%d][%d] ~ (y,x)=(%.3f,%.3f)' %(points[i][0], points[i][1], find_spatial(points[i][0], points[i][1], L, Dx)[0], find_spatial(points[i][0], points[i][1], L, Dx)[1])
 		return None
 
 	
@@ -95,7 +97,7 @@ def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots
 	l_left_Q = -99
 	l_right_Q = -99
 	for l_search in range(L-1):
-		left_x_bound = find_spatial(l_center, l_search)[1] - 0.5*Dx
+		left_x_bound = find_spatial(l_center, l_search, L, Dx)[1] - 0.5*Dx
 		if( left_x_bound <= -a/2 and -a/2 < left_x_bound + Dx):
 			l_left_Q = l_search
 		if( left_x_bound <= a/2 and a/2 < left_x_bound + Dx):
@@ -115,7 +117,7 @@ def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots
 		if(y_index == l_center and (x_index == l_left_Q or x_index == l_right_Q)):
 			return False
 		# check that it's not on/beyond the R boundary
-		spatial = find_spatial(y_index,x_index)
+		spatial = find_spatial(y_index,x_index, L, Dx)
 		r_squared = spatial[0]*spatial[0] + spatial[1]*spatial[1]
 		if(r_squared >= R*R):
 			return False
@@ -146,8 +148,11 @@ def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots
 	
 	# Set the initial conditions, ie add point charges
 	# R boundary already set to be zero and held fixed by write_allowed
-	V[l_center][l_left_Q] = -Q_over_epsilon0
-	V[l_center][l_right_Q] = Q_over_epsilon0
+	# multiply by 4.0 because rho should not get the 1/4 prefactor,
+	# but will otherwise the way this is coded
+	# Dx^2/Dx^2 cancel out
+	V[l_center][l_left_Q] = -4.0*Q_over_epsilon0
+	V[l_center][l_right_Q] = 4.0*Q_over_epsilon0
 
 	# if desired, make initial V and boundary value plots 
 	if(extra_plots):
@@ -318,26 +323,41 @@ def plot_V(optional_title, fname, n_contours, m_path, run=[]):
 
 	# Make a contour plot
 	if(fname == 'boundary'): n_contours = [-Q_over_epsilon0, Q_over_epsilon0, 7.7] 
-	CS = ax.contour(X,Y,m_V,n_contours, antialiased=True)
+	try:
+		CS = ax.contour(X,Y,m_V,n_contours, antialiased=True)
+	except RuntimeWarning:
+		print 'ax.contour threw an warning trying to plot fname = %s, it should be fine...' % fname
 
-	# Set the contour labels
-	ax.clabel(CS, inline=1, fontsize=10, fmt='%2.2f')
+	# Set the contour labels, turned off for being to messy near the charges
+	# ax.clabel(CS, inline=1, fontsize=10, fmt='%2.2f')
 
 	# Set the color bar
 	CB = plt.colorbar(CS, shrink=0.8, extend='both', filled=True, cmap='inferno', ax=ax, label='$V\left(x,y\\right)$ [V]')
 
+	legend_handles = []
 	# If it's the initial/diagnostics plot, draw vertical dashed lines at +-a
 	if fname == 'initial':
-		ax.axvline(x=a/2, ls = 'dashed', label='$a/2$', c='red')
-		ax.axvline(x=-a/2, ls = 'dashed', label='$-a/2$', c='blue')
+		red_line = ax.axvline(x=a/2, ls = 'dashed', label='$a/2$', c='red')
+		blue_line = ax.axvline(x=-a/2, ls = 'dashed', label='$-a/2$', c='blue')
+		legend_handles.append(red_line)
+		legend_handles.append(blue_line)
 
 	# Add a dashed circle for the R boundary condition
-	radius_circle = plt.Circle((0,0), R, ls='dashed', color='grey', fill=False)
+	radius_circle = plt.Circle((0,0), R, ls='dashed', color='grey', fill=False, label='$V(R) = 0$ Boundary')
 	ax.add_artist(radius_circle)
+	legend_handles.append(mlines.Line2D([], [], ls='dashed', color='grey', label='$V(R) = 0$ Boundary'))
 
 	# Add dashed square for the simulation border
-	boundary_square = plt.Rectangle((-max_spatial,-max_spatial), 2*max_spatial, 2*max_spatial, angle=0.0, ls='dashed', color='black', fill=False)
+	boundary_square = plt.Rectangle((-max_spatial,-max_spatial), 2*max_spatial, 2*max_spatial, angle=0.0, ls='dashed', color='black', fill=False, label='Sim. Boundary')
 	ax.add_artist(boundary_square)
+	legend_handles.append(mlines.Line2D([], [], ls='dashed', color='black', label='Sim. Boundary'))
+
+	if(fname != 'initial' and fname != 'boundary'): 
+		# Add dashed square for the max distance info can propigate in Niter steps
+		max_info_prop = a + Dx*n_sweep 
+		info_prop_square = plt.Rectangle((-max_info_prop,-max_info_prop), 2*max_info_prop, 2*max_info_prop, angle=0.0, ls='dotted', color='maroon', fill=False, label='Prop. Boundary')
+		ax.add_artist(info_prop_square)
+		legend_handles.append(mlines.Line2D([], [], ls='dotted', color='maroon', label='Prop. Boundary'))
 
 
 	# Annotate
@@ -353,9 +373,12 @@ def plot_V(optional_title, fname, n_contours, m_path, run=[]):
 	plt.figtext(0.145, 0.13, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small')
 
 	# set axis
-	ax_max = 1.1*max_spatial # Zoom out 10$
+	ax_max = 1.1*max_spatial # Zoom out 10%
 	ax.set_xlim((-ax_max,ax_max))
 	ax.set_ylim((-ax_max,ax_max))
+
+	# draw legend
+	ax.legend(handles=legend_handles, bbox_to_anchor=(1.35, -0.114), borderaxespad=0, loc='lower right', fontsize='x-small')
 
 	# Print it out
 	make_path(m_path)
@@ -367,6 +390,100 @@ def plot_V(optional_title, fname, n_contours, m_path, run=[]):
 # end def for plot_V
 
 # TODO write V(r) plotting function
+########################################################
+# Define a function to plot V(r) along the dipoles axis 
+def plot_Vr_dipole_axis(optional_title, fname, m_path, run=[]):
+	if(debugging): print 'Beginning plot_Vr_dipole_axis for fname: '+fname	
+
+	m_V = run[0]
+	n_sweep = run[1]
+	L = run[2]
+	Dx = run[3]
+	alpha = run[4]
+	sim_method = run[5]
+	halt_method = run[6]
+	epsilon = run[7]
+	fixed_accuracy = run[8]
+
+	l_center = (L-1)/2
+	max_spatial = Dx*l_center
+
+	# Set up the figure and axes
+        fig = plt.figure('fig')
+        ax = fig.add_subplot(111)
+        ax.set_title('$V(r)$ along dipole axis ($\\theta = 0$)'+optional_title)
+        ax.set_xlabel('$r$ [m]')
+        ax.set_ylabel('$V$ [V]')
+
+	# Define a function for the expected V(r) 
+	def Vr_dipole_axis_theory(r):
+ 		if(abs(r) == a/2.0):
+			return None
+		else:
+			return (Q_over_epsilon0/(4.0*np.pi))*( (1.0/abs(r-(a/2.0))) -(1.0/abs(r+(a/2.0))) )
+	# end def for Vr_dipole_axis_theory
+
+	# loop over V[l_y][l_x] save V(r) sim and calculate V(r) theory
+	r = []
+	Vr = []
+	Vr_theory = []
+
+	for l_x in range(L-1):
+		r.append(find_spatial(l_center, l_x, L, Dx)[1])
+		Vr.append(m_V[l_center][l_x])
+		Vr_theory.append(Vr_dipole_axis_theory(find_spatial(l_center, l_x, L, Dx)[1]))
+
+	# create the ndarrays to plot
+	r_ndarray = np.array(r)
+	Vr_ndarray = np.array(Vr)
+	Vr_theory_ndarray = np.array(Vr_theory)
+
+
+	# make the plots
+	ax.plot(r_ndarray, Vr_ndarray, ls='solid', label='$V(r)$ Simulation', c='black')
+	ax.plot(r_ndarray, Vr_theory_ndarray, ls='dashed', label='$V(r)$ Theory', c='darkgreen')
+
+	# Draw vertical dashed lines at +-a
+	ax.axvline(x=a/2, ls = 'solid', label='$a/2$', c='red')
+	ax.axvline(x=-a/2, ls = 'solid', label='$-a/2$', c='blue')
+
+	# Draw vertical lines at +-R, max_spatial, and max_info_prop
+	ax.axvline(x=R, ls = 'solid', label='$V(R) = 0$ Boundary', c='black')
+	ax.axvline(x=-R, ls = 'solid', label=None, c='black')
+	ax.axvline(x=max_spatial, ls = 'dashed', label='Sim. Boundary', c='grey')
+	ax.axvline(x=-max_spatial, ls = 'dashed', label=None, c='grey')
+	max_info_prop = a + Dx*n_sweep 
+	ax.axvline(x=max_info_prop, ls='dotted', label='Prop. Boundary', c='maroon')
+	ax.axvline(x=-max_info_prop, ls='dotted', label=None, c='maroon')
+
+
+	# Annotate
+	ann_text = '$L =$ %3.d, $\Delta x =$ %.3f [m]' % (L, Dx)
+	ann_text += '\n$R =$ %2.1f [m], $a =$ %1.1f [m]' % (R, a)
+	ann_text += '\n$Q/\epsilon_{0} =$ %1.1f [Vm]' % (Q_over_epsilon0)
+	if(sim_method == 'jacobi'): ann_text += '\nSim. Method = Jacobi'
+	if(sim_method == 'SOR'): ann_text += '\nSim. Method = SOR, $\\alpha =$ %.3f' % (alpha)
+	if(halt_method == 'epsilon'): ann_text += '\nConv. Criteria: $\epsilon <$ %.2E [V]' % (epsilon)
+	if(halt_method == 'fixed_accuracy'): ann_text += '\nConv. Criteria: $A$ < %.2E [V]' % (fixed_accuracy)
+	ann_text += '\n$N_{\mathrm{iter}} =$ %5.d' % (n_sweep)
+	plt.figtext(0.145, 0.13, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small')
+
+	# set axis
+	ax_max = 1.1*max_spatial # Zoom out 10%
+	ax.set_xlim((-ax_max,ax_max))
+	ax.set_ylim((-ax_max,ax_max))
+
+	# draw legend
+	ax.legend(loc='lower right', fontsize='x-small')
+
+	# Print it out
+	make_path(m_path)
+	fig.savefig(m_path+'/Vr_dipole_axis'+fname+'.pdf')	
+
+	fig.clf() # Clear fig for reuse
+
+	if(debugging): print 'V(r) dipole axis plot printed'
+# end def for plot_Vr_dipole_axis
 
 ########################################################
 # Define a function to plot N_iter vs epsilon 
@@ -494,7 +611,7 @@ def plot_N_vs_n(fixed_accuracy, Dx, L_low, L_step0, tipping_point1, L_step1, L_h
 	epsilon = -99.0
 	num_contours = 50
 
-	# Loop over run_sim, save n=L*L and n_sweeps ~ N_iter
+	# loop over run_sim, save n=L*L and n_sweeps ~ n_iter
 	ns_fit = []
 	ns_no_fit = []
 	jacobi_sweeps_fit = []
@@ -503,19 +620,19 @@ def plot_N_vs_n(fixed_accuracy, Dx, L_low, L_step0, tipping_point1, L_step1, L_h
 
 	m_L = L_low
 	while m_L <= L_high:
-		if(m_L % 2 == 0): m_L += 1 # make sure L is odd, no matter wht L_low, L_step are given
+		if(m_L % 2 == 0): m_L += 1 # make sure L is odd, no matter what L_low, L_step are given
 		m_n = m_L*m_L
 		fname = 'V_for_L_%d' % m_L	
 
 		jacobi_run = run_sim(m_L, Dx, 'jacobi', halt_method, epsilon, fixed_accuracy, False)
-		plot_V(' Jacobi $N_{\mathrm{iter}}\left(n\\right)$ Run', 'jacobi_'+fname, num_contours, m_path+'/jacobi_runs', jacobi_run)
+		plot_V(' Jacobi $N_{\mathrm{iter}}\left(n\\right)$ run', 'jacobi_'+fname, num_contours, m_path+'/jacobi_runs', jacobi_run)
 
 		sor_run = run_sim(m_L, Dx, 'SOR', halt_method, epsilon, fixed_accuracy, False)
-		plot_V(' SOR $N_{\mathrm{iter}}\left(n\\right)$ Run', 'sor_'+fname, num_contours, m_path+'/sor_runs', sor_run)
+		plot_V(' SOR $N_{\mathrm{iter}}\left(n\\right)$ run', 'sor_'+fname, num_contours, m_path+'/sor_runs', sor_run)
 
-		print 'For L = %d, n = %.4E, Niter = %d (Jacobi), %d (SOR)' % (m_L, m_n, jacobi_run[1], sor_run[1])
+		print 'for L = %d, n = %.4E, Niter = %d (Jacobi), %d (SOR)' % (m_L, m_n, jacobi_run[1], sor_run[1])
 
-		if(m_n < jacobi_n_fit_cut):
+		if(m_n < jacobi_n_fit_cut or jacobi_n_fit_cut == -99):
 			ns_fit.append(m_n)
 			jacobi_sweeps_fit.append(jacobi_run[1])
 		else:
@@ -529,34 +646,49 @@ def plot_N_vs_n(fixed_accuracy, Dx, L_low, L_step0, tipping_point1, L_step1, L_h
 		else:
 			m_L += L_step1
 
-	# Create the ndarrays to plot
+	# create the ndarrays to plot
 	n_fit_ndarray = np.array(ns_fit)
-	n_no_fit_ndarray = np.array(ns_no_fit)
 	jacobi_sweeps_fit_ndarray = np.array(jacobi_sweeps_fit)
-	jacobi_sweeps_no_fit_ndarray = np.array(jacobi_sweeps_no_fit)
+	if(jacobi_n_fit_cut != -99):
+		n_no_fit_ndarray = np.array(ns_no_fit)
+		jacobi_sweeps_no_fit_ndarray = np.array(jacobi_sweeps_no_fit)
 
 	n_ndarray = np.array(ns_fit+ns_no_fit)
 	sor_sweeps_ndarray = np.array(sor_sweeps)
 
-	# Set up the figure and axes
-        fig = plt.figure('fig')
-        ax = fig.add_subplot(111)
+	# Set up the figures and axes
+        jacobi_fig = plt.figure('jacobi')
+        jacobi_ax = jacobi_fig.add_subplot(111)
 
-        ax.set_title('$N_{\mathrm{iter}}\left(n\\right)$')
-        ax.set_xlabel('$n = L^{2}$')
-        ax.set_ylabel('$N_{\mathrm{iter}}$')
+        jacobi_ax.set_title('$N_{\mathrm{iter}}\left(n\\right)$')
+        jacobi_ax.set_xlabel('$n = L^{2}$')
+        jacobi_ax.set_ylabel('$N_{\mathrm{iter}}$')
+
+        sor_fig = plt.figure('sor')
+        sor_ax = sor_fig.add_subplot(111)
+
+        sor_ax.set_title('$N_{\mathrm{iter}}\left(n\\right)$')
+        sor_ax.set_xlabel('$n = L^{2}$')
+        sor_ax.set_ylabel('$N_{\mathrm{iter}}$')
 
 	# Create the plots
 	jacobi_color = 'blue'
-	ax.scatter(n_fit_ndarray, jacobi_sweeps_fit_ndarray, marker='o', label='Jacobi $N_{\mathrm{iter}}$', c=jacobi_color)
-	ax.scatter(n_no_fit_ndarray, jacobi_sweeps_no_fit_ndarray, marker='o', c=jacobi_color)
+	jacobi_ax.scatter(n_fit_ndarray, jacobi_sweeps_fit_ndarray, marker='o', label='Jacobi $N_{\mathrm{iter}}$', c=jacobi_color)
+	if(jacobi_n_fit_cut != -99): jacobi_ax.scatter(n_no_fit_ndarray, jacobi_sweeps_no_fit_ndarray, marker='o', c=jacobi_color)
 
 	sor_color = 'green'
-	ax.scatter(n_ndarray, sor_sweeps_ndarray, marker='d', label='SOR $N_{\mathrm{iter}}$', c=sor_color)
+	sor_ax.scatter(n_ndarray, sor_sweeps_ndarray, marker='d', label='SOR $N_{\mathrm{iter}}$', c=sor_color)
+
+	# Adjust the axis range
+#	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
+#	ax.set_ylim(0, y2_auto)
+
 
 	# Make the plot log log
-	ax.set_xscale('log')
-	ax.set_yscale('log')
+	jacobi_ax.set_xscale('log')
+	jacobi_ax.set_yscale('log')
+	sor_ax.set_xscale('log')
+	sor_ax.set_yscale('log')
 
 	# Fitting 
 	########################################################
@@ -570,55 +702,96 @@ def plot_N_vs_n(fixed_accuracy, Dx, L_low, L_step0, tipping_point1, L_step1, L_h
 	# actually perform the fits
 	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
 	jacobi_p0 = [2.0, 1.0, 0.0]
+
 	sor_p0 = [1.0, 1.0, 0.0]
 
-	jacobi_op_par, jacobi_covar_matrix = curve_fit(fit_function, n_fit_ndarray, jacobi_sweeps_fit_ndarray, p0=jacobi_p0)
-	sor_op_par, sor_covar_matrix = curve_fit(fit_function, n_ndarray, sor_sweeps_ndarray, p0=sor_p0)
+	jacobi_fit_status = True
+	sor_fit_status = True
+
+	try:
+		jacobi_op_par, jacobi_covar_matrix = curve_fit(fit_function, n_fit_ndarray, jacobi_sweeps_fit_ndarray, p0=jacobi_p0)
+	except RuntimeError:
+		print 'jacobi curve_fit failed, continuing...'
+		jacobi_fit_status = False 
+
+	try:
+		sor_op_par, sor_covar_matrix = curve_fit(fit_function, n_ndarray, sor_sweeps_ndarray, p0=sor_p0)
+	except RuntimeError:
+		print 'sor curve_fit failed, continuing...'
+		sor_fit_status = False 
+
 
 	# Create fine grain fit x axis
-	x1,x2,y1,y2 = ax.axis()
-	fit_x_ndarray = np.linspace(x1,x2,150)
-	left_fit_x_ndarray = np.linspace(x1,jacobi_n_fit_cut,int(150*abs((jacobi_n_fit_cut-x1)/(x2-x1))))
-	right_fit_x_ndarray = np.linspace(jacobi_n_fit_cut,x2,int(150*abs((x2-jacobi_n_fit_cut)/(x2-x1))))
+	x1 = min(ns_fit+ns_no_fit)
+	x2 = max(ns_fit+ns_no_fit)
+	num_points = 100
+	fit_x_ndarray = np.linspace(x1,x2,num_points)
+	if(jacobi_n_fit_cut != -99):
+		left_fit_x_ndarray = np.linspace(x1,jacobi_n_fit_cut,int(num_points*abs((jacobi_n_fit_cut-x1)/(x2-x1))))
+		right_fit_x_ndarray = np.linspace(jacobi_n_fit_cut,x2,int(num_points*abs((x2-jacobi_n_fit_cut)/(x2-x1))))
 
 
 	# plot the fits
-	ax.plot(fit_x_ndarray, fit_function(fit_x_ndarray, *sor_op_par), ls='solid', label='SOR Fit', c=sor_color)
-	ax.plot(left_fit_x_ndarray, fit_function(left_fit_x_ndarray, *jacobi_op_par), ls='solid', label='Jacobi Fit', c=jacobi_color)
-	ax.plot(right_fit_x_ndarray, fit_function(right_fit_x_ndarray, *jacobi_op_par), ls='dashed', label=None, c=jacobi_color)
+	if(sor_fit_status): sor_ax.plot(fit_x_ndarray, fit_function(fit_x_ndarray, *sor_op_par), ls='solid', label='SOR Fit', c=sor_color)
 
-	# Draw vertical line where fit ends
-	ax.axvline(x=jacobi_n_fit_cut, ls = 'dashed', label='Fit Boundary', c='grey')
+	if(jacobi_fit_status):
+		if(jacobi_n_fit_cut == -99):
+			jacobi_ax.plot(fit_x_ndarray, fit_function(fit_x_ndarray, *jacobi_op_par), ls='solid', label='Jacobi Fit', c=jacobi_color)
+		else:
+			jacobi_ax.plot(left_fit_x_ndarray, fit_function(left_fit_x_ndarray, *jacobi_op_par), ls='solid', label='Jacobi Fit', c=jacobi_color)
+			jacobi_ax.plot(right_fit_x_ndarray, fit_function(right_fit_x_ndarray, *jacobi_op_par), ls='dashed', label=None, c=jacobi_color)
 
+			# Draw vertical line where fit ends
+			jacobi_ax.axvline(x=jacobi_n_fit_cut, ls = 'dashed', label='Fit Boundary', c='grey')
+
+			print 'The cut Jacobi fit should be drawn!' # TODO it isn't though...
 
 	# Write out the fit parameters
-	fit_text = 'Fit Function: $N_{\mathrm{iter}} = c + b n^{a}$' 
-	fit_text += '\n$a_{\mathrm{Jacobi}} =$ %.5f' % (jacobi_op_par[0])
-	fit_text += '\n$b_{\mathrm{Jacobi}} =$ %.5f' % (jacobi_op_par[1])
-	fit_text += '\n$c_{\mathrm{Jacobi}} =$ %.5f' % (jacobi_op_par[2])
+	jacobi_fit_text = 'Fit Function: $N_{\mathrm{iter}} = c + b n^{a}$' 
+	if(jacobi_fit_status):
+		jacobi_fit_text += '\n$a_{\mathrm{Expected}} = 2$, $a_{\mathrm{Fit}} =$ %.5f' % (jacobi_op_par[0])
+		jacobi_fit_text += '\n$b_{\mathrm{Fit}} =$ %.5f' % (jacobi_op_par[1])
+		jacobi_fit_text += '\n$c_{\mathrm{Fit}} =$ %.5f' % (jacobi_op_par[2])
+	else:
+		jacobi_fit_text += '\nJacobi Fit Failed'
 
-	fit_text += '\n\n$a_{\mathrm{SOR}} =$ %.5f' % (sor_op_par[0])
-	fit_text += '\n$b_{\mathrm{SOR}} =$ %.5f' % (sor_op_par[1])
-	fit_text += '\n$c_{\mathrm{SOR}} =$ %.5f' % (sor_op_par[2])
+	sor_fit_text = 'Fit Function: $N_{\mathrm{iter}} = c + b n^{a}$' 
+	if(sor_fit_status):
+		sor_fit_text += '\n$a_{\mathrm{Expected}} = 1$, $a_{\mathrm{Fit}} =$ %.5f' % (sor_op_par[0])
+		sor_fit_text += '\n$b_{\mathrm{Fit}} =$ %.5f' % (sor_op_par[1])
+		sor_fit_text += '\n$c_{\mathrm{Fit}} =$ %.5f' % (sor_op_par[2])
+	else:
+		sor_fit_text += '\nSOR Fit Failed'
 
-	plt.figtext(0.7, 0.13, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small')
+	fit_text_x = 0.04
+	fit_text_y = 0.85
 
+	jacobi_ax.text(fit_text_x, fit_text_y, jacobi_fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=jacobi_ax.transAxes)
+	sor_ax.text(fit_text_x, fit_text_y, sor_fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=sor_ax.transAxes)
 
 	# Draw the legend
-        ax.legend(fontsize='small')
+	jacobi_ax.legend(fontsize='small')
+	sor_ax.legend(fontsize='small')
 
 	# Annotate
 	ann_text = '$\Delta x =$ %.3f [m]' % (Dx)
 	ann_text += '\n$R =$ %2.1f [m], $a =$ %1.1f [m]' % (R, a)
 	ann_text += '\n$Q/\epsilon_{0} =$ %1.1f [Vm]' % (Q_over_epsilon0)
 	ann_text += '\nConv. Criteria: $A$ < %.2E [V]' % (fixed_accuracy)
-	plt.figtext(0.145, 0.13, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small')
+
+	ann_text_x = 0.67
+	ann_text_y = 0.04
+
+	jacobi_ax.text(ann_text_x, ann_text_y, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=jacobi_ax.transAxes)
+	sor_ax.text(ann_text_x, ann_text_y, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=sor_ax.transAxes)
 
 	# Print it out
 	make_path(m_path)
-	fig.savefig(m_path+'/Niter_vs_n.pdf')	
+	jacobi_fig.savefig(m_path+'/Niter_vs_n_jacobi.pdf')	
+	sor_fig.savefig(m_path+'/Niter_vs_n_sor.pdf')	
 
-	fig.clf() # Clear fig for reuse
+	jacobi_fig.clf() # Clear fig for reuse
+	sor_fig.clf()
 
 	print 'plot_N_vs_n completed!!!'
 # end def for plot_N_vs_n
@@ -629,40 +802,35 @@ def plot_N_vs_n(fixed_accuracy, Dx, L_low, L_step0, tipping_point1, L_step1, L_h
 ########################################################
 ########################################################
 # Finally, actually run things!
-top_output_path = './output/poisson_dipole'
 
 ########################################################
 ########################################################
 # Development Runs 
-output_path = top_output_path+'/development'
+output_path = './output/development/poisson_dipole'
 
 debugging = False
+'''
 target_Dx = 0.1
 L = int(round(2*R/target_Dx))
+if(L % 2 == 0): L += 1 # ensure L is odd
 Dx = 2*R/(L-1)
-
+'''
+# Part b stuff TODO fix up
 # plot_N_vs_epsilon(L, Dx, 10e-6, 5e-6, 0.00018, 0.00050, 0.005, 0.001, 0.01, output_path)
 
-# TODO play with numbers
-#plot_N_vs_n(0.01, 0.1, 20, 5, 50, 15, 100, output_path, 2000)
-plot_N_vs_n(0.0005, 0.1, 10, 5, 100, 10, 250, output_path, 2000)
 
-Dx = 0.1
-L = int(round(2*R/Dx))
-#L = int(round(1.05*L))
-if(L % 2 == 0): L += 1
 
-#m_run = run_sim(L, Dx, 'SOR', 'fixed_accuracy', -99.0, 0.01, True)
-debugging = True
-#plot_V('', 'testing', 50, output_path, m_run)
 
+# Part c stuff
+# plot_N_vs_n(0.00001, 0.1, 10, 5, 60, 20, 80, output_path, -99)
+# plot_N_vs_n(0.00001, 0.1, 10, 5, 80, 10, 200, output_path, 1800)
 
 ########################################################
 ########################################################
 # Production Runs for paper 
 
-if(False):
-	output_path += '/plots_for_paper'
+if(True):
+	top_output_path = './output/plots_for_paper/poisson_dipole'
 	debugging = False
 
         # Part a
@@ -673,14 +841,12 @@ if(False):
 	# Set the parameters TODO Tweak
 	Dx = 0.05 # Set the spacing of the grid points in [m]
 	L = int(round(2*R/Dx)) # find the closest L that will work
-	#L = int(round(1.05*L)) # zoom out 5%
 	if(L % 2 == 0): L += 1 # ensure L is odd
 
 	# Run and print the sim
 	m_run = run_sim(L, Dx, 'jacobi', 'epsilon', 0.00001, -99.0, True)
 	plot_V('', 'best_jacobi', 60, output_path, m_run)
-
-	# TODO V(r) comparison plots
+	plot_Vr_dipole_axis('', 'best_jacobi', output_path, m_run)
 
         # Part b
         ########################################################
@@ -694,7 +860,10 @@ if(False):
         print '\nPart c:'
         output_path = top_output_path+'/part_c'
 
-	# TODO get fit working, then add here
+	plot_N_vs_n(0.00001, 0.1, 10, 5, 60, 15, 200, output_path, -99)
+
+	# TODO extra material, that shows the prop boundary
+
 
 ########################################################
 print '\n\nDone!\n'
