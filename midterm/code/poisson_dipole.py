@@ -413,7 +413,7 @@ def plot_Vr_dipole_axis(optional_title, fname, m_path, run=[]):
 	# Set up the figure and axes
         fig = plt.figure('fig')
         ax = fig.add_subplot(111)
-        ax.set_title('$V(r)$ along Dipole Axis ($\\theta = 0$)'+optional_title)
+        ax.set_title('$V(r)$ along Dipole Axis'+optional_title)
         ax.set_xlabel('$r$ [m]')
         ax.set_ylabel('$V$ [V]')
 
@@ -802,27 +802,13 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 
 if(False):
 	output_path = './output/development/poisson_dipole'
-	
 	debugging = False
-	
-	# DEPRECIATED part c stuff
-	# fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high, m_path, jacobi_n_fit_cut
-	#plot_N_vs_n(0.001, 35, 5, 80, 20, 238 # Future plot for paper run
-	
-	# TODO
-	#print 'Testing low n, N_vs_n jacobi'
-	#plot_N_vs_n(0.001, 35, 1, 50, 20, 80, output_path, 2125) # Low n/L jacobi fit testing
 	
 	# target_Dx = 0.1
 	# L = int(round(2*R/target_Dx))
 	# if(L % 2 == 0): L += 1
 	# Dx = float(2*R/L)
 	
-	# Part b stuff
-	# output_path = './output/development/poisson_dipole/part_b_stuff'
-	# plot_N_vs_epsilon(L, Dx, 1.0e-5 # for paper
-	# print 'Testing N_vs_epsilon'
-	# plot_N_vs_epsilon(L, Dx, 6.0e-5, 0.5e-5, 15.0e-5, 15.0e-5, 0.001, 50.0e-5, 0.008, output_path)
 	
 ########################################################
 ########################################################
@@ -846,9 +832,9 @@ if(True):
 	m_run = run_sim(L, Dx, 'jacobi', 'epsilon', 0.00001, -99.0, True, '_best_jacobi')
 	plot_V('', 'best_jacobi', 60, output_path, m_run)
 	plot_Vr_dipole_axis('', 'best_jacobi', output_path, m_run)
+        
 
-
-        # Part b
+	# Part b
         ########################################################
         print '\nPart b:'
         output_path = top_output_path+'/part_b'
