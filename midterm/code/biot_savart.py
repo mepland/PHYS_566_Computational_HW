@@ -207,7 +207,7 @@ def plot_B(target_Dl, fixed_point, free_var_num, var_min, var_step1, var_trans1,
 
 	ann_text_y = 0.685
 
-	# TODO plot theory
+	# plot theory
 	if(plot_theory):
 		if(fixed_point[fixed_vars[0]] != 0.0 and fixed_point[fixed_vars[1]] != 0.0):
 			print 'ERROR! Comparing theory apples to oranges!! Exiting!'
@@ -274,7 +274,7 @@ debugging2 = False
 # plot_B(target_Dl, fixed_point, free_var_num, var_min, var_step1, var_trans1, var_step2, var_max, fname, m_path, optional_title, plot_theory)
 
 if(True):
-	output_path = './output/plots_for_paper/biot_savart'
+	output_path = './output/plots_for_paper_final/biot_savart'
 
 	debugging = False
 	debugging2 = False

@@ -124,9 +124,9 @@
 
 \newcommand{\degree}{\ensuremath{^{\circ}}}
 
-% TODO Select between raw and saved plots here
-\graphicspath{{../code/output/plots_for_paper/}} % raw plots
-%\graphicspath{{./output/}} % saved plots
+% Select between raw and saved plots here
+% \graphicspath{{../code/output/plots_for_paper/}}
+\graphicspath{{../code/output/plots_for_paper_final/}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
@@ -137,8 +137,9 @@
 
 \date{\today}
 
+
 \begin{abstract}
-TODO
+%No Time...
 \end{abstract}\maketitle
 
 
@@ -146,125 +147,179 @@ TODO
 \label{sec:intro}
 TODO
 
+The Python source code used to produce these results can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/midterm/code}, and is included in Section~\ref{sec:code}.
+
 \section{Theory}
 \label{sec:theory}
-TODO
 
+\subsection{Numerical Solutions to the Poisson Equation}
+\label{subsec:poisson_theory}
+All of electrostatics can be described by a Poisson equation (\ref{eq:poisson}) with suitable boundary conditions, thus it is very important that we be able to solve such problems numerically. Once developed, a computational tool capable of solving (\ref{eq:poisson}) can produce potentials, $V\left(\mathbf{r}\right)$, for any charge distribution and boundary conditions fed into it.
+
+\begin{equation} \label{eq:poisson}
+\nabla^{2} V\left(\mathbf{r}\right) = -\frac{\rho\left(\mathbf{r}\right)}{\epsilon_{0}}
+\end{equation}
+
+In this assignment we will be using the Jacobi method and it's more complex extension, the Simultaneous Over--Relaxation (SOR) method. To begin, we assume we are working in a 2D space\footnote{Extensions to higher dimensions can easily be written by altering the average over nearest--neighbors in the natural way.} with Cartesian coordinates quantized into squares of length $\Delta x$ and indexed by $\left(i,j\right)$. The Jacobi method can then be written formally as (\ref{eq:jacobi}), but is better understood as updating $V\left(i,j\right)$ for each square with the average of it's nearest--neighbors (NN), plus any source terms in the square\footnote{$\rho\left(i,j\right)\left(\Delta x\right)^{2} = Q\left(i,j\right)$}. Sweeps are made through the simulated region, updating each square in turn, until a convergence criteria is satisfied. Boundary conditions are included by holding $V\left(i,j\right) = V_{\mathrm{BC}}$ fixed at the appropriate $\left(i,j\right)$ points.
 
 \begin{equation} \label{eq:jacobi}
-V_{\mathrm{new}}\left(i,j\right)^{\mathrm{Jacobi}} = \frac{1}{2^2}\big( V_{\mathrm{old}}\left(i+1,j) + V_{\mathrm{old}}\left(i-1,j) +V_{\mathrm{old}}\left(i,j+1) +V_{\mathrm{old}}\left(i,j-1) \big)
+V_{\mathrm{new}}\left(i,j\right)^{\mathrm{Jacobi}} = \frac{1}{2^2}\big( V_{\mathrm{old}}\left(i+1,j\right) + V_{\mathrm{old}}\left(i-1,j\right) +V_{\mathrm{old}}\left(i,j+1\right) +V_{\mathrm{old}}\left(i,j-1\right) \big) + \frac{1}{\epsilon_{0}} \rho\left(i,j\right)\left(\Delta x\right)^{2}
 \end{equation}
+While the Jacobi method is simple in form, it pays for this by being computationally expensive. If the simulated area itself is a square containing $L^{2} = n$ points, the Jacobi method will scale\footnote{One factor of $L^{2}$ comes from the method itself, the other from sweeping through all $L^{2}$ points.} as $\approx L^{2} \times L^{2} = n^{2}$. One immediate improvement on the Jacobi method is the Gauss--Seidel (GS) method (\ref{eq:GS}) that is exactly the same as the Jacobi method, but uses the last value of $V$ calculated, $V_{\mathrm{latest}}$, to compute the NN average instead of always relying on $V_{\mathrm{old}}$. This obviously saves memory, as only one array is needed to store the simulated region, but also improves the scaling behavior\footnote{$L^{2}$/2 from the method $\times$ $L^{2}$ from the sweeps.} to $\approx (1/2)n^{2}$.
 
 \begin{equation} \label{eq:GS}
-V_{\mathrm{new}}\left(i,j\right)^{\mathrm{GS}} = \frac{1}{2^2}\big( V_{\mathrm{latest}}\left(i+1,j) + V_{\mathrm{latest}}\left(i-1,j) +V_{\mathrm{latest}}\left(i,j+1) +V_{\mathrm{latest}}\left(i,j-1) \big)
+V_{\mathrm{new}}\left(i,j\right)^{\mathrm{GS}} = \frac{1}{2^2}\big( V_{\mathrm{latest}}\left(i+1,j\right) + V_{\mathrm{latest}}\left(i-1,j\right) +V_{\mathrm{latest}}\left(i,j+1\right) +V_{\mathrm{latest}}\left(i,j-1\right) \big) + \frac{1}{\epsilon_{0}} \rho\left(i,j\right)\left(\Delta x\right)^{2}
+)
 \end{equation}
 
-\begin{comment
-\begin{align} \label{eq:SOR}
-V_{\mathrm{new}}\left(i,j\right)^{\mathrm{SOR}} = V\left(i,j\right)^{\mathrm{GS}} - V\left(i,j\right)^{\mathrm{GS}} 
+The SOR method further improves on the GS method by taking the sweep--to-sweep change in $V\left(i,j\right)$ from the GS method (\ref{eq:SOR_DeltaV}), scaling it up by a factor of $\alpha$ and using the result as it's own sweep--to--sweep change (\ref{eq:SOR_V}). Without proof, the optimal value of $\alpha$ is given by (\ref{eq:SOR_alpha})\footnote{If $\alpha < 1$ SOR is worse than GS, if $\alpha = 1$ SOR reduces to GS, and if $\alpha \geq 2$ SOR becomes divergent.}. For $\alpha_{\mathrm{optimal}}$ the SOR method scales like $n^{3/2}$.
 
-\end{equation}
-\end{comment}
+\begin{align}
+\Delta V\left(i,j\right) &= V_{\mathrm{new}}\left(i,j\right)^{\mathrm{GS}} - V\left(i,j\right)_{\mathrm{old}} \label{eq:SOR_DeltaV} \\
+V_{\mathrm{new}}\left(i,j\right)^{\mathrm{SOR}} &= \alpha \Delta V\left(i,j\right) + V\left(i,j\right)_{\mathrm{old}} \label{eq:SOR_V} \\
+\alpha_{\mathrm{optimal}} &\approx \frac{2}{1+\pi/L} \label{eq:SOR_alpha} 
+\end{align}
 
 \clearpage
+\subsection{Biot--Savart Law and Numerical Integration}
+\label{subsec:biot_savart_theory}
+Having dealt with electrostatics numerically we now turn to magnetostatics and the Biot--Savart Law (\ref{eq:biot_savart}). Here there is no need to solve equations, we simply need to integrate\footnote{Note that we could have also handled electrostatics in a similar manner by integrating Coulumb's law, but imposing boundary conditions could be quite troublesome. Magnetostatics problems usually don't have complex boundary conditions, so we can get away with the source integral method.} $\mathrm{d}\mathbf{B}\left(\mathbf{r}\right)$ over all current elements $I\,\mathrm{d}\mathbf{r}'$ to find $\mathbf{B}\left(\mathbf{r}\right)$.
+
+\begin{equation} \label{eq:biot_savart}
+\mathrm{d}\mathbf{B}\left(\mathbf{r}\right) = \frac{\mu_{0}I}{4\pi} \frac{\mathrm{d}\mathbf{r}' \times \left(\mathbf{r} - \mathbf{r}'\right)}{\left|\mathbf{r} - \mathbf{r}'\right|^{3}}
+\end{equation}
+
+There are a multitude of numerical integration schemes available, such as Simpson's rule and the trapezoid approximation. However for this assignment the simplest method, a midpoint Riemann sum (\ref{eq:riemann}), was sufficiently accurate\footnote{$\orderof\big(\left(\Delta x\right)^2\big)$} with reasonable computational requirements.
+
+\begin{align} 
+\int_{a}^{b} f\left(x\right)\,\mathrm{d}x &\approx \displaystyle\sum_{i=1}^{n} f\left(x_{i}^{*}\right) \Delta x \label{eq:riemann} \\
+x_{i}^{*} &= a + \left(i-\frac{1}{2}\right) \Delta x \label{eq:reimann_midpoint}
+\end{align}
+
+The Riemann above is written in 1D, but is easily extended to 3D Cartesian coordinates as are needed to integrate $\mathrm{d}\mathbf{B}\left(\mathbf{r}\right)$. 
+
 \section{Results}
 \label{sec:results}
-TODO
 
+\subsection{Poisson Equation for a Dipole}
+\label{subsec:poisson_results}
+The electrostatics problem simulated in this assignment was that of a dipole inside a grounded circular boundary embedded in a 2D space. The dipole consisted of two point charges $Q/\epsilon_{0} = \pm1$ [Vm] separated by $a =$ 0.6 [m]. The coordinate system was chosen such that $\pm Q$ was located at $x = \pm a/2$, $y=0$. The circular boundary condition was simply $V\left(R\right) = 0$, $R =$ 10 [m].
+
+The Jacobi and SOR methods as described in Section~\ref{subsec:poisson_theory} were used to simulate the problem on a grid of $L \times L$ squares with length $\Delta x$. Sweeps of the simulated area were run until the preset convergence criteria was satisfied. There were two possible convergence criteria, tolerance\footnote{Ideally a percentage tolerance would be used, but as $V\left(i,j\right)$ was frequently zero this would have caused divide by zero issues. These zero points could also not simply be ignored, or the simulation could end prematurely. One possible solution that I did not have time to implement and investigate, would be to divide by the nonzero option of $V_{\mathrm{new}}$ or $V_{\mathrm{old}}$. Even then $\epsilon$ would likely not converge, due to occasional very small denominators blowing up the sum. I saw this behavior firsthand when testing a na\"{\i}ve percent tolerance method.} $\epsilon$ (\ref{eq:epsilon_def}), and accuracy $A$ (\ref{eq:A_def}).
+
+\begin{equation} \label{eq:epsilon_def} 
+\epsilon = \Bigg( \displaystyle\sum_{\forall (\mathrm{squares})} \left|V_{\mathrm{new}} - V_{\mathrm{old}}\right|\Bigg) / \Bigg( \displaystyle\sum_{\forall (\mathrm{squares})} 1 - \delta_{V_{\mathrm{new}},\,V_{\mathrm{old}}} \Bigg) < \epsilon_{\mathrm{halt}}
+\end{equation}
+
+\begin{equation} \label{eq:A_def} 
+A = \mathrm{maximum}|_{\forall (\mathrm{squares})} \bigg(\left|V_{\mathrm{new}} - V_{\mathrm{old}}\right|\bigg) < A_{\mathrm{halt}}
+\end{equation}
+
+See Figure~\ref{fig:part1a_V} for a $V\left(x, y\right)$ equapotential contour plot, and Figure~\ref{fig:part1a_Vr} for a plot of $V\left(r\right) = V\left(x,\,y=0\right)$ through the dipole's axis. In this case we can compare to the exact solution (\ref{eq:two_Qs}) and find that the simulation does a decent job except near the point charges themselves where the exact solution diverges to $\pm \inf$.
+
+\begin{equation} \label{eq:two_Qs} 
+V\left(r\right) = V\left(x,\,y=0\right) = \frac{Q}{4 \pi \epsilon_{0}} \bigg( \frac{1}{\left|r-a/2\right|} - \frac{1}{\left|r+a/2\right|} \bigg)
+\end{equation}
 
 \clearpage
-\subsection{Part 1.A}
-\label{subsec:part_1a}
+\subsubsection{Part 1A}
+\label{subsubsec:part_1a}
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.7\textwidth]{poisson_dipole/part_a/V_best_jacobi.pdf}
+  \includegraphics[width=.65\textwidth]{poisson_dipole/part_a/V_best_jacobi.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$V\left(x, y\right)$, Jacobi method.}
 	\label{fig:part1a_V}
 \end{figure}
 
-\clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.7\textwidth]{poisson_dipole/part_a/Vr_dipole_axis_best_jacobi.pdf}
+  \includegraphics[width=.65\textwidth]{poisson_dipole/part_a/Vr_dipole_axis_best_jacobi.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$V\left(r, \theta=0\right)$, through the dipole's axis, Jacobi method.}
 	\label{fig:part1a_Vr}
 \end{figure}
 
 \clearpage
-\subsection{Part 1.B}
-\label{subsec:part_1b}
+\subsubsection{Part 1B}
+\label{subsubsec:part_1b}
 
-% TODO
-\begin{comment}
+TODO
+
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.7\textwidth]{poisson_dipole/part_b/
+  \includegraphics[width=.8\textwidth]{poisson_dipole/part_b/Niter_vs_epsilon.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$N_{\mathrm{iter}}\left(\epsilon\right)$, Jacobi method}
 	\label{fig:part1b}
 \end{figure}
-\end{comment}
 
 \clearpage
-\subsection{Part 1.C}
-\label{subsec:part_1c}
+\subsubsection{Part 1C}
+\label{subsubsec:part_1c}
 
-% TODO
-\begin{comment}
+TODO
+
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.7\textwidth]{poisson_dipole/part_c/
+  \includegraphics[width=.8\textwidth]{poisson_dipole/part_c/Niter_vs_n.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{$N_{\mathrm{iter}}\left(n\right)$, Jacobi and SOR methods with absolute convergence, $A <$ 0.001.}
-	\label{fig:part1b}
+	\caption{$N_{\mathrm{iter}}\left(n\right)$, Jacobi and SOR methods with fixed absolute convergence, $A <$ 0.001. The Jacobi fit was only performed on data to the left of the dashed grey line at $n =$ 2125. Two vertical scales were used to fit both curves onto one plot, with the downside that it may be hard to see at first glance that $N_{\mathrm{iter}}$ SOR $<$ $N_{\mathrm{iter}}$ Jacobi for every $n$.}
+	\label{fig:part1c}
 \end{figure}
-\end{comment}
+
+\subsection{Biot--Savart Law for a Square Current Loop}
+\label{subsec:biot_savart_results}
+TODO
+
+TODO add Griffiths equation
+
 
 \clearpage
-\subsection{Part 2.A}
-\label{subsec:part_2a}
+\subsubsection{Part 2A}
+\label{subsubsec:part_2a}
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.7\textwidth]{biot_savart/part_a_Bxyz_of_z.pdf}
+  \includegraphics[width=.8\textwidth]{biot_savart/part_a_Bxyz_of_z.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\mathbf{B}\left(x=y=0,~z\right)$ with the theoretical result for a similar circular current loop.}
 	\label{fig:part2a}
 \end{figure}
 
+
 \clearpage
-\subsection{Part 2.B}
-\label{subsec:part_2b}
+\subsubsection{Part 2B}
+\label{subsubsec:part_2b}
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.6\textwidth]{biot_savart/part_b_Bxyz_of_x.pdf}
+  \includegraphics[width=.65\textwidth]{biot_savart/part_b_Bxyz_of_x.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\mathbf{B}\left(y=0,~z=1\mathrm{m},~x\right)$}
 	\label{fig:part2b}
 \end{figure}
 
-\subsection{Part 2.C}
-\label{subsec:part_2c}
+\subsubsection{Part 2C}
+\label{subsubsec:part_2c}
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.6\textwidth]{biot_savart/part_c_Bxyz_of_z.pdf}
+  \includegraphics[width=.65\textwidth]{biot_savart/part_c_Bxyz_of_z.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$\mathbf{B}\left(x=0.5\mathrm{m},~y=0,~z\right)$}
 	\label{fig:part2c}
 \end{figure}
 
-
+\begin{comment}
 \clearpage
 \section{Conclusions}
 \label{sec:Conclusions}
-TODO
+No time...
 
 The Python source code used to produce these results can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/midterm/code}, and is included in Section~\ref{sec:code}.
+\end{comment}
 
 \clearpage
 \section{Extra Material}
@@ -286,28 +341,26 @@ The Python source code used to produce these results can be found online at \url
 	\label{fig:initial_array_test}
 \end{figure}
 
-\begin{comment}
-TODO
 \clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.7\textwidth]{poisson_dipole/extra_material/
+  \includegraphics[width=.8\textwidth]{poisson_dipole/extra_material/V_prop_illustration.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{If the convergence criteria are too loose, $N_{\mathrm{iter}}$ may not be large enough for the information/charge close to the origin to propagate via the average of nearest neighbors through the whole simulated region. A forced $N_{\mathrm{iter}}$ minimum would solve this potential issue, but would also complicate the $N_{\mathrm{iter}}\left(\epsilon\right)$ and $N_{\mathrm{iter}}\left(n\right)$ results.}
+	\caption{If the convergence criteria are too loose, $N_{\mathrm{iter}}$ may not be large enough for the information/charge close to the origin to propagate via the NN average through the whole simulated region. A forced $N_{\mathrm{iter}}$ minimum would solve this potential issue, but would also complicate the $N_{\mathrm{iter}}\left(\epsilon\right)$ and $N_{\mathrm{iter}}\left(n\right)$ results.}
 	\label{fig:propegation_test}
 \end{figure}
-\end{comment}
+
 
 \clearpage
 \section{Supporting Material}
 \label{sec:Supporting_Material}
 
-% TODO
-% \lstinputlisting[style=output,label={lst:output}]{../code/output/output.log} % raw
+\lstinputlisting[style=output,label={lst:output}]{../code/output/plots_for_paper_final/biot_savart_output.log}
+\clearpage
+\lstinputlisting[style=output,label={lst:output}]{../code/output/plots_for_paper_final/poisson_dipole_output.log}
 
 \clearpage
 \includepdf[pages={1}]{../midterm.pdf}
-\clearpage
 \includepdf[pages={2}]{../midterm.pdf}
 % Have to do them one a time for some reason or they overlap...
 

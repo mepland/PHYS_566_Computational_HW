@@ -158,7 +158,7 @@ def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots
 	# if desired, make initial V and boundary value plots 
 	if(extra_plots):
 		artificial_run = [V, -99, L, Dx, alpha, sim_method, halt_method, epsilon, fixed_accuracy]
-		plot_V(' Initial', 'initial'+extra_plots_fname, 10, './output/plots_for_paper/poisson_dipole/extra_material', artificial_run)
+		plot_V(' Initial', 'initial'+extra_plots_fname, 10, './output/plots_for_paper_final/poisson_dipole/extra_material', artificial_run)
 
 		# Make a boundary_V filling every allowed point with 7.7
 		boundary_V = np.zeros((L,L))
@@ -167,7 +167,7 @@ def run_sim(L, Dx, sim_method, halt_method, epsilon, fixed_accuracy, extra_plots
 				# Check if we can edit this cell
 				if(write_allowed(l_y,l_x)): boundary_V[l_y][l_x] = 7.7
 		artificial_run[0] = boundary_V
-		plot_V(' Boundary', 'boundary'+extra_plots_fname, 3, './output/plots_for_paper/poisson_dipole/extra_material', artificial_run)
+		plot_V(' Boundary', 'boundary'+extra_plots_fname, 3, './output/plots_for_paper_final/poisson_dipole/extra_material', artificial_run)
 
 
 	########################################################
@@ -663,7 +663,7 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 	sor_ax.set_xscale('log')
 	sor_ax.set_yscale('log')
 
-	# TODO Adjust the axis
+	# Adjust the axis
 
 	# x1_jacobi_auto,x2_jacobi_auto,y1_jacobi_auto,y2_jacobi_auto = jacobi_ax.axis()
 	# jacobi_ax.set_xlim(x_min_scale*x1_jacobi_auto, x_max_scale*x2_jacobi_auto)
@@ -671,7 +671,7 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 
 	x1_sor_auto,x2_sor_auto,y1_sor_auto,y2_sor_auto = sor_ax.axis()
 	# sor_ax.set_xlim(x_min_scale*x1_jacobi_auto, x_max_scale*x2_jacobi_auto)
-	sor_ax.set_ylim(y1_sor_auto, (10**1.02)*y2_sor_auto)
+	sor_ax.set_ylim(y1_sor_auto, (10**1.015)*y2_sor_auto)
 
 	# Color the y axis
         for tl in jacobi_ax.get_yticklabels():
@@ -701,10 +701,10 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
 
 	# jacobi_p0 = [1.0, 0.0301, 141.45]
-	sor_p0 = [1.0, 1.0, 0.0]
+	# sor_p0 = [1.0, 1.0, 0.0]
 
 	jacobi_p02 = [1.0, 0.0301]
-	#sor_p02 = [1.0, 1.0]
+	sor_p02 = [1.0, 1.0]
 
 	jacobi_fit_status = True
 	sor_fit_status = True
@@ -718,7 +718,7 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 		jacobi_fit_status = False 
 
 	try:
-		sor_op_par, sor_covar_matrix = curve_fit(fit_function, n_ndarray, sor_sweeps_ndarray, p0=sor_p0, maxfev=m_maxfev)
+		sor_op_par, sor_covar_matrix = curve_fit(fit_function2, n_ndarray, sor_sweeps_ndarray, p0=sor_p02, maxfev=m_maxfev)
 	except RuntimeError:
 		print sys.exc_info()[1]
 		print 'sor curve_fit failed, continuing...'
@@ -740,7 +740,7 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 		Nn_legend_handles.append(jacobi_fit_boundary_line)
 
 	if(sor_fit_status):
-		sor_fit_line, = sor_ax.plot(fit_x_ndarray, fit_function(fit_x_ndarray, *sor_op_par), ls='solid', label='SOR Fit', c=sor_color)
+		sor_fit_line, = sor_ax.plot(fit_x_ndarray, fit_function2(fit_x_ndarray, *sor_op_par), ls='solid', label='SOR Fit', c=sor_color)
 		Nn_legend_handles.append(sor_fit_line)
 
 	# Write out the fit parameters
@@ -753,12 +753,12 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 	else:
 		jacobi_fit_text += '\nJacobi Fit Failed'
 
-	sor_fit_text = '\nSOR Fit Function: $N_{\mathrm{iter}} = c + b n^{a}$' 
-	# sor_fit_text = '\nSOR Fit Function: $N_{\mathrm{iter}} = b n^{a}$' 
+	# sor_fit_text = '\nSOR Fit Function: $N_{\mathrm{iter}} = c + b n^{a}$' 
+	sor_fit_text = '\nSOR Fit Function: $N_{\mathrm{iter}} = b n^{a}$' 
 	if(sor_fit_status):
 		sor_fit_text += '\n$a_{\mathrm{Expected}} = 1$\n$a_{\mathrm{Fit}} =$ %.5f' % (sor_op_par[0])
 		sor_fit_text += '\n$b_{\mathrm{Fit}} =$ %.5f' % (sor_op_par[1])
-		sor_fit_text += '\n$c_{\mathrm{Fit}} =$ %.5f' % (sor_op_par[2])
+		# sor_fit_text += '\n$c_{\mathrm{Fit}} =$ %.5f' % (sor_op_par[2])
 	else:
 		sor_fit_text += '\nSOR Fit Failed'
 
@@ -776,9 +776,9 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 
 	# Adjust the minor ticks
 	minorFormatter = LogFormatterExponent(labelOnlyBase=False)
-	jacobi_ax.xaxis.set_minor_formatter( minorFormatter )
+	# jacobi_ax.xaxis.set_minor_formatter( minorFormatter )
 	jacobi_ax.yaxis.set_minor_formatter( minorFormatter )
-	sor_ax.yaxis.set_minor_formatter( minorFormatter )
+	# sor_ax.yaxis.set_minor_formatter( minorFormatter )
 
 	# Print it out
 	make_path(m_path)
@@ -799,37 +799,37 @@ def plot_N_vs_n(fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high,
 ########################################################
 ########################################################
 # Development Runs 
-output_path = './output/development/poisson_dipole'
 
-debugging = False
-
-# DEPRECIATED part c stuff
-# fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high, m_path, jacobi_n_fit_cut
-#plot_N_vs_n(0.001, 35, 5, 80, 20, 238 # Future plot for paper run
-
-# TODO
-print 'Testing low n, N_vs_n jacobi'
-plot_N_vs_n(0.001, 35, 1, 50, 20, 80, output_path, 2125) # Low n/L jacobi fit testing
-
-
-
-# target_Dx = 0.1
-# L = int(round(2*R/target_Dx))
-# if(L % 2 == 0): L += 1
-# Dx = float(2*R/L)
-
-# Part b stuff
-# output_path = './output/development/poisson_dipole/part_b_stuff'
-# plot_N_vs_epsilon(L, Dx, 1.0e-5 # for paper
-# print 'Testing N_vs_epsilon'
-# plot_N_vs_epsilon(L, Dx, 6.0e-5, 0.5e-5, 15.0e-5, 15.0e-5, 0.001, 50.0e-5, 0.008, output_path)
-
+if(False):
+	output_path = './output/development/poisson_dipole'
+	
+	debugging = False
+	
+	# DEPRECIATED part c stuff
+	# fixed_accuracy, L_low, L_step0, tipping_point1, L_step1, L_high, m_path, jacobi_n_fit_cut
+	#plot_N_vs_n(0.001, 35, 5, 80, 20, 238 # Future plot for paper run
+	
+	# TODO
+	#print 'Testing low n, N_vs_n jacobi'
+	#plot_N_vs_n(0.001, 35, 1, 50, 20, 80, output_path, 2125) # Low n/L jacobi fit testing
+	
+	# target_Dx = 0.1
+	# L = int(round(2*R/target_Dx))
+	# if(L % 2 == 0): L += 1
+	# Dx = float(2*R/L)
+	
+	# Part b stuff
+	# output_path = './output/development/poisson_dipole/part_b_stuff'
+	# plot_N_vs_epsilon(L, Dx, 1.0e-5 # for paper
+	# print 'Testing N_vs_epsilon'
+	# plot_N_vs_epsilon(L, Dx, 6.0e-5, 0.5e-5, 15.0e-5, 15.0e-5, 0.001, 50.0e-5, 0.008, output_path)
+	
 ########################################################
 ########################################################
 # Production Runs for paper 
 
-if(False):
-	top_output_path = './output/plots_for_paper/poisson_dipole'
+if(True):
+	top_output_path = './output/plots_for_paper_final/poisson_dipole'
 	debugging = False
 
         # Part a
@@ -855,16 +855,13 @@ if(False):
 
 	plot_N_vs_epsilon(L, Dx, 1.0e-5, 0.5e-5, 15.0e-5, 15.0e-5, 0.001, 50.0e-5, 0.008, output_path)
 
-	'''
 
-        # Part c
         ########################################################
         print '\nPart c:'
         output_path = top_output_path+'/part_c'
 
-	# TODO
+	plot_N_vs_n(0.001, 35, 1, 50, 20, 238, output_path, 2125)
 
-	'''
 
 	# Extra Material
         ########################################################
