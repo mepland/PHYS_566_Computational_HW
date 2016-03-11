@@ -125,8 +125,8 @@
 \newcommand{\degree}{\ensuremath{^{\circ}}}
 
 % Select between raw and saved plots here TODO
-\graphicspath{{../code/output/}}
-%\graphicspath{{../code/output/plots_for_paper/}}
+%\graphicspath{{../code/output/}}
+\graphicspath{{../code/output/plots_for_paper/}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
@@ -149,10 +149,166 @@ TODO
 \label{sec:theory}
 TODO
 
+\subsection{Box--Muller Transform}
+\label{subsec:box_muller}
+TODO
+
+\begin{align}
+Z_{0} &= \sqrt{-2\ln U_{1}} \cos\left(2\pi U_{2}\right) \label{eq:z0} \\
+Z_{1} &= \sqrt{-2\ln U_{1}} \sin\left(2\pi U_{2}\right) \label{eq:z1}
+\end{align}
+
 \clearpage
 \section{Results}
 \label{sec:results}
 TODO
+
+\subsection{Uniform}
+\label{subsec:uniform_results}
+TODO
+
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_a/uniform_N_1000_bins_10.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Uniform random number distribution with $N = 1000$ and $10$ bins.}
+	\label{fig:uniform_N_1000_bins_10}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_a/uniform_N_1000_bins_20.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Uniform random number distribution with $N = 1000$ and $20$ bins.}
+	\label{fig:uniform_N_1000_bins_20}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_a/uniform_N_1000_bins_50.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Uniform random number distribution with $N = 1000$ and $50$ bins.}
+	\label{fig:uniform_N_1000_bins_50}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_a/uniform_N_1000_bins_100.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Uniform random number distribution with $N = 1000$ and $100$ bins.}
+	\label{fig:uniform_N_1000_bins_100}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_a/uniform_N_1E6_bins_10.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Uniform random number distribution with $N = 10^6$ and $10$ bins.}
+	\label{fig:uniform_N_1E6_bins_10}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_a/uniform_N_1E6_bins_20.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Uniform random number distribution with $N = 10^6$ and $20$ bins.}
+	\label{fig:uniform_N_1E6_bins_20}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_a/uniform_N_1E6_bins_50.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Uniform random number distribution with $N = 10^6$ and $50$ bins.}
+	\label{fig:uniform_N_1E6_bins_50}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_a/uniform_N_1E6_bins_100.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Uniform random number distribution with $N = 10^6$ and $100$ bins.}
+	\label{fig:uniform_N_1E6_bins_100}
+\end{figure}
+
+
+
+\clearpage
+\subsection{Gaussian}
+\label{subsec:gaussian_results}
+TODO
+note that the fits are to the left edges of the bins!
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_b/gaussian_N_1000_bins_10.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Gaussian random number distribution with $N = 1000$ and $10$ bins.}
+	\label{fig:gaussian_N_1000_bins_10}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_b/gaussian_N_1000_bins_20.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Gaussian random number distribution with $N = 1000$ and $20$ bins.}
+	\label{fig:gaussian_N_1000_bins_20}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_b/gaussian_N_1000_bins_50.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Gaussian random number distribution with $N = 1000$ and $50$ bins.}
+	\label{fig:gaussian_N_1000_bins_50}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_b/gaussian_N_1000_bins_100.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Gaussian random number distribution with $N = 1000$ and $100$ bins.}
+	\label{fig:gaussian_N_1000_bins_100}
+\end{figure}
+
+\clearpage
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_b/gaussian_N_1E6_bins_10.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Gaussian random number distribution with $N = 10^6$ and $10$ bins.}
+	\label{fig:gaussian_N_1E6_bins_10}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_b/gaussian_N_1E6_bins_20.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Gaussian random number distribution with $N = 10^6$ and $20$ bins.}
+	\label{fig:gaussian_N_1E6_bins_20}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_b/gaussian_N_1E6_bins_50.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Gaussian random number distribution with $N = 10^6$ and $50$ bins.}
+	\label{fig:gaussian_N_1E6_bins_50}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.6\textwidth]{part_b/gaussian_N_1E6_bins_100.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{Gaussian random number distribution with $N = 10^6$ and $100$ bins.}
+	\label{fig:gaussian_N_1E6_bins_100}
+\end{figure}
+
+
 
 \clearpage
 \section{Conclusions}
@@ -166,7 +322,7 @@ The Python source code used to produce these results can be found online at \url
 \section{Supporting Material}
 \label{sec:Supporting_Material}
 
-% \lstinputlisting[style=output,label={lst:output}]{../code/output/output.log} TODO
+\lstinputlisting[style=output,label={lst:output}]{../code/output/output.log}
 
 
 \clearpage
@@ -176,7 +332,7 @@ The Python source code used to produce these results can be found online at \url
 \section{Code}
 \label{sec:code}
 
-% \lstinputlisting[style=python]{../code/poisson_dipole.py} TODO
+\lstinputlisting[style=python]{../code/random_numbers.py}
 
 \end{document} %%% end of doc %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -184,12 +340,4 @@ The Python source code used to produce these results can be found online at \url
 
 \bibliographystyle{bib_files/styles/atlasBibStyleWoTitle}
 \bibliography{bib_files/my_bib.bib}
-
-\begin{figure}[!htbc]
-  \centering
-  \includegraphics[width=.6\textwidth]{part_b/compare_runs_vary_sim_method/theta_vary_sim_method.pdf}
-	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{$\theta\left(t\right)$ for the Euler--Cromer and RK4 methods.}
-	\label{fig:theta_vary_sim_method}
-\end{figure}
 
