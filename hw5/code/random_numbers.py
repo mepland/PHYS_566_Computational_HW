@@ -1,6 +1,3 @@
-#!/usr/bin/env /home/mbe9/Documents/Spring_2016/PHYS_566_Computational_HW/anaconda/bin/python
-# #! to the correct python install, not portable!!!
-
 import os
 import sys
 import numpy as np
@@ -29,19 +26,29 @@ def m_random(N, seed, dist):
 	# Set up the standard python RNG with our seed
 	random.seed(seed)
 
-	data = [] # make a list to hold the generated numbers
+	# make a list to hold the generated numbers
+	data = []
 
-	for i in range(N):
-		rand_num = random.random()
+	
+	if(dist == "Uniform"):
+		for i in range(N):
+			data.append(random.random())
 
-		if(dist == "Uniform"):
-			data.append(rand_num)
-		elif(dist == "Gaussian"):
-			rand_num2 = random.random()
-			data.append( math.sqrt(-2*math.log(rand_num))*math.cos(2*np.pi*rand_num2) )
-		else:
-			print "Unknown distribution, exiting!"
-			sys.exit()
+	elif(dist == "Gaussian"):
+
+		# Ensure N is even
+		if(N % 2 != 0): N += 1
+
+		for i in range(N/2):
+			U1 = random.random()
+			U2 = random.random()
+			data.append( math.sqrt(-2*math.log(U1))*math.cos(2*np.pi*U2) )
+			data.append( math.sqrt(-2*math.log(U1))*math.sin(2*np.pi*U2) )
+
+	else:
+		print "Unknown distribution, exiting!"
+		sys.exit()
+
 
 	return [N, seed, dist, data]
 # end def for m_random
@@ -50,7 +57,7 @@ def m_random(N, seed, dist):
 ########################################################
 # Define a function to plot and fit the data
 def plot(optional_title, m_path, fname, m_nbins, run=[]):
-	if(debugging): print 'Beginning plot() for fname: '+fname	
+	print 'Beginning plot() for fname: '+fname	
 
 	# Get a nice handle on the distribution
 	dist = run[2]
@@ -82,6 +89,10 @@ def plot(optional_title, m_path, fname, m_nbins, run=[]):
 	# remove the last element of the returned_bins array, which is the right most edge of the largest bin,
 	# then n and bins have the same length, bins only has left edges, and we can plot them
 	bins = np.delete(returned_bins,returned_bins.size-1,None)	
+
+	# center the bins
+	bin_size = abs(bins[1]-bins[0])
+	bins += bin_size/2
 
 	# Fitting 
 	########################################################
@@ -162,7 +173,7 @@ def plot(optional_title, m_path, fname, m_nbins, run=[]):
 	# adjust axis range
 	x1,x2,y1,y2 = ax.axis()
 	ax.set_xlim((x_min, x_max))
-	ax.set_ylim((y1,1.20*y2))
+	ax.set_ylim((y1,1.250*y2))
 
 	# Draw the legend
 	ax.legend(loc='upper right', bbox_to_anchor=(0.98, 0.98), borderaxespad=0, fontsize='x-small')
