@@ -2,9 +2,47 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import curve_fit
-import random
+#from scipy.optimize import curve_fit
+#import random
 import math
+
+########################################################
+# Set fixed/global parameters
+
+J = 1.5 # nearest neighbor interaction strength J
+kB = 1.0 # Boltzmann's constant, relative to J TODO
+
+neighborhood = 'Von Neumann'
+# neighborhood = 'Moore'
+
+
+########################################################
+# Print out fixed values
+print '\nBeginning dla.py'
+print '\nFixed Parameters are:'
+print '---------------------------------------------'
+
+print '\nNN interaction strength J = %.1f ' % J
+print 'Boltzmann\'s constant kB = %.1f ' % kB
+
+print '\nNN neighborhood type = %s ' % neighborhood
+
+print '\n---------------------------------------------'
+print '---------------------------------------------\n'
+
+########################################################
+########################################################
+
+# Set up the neighborhood of points to check
+NN_list = []
+if neighborhood == 'Moore':
+	NN_list = [[-1,1], [0,1], [1,1], [-1,0], [1,0], [-1,-1], [0,-1], [1,-1]] # Moore neighborhood
+elif neighborhood == 'Von Neumann':
+	NN_list = [[0,1], [-1,0], [1,0], [0,-1]] # Von Neumann neighborhood
+else:
+	print 'ERROR!! Unknown neighborhood, exiting!!'
+	sys.exit()
+
 
 ########################################################
 # Define a function to create the output dir
@@ -19,173 +57,75 @@ def make_path(path):
 	        raise Exception('Problem creating output dir %s !!!\nA file with the same name probably already exists, please fix the conflict and run again.' % output_path)
 # end def for make_path
 
-#######################################################
-# Define a function to generate the random numbers 
-def m_random(N, seed, dist):
-
-	# Set up the standard python RNG with our seed
-	random.seed(seed)
-
-	# make a list to hold the generated numbers
-	data = []
-
-	
-	if(dist == "Uniform"):
-		for i in range(N):
-			data.append(random.random())
-
-	elif(dist == "Gaussian"):
-
-		# Ensure N is even
-		if(N % 2 != 0): N += 1
-
-		for i in range(N/2):
-			U1 = random.random()
-			U2 = random.random()
-			data.append( math.sqrt(-2*math.log(U1))*math.cos(2*np.pi*U2) )
-			data.append( math.sqrt(-2*math.log(U1))*math.sin(2*np.pi*U2) )
-
-	else:
-		print "Unknown distribution, exiting!"
-		sys.exit()
-
-
-	return [N, seed, dist, data]
-# end def for m_random
-
 
 ########################################################
 # Define a function to plot and fit the data
-def plot(optional_title, m_path, fname, m_nbins, run=[]):
-	print 'Beginning plot() for fname: '+fname	
+def plot(optional_title, m_path, fname, m_T, m_seed, world_grid):
+	if debugging: print 'Beginning plot() for fname: '+fname	
 
-	# Get a nice handle on the distribution
-	dist = run[2]
-
-	# create the ndarrays to plot
-	data_ndarray = np.array(run[3])
+	local_n = world_grid.shape[0] 
 
 	# Set up the figure and axes
         fig = plt.figure('fig')
         ax = fig.add_subplot(111)
-        ax.set_title(dist+' $x$'+optional_title)
-        ax.set_xlabel('$x$')
-        ax.set_ylabel('Pr($x$)')
+        ax.set_title(optional_title)
+        ax.set_xlabel('$x$ Index')
+        ax.set_ylabel('$y$ Index')
 
-	# Set up x axis range
-	x_min = min(run[3])
-	x_max = max(run[3])
-	x_max = math.ceil(max(abs(x_min), abs(x_max)))
-	x_min = -x_max
-
-	if(dist == "Uniform"):
-		x_min = 0.0
-		x_max = 1.0
-
-	# plot the histogram, saving the bin values (n) and edges (returned_bins) for later fitting
-	# use normed=1 to normalize the histogram, ie make counts into probabilities
-	n, returned_bins, patches = ax.hist(data_ndarray, m_nbins, range=(x_min, x_max), normed=1, facecolor='blue', alpha=0.8, label="Gen. Data")
-
-	# remove the last element of the returned_bins array, which is the right most edge of the largest bin,
-	# then n and bins have the same length, bins only has left edges, and we can plot them
-	bins = np.delete(returned_bins,returned_bins.size-1,None)	
-
-	# center the bins
-	bin_size = abs(bins[1]-bins[0])
-	bins += bin_size/2
-
-	# Fitting 
-	########################################################
-
-	########################################################
-	# Define the linear fit function
-	def linear_fit_function(n_data, offset_fit, slope_fit):
-	        return offset_fit + slope_fit*n_data
-	# end def linear_fit_function
-
-	########################################################
-	# Define the gaussian fit function
-	def gaussian_fit_function(n_data, offset_fit, mean_fit, std_dev_fit):
-	        return offset_fit + (1/(std_dev_fit*np.sqrt(2*np.pi)))*np.exp((-(n_data-mean_fit)**2)/(2*std_dev_fit**2))
-	# end def gaussian_fit_function
-
-	# TODO keep offset?
-
-	# actually perform the fits
-	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
-
-	linear_p0 = [1.0, 0.0]
-	linear_fit_status = True
-
-	gaussian_p0 = [0.0, 0.0, 1.0]
-	gaussian_fit_status = True
-
-	maxfev=m_maxfev = 2000
-
-	fit_text = ''
-
-	if(dist == "Uniform"):
-		try:
-			linear_op_par, linear_covar_matrix = curve_fit(linear_fit_function, bins, n, p0=linear_p0, maxfev=m_maxfev)
-		except RuntimeError:
-			print sys.exc_info()[1]
-			print 'linear curve_fit failed, continuing...'
-			linear_fit_status = False 
 	
-		# plot the fit
-		if(linear_fit_status):
-			linear_fit_line, = ax.plot(bins, linear_fit_function(bins, *linear_op_par), ls='dashed', label='Linear Fit', c="black")
-	
-		# Write out the fit parameters
-		fit_text = 'Linear Fit Function: Pr$(x) = a + b x$' 
-		if(linear_fit_status):
-			fit_text += '\n$a_{\mathrm{Expected}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (linear_p0[0], linear_op_par[0])
-			fit_text += '\n$b_{\mathrm{Expected}} =$ %2.2f, $b_{\mathrm{Fit}} =$ %2.5f' % (linear_p0[1], linear_op_par[1])
-		else:
-			fit_text += '\nLinear Fit Failed'
-	# end if dist == "Uniform"
+        # adjust axis range
+        ax.axis('scaled')
+        axis_offset = 0.1*(local_n+1)
+        ax.set_xlim((-axis_offset, local_n-1+axis_offset))
+        ax.set_ylim((-axis_offset, local_n-1+axis_offset))
 
-	if(dist == "Gaussian"):
-		try:
-			gaussian_op_par, gaussian_covar_matrix = curve_fit(gaussian_fit_function, bins, n, p0=gaussian_p0, maxfev=m_maxfev)
-		except RuntimeError:
-			print sys.exc_info()[1]
-			print 'gaussian curve_fit failed, continuing...'
-			gaussian_fit_status = False 
-	
-		# plot the fit
-		if(gaussian_fit_status):
-			gaussian_fit_line, = ax.plot(bins, gaussian_fit_function(bins, *gaussian_op_par), ls='dashed', label='Gaussian Fit', c="black")
-	
-		# Write out the fit parameters
-		fit_text = 'Gaussian Fit Function: Pr$(x) = a + \left(\sigma \sqrt{2\pi}\\right)^{-1} \exp\left(-\\frac{(x-\mu)^2}{2\sigma^2}\\right)$' 
-		if(gaussian_fit_status):
-			fit_text += '\n$a_{\mathrm{Expected}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (gaussian_p0[0], gaussian_op_par[0])
-			fit_text += '\n$\mu_{\mathrm{Expected}} =$ %2.2f, $\mu_{\mathrm{Fit}} =$ %2.5f' % (gaussian_p0[1], gaussian_op_par[1])
-			fit_text += '\n$\sigma_{\mathrm{Expected}} =$ %2.2f, $\sigma_{\mathrm{Fit}} =$ %2.5f' % (gaussian_p0[2], gaussian_op_par[2])
-		else:
-			fit_text += '\nGaussian Fit Failed'
-	# end if dist == "Gaussian"
+        # start list for legend entries/handles
+        legend_handles = []
 
-	# Print the fit parameters
-	ax.text(0.025, 1-0.03, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes, va='top')
+        Dx = 1.0 # grid spacing of the world
 
-	# adjust axis range
-	x1,x2,y1,y2 = ax.axis()
-	ax.set_xlim((x_min, x_max))
-	ax.set_ylim((y1,1.250*y2))
+	firstcp1 = True
+	firstcp2 = True
 
-	# Draw the legend
-	ax.legend(loc='upper right', bbox_to_anchor=(0.98, 0.98), borderaxespad=0, fontsize='x-small')
+        # plot the world grid
+	for i in range(local_n):
+		for j in range(local_n):
+                        if world_grid[i][j] == 1:
+                                cp1 = plt.Rectangle((i-Dx/2, j-Dx/2), Dx, Dx, color='red', fill=True, label='Spin Up')
+                                ax.add_artist(cp1)
+
+                                if firstcp1:
+                                        firstcp1 = False
+                                        legend_handles.append(cp1)
+
+                        if world_grid[i][j] == -1:
+                                cp2 = plt.Rectangle((i-Dx/2, j-Dx/2), Dx, Dx, color='blue', fill=True, label='Spin Down')
+                                ax.add_artist(cp2)
+
+                                if firstcp2 and not firstcp1:
+                                        firstcp2 = False
+                                        legend_handles.append(cp2)
 
 
-	# Annotate
-	ann_text = '$N =$ %G' % (run[0])
-	ann_text += '\n$N_{\mathrm{Bins}} =$ %G' % (bins.size)
-	ann_text += '\nSeed $=$ %d' %(run[1])
-	ann_text += '\nGen. Dist. =  %s' % (dist)
+        # make a square on the world border
+        world_border = plt.Rectangle((0-Dx/2,0-Dx/2), (local_n)*Dx, (local_n)*Dx, color='black', ls='dashed', fill=False, label='World Border')
+        ax.add_artist(world_border)
+        legend_handles.append(world_border)
 
-	ax.text(0.77, 0.88, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes, va='top') # TODO watch x alignment when Gaussian is printed
+
+        # draw legend
+        ax.legend(handles=legend_handles, bbox_to_anchor=(1.03, 1), borderaxespad=0, loc='upper left', fontsize='x-small')
+
+        # Annotate
+        ann_text = '$n =$ %d\n$N =$ %d' % (local_n, local_n*local_n)
+	ann_text += '\n$T =$ %.5g' % (m_T)
+	ann_text += '\n\n$k_{\mathrm{B}} =$ %.5g' % (kB)
+	ann_text += '\n$J =$ %.5g' % (J)
+	ann_text += '\nRNG Seed = %d' % (m_seed)
+        ann_text += '\n\nNN Neighborhood:\n'+neighborhood
+
+        ax.text(1.0415, 0.018, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
+
 
 	# Print it out
 	make_path(m_path)
@@ -193,11 +133,107 @@ def plot(optional_title, m_path, fname, m_nbins, run=[]):
 
 	fig.clf() # Clear fig for reuse
 
-	print 'plot() completed!!!'
+	if debugging: print 'plot() completed!!!'
 # end def for plot()
 
 
 
+#######################################################
+# Define a function to initialize the world grid
+def initialize(n, seed):
+
+	# Set up the numpy RNG with our seed
+	np.random.seed(seed)
+
+	# Set up the world grid with random +/-1 values
+	# First randint makes 0, 1's then change 0's to -1
+	world_grid = np.random.randint(2, size=(n, n))
+	for i in range(n):
+		for j in range(n):	
+			if world_grid[i][j] == 0: world_grid[i][j] = -1
+
+	return world_grid
+
+# end def for initialize
+
+
+
+#######################################################
+# Define a function to perform one sweep of the world grid
+def sweep(T, local_n, world_grid, NN_list = []):
+	
+	# local_n = world_grid.shape[0] pass as a parameter to speed up the sweeps...
+
+	# sweep through whole grid
+	for i in range(local_n):
+		for j in range(local_n):
+
+			# compute DeltaE
+
+			NN_E_original = 0.0
+			for k in range(len(NN_list)):
+				NN_E_original += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%local_n ][ (j+NN_list[k][1])%local_n ]
+
+			world_grid[i][j] = -world_grid[i][j] # test flip the spin
+
+			# compute DeltaE for the spin flipped
+
+			NN_E_flipped = 0.0
+			for k in range(len(NN_list)):
+				NN_E_flipped += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%local_n ][ (j+NN_list[k][1])%local_n ]
+
+			DeltaE = NN_E_original - NN_E_flipped
+
+			# if DeltaE <= 0 always keep the spin, ie do nothing as it's already been flipped
+			if DeltaE > 0.0:
+				# keep the spin with probability p = exp(-DeltaE/kB*T)
+				p = np.exp( -DeltaE/(kB*T) )
+				r = np.random.rand()
+
+				# if p >= 1.0: print 'warning p >= 1' # Debugging
+
+				# if r < p keep the spin, ie do nothing as it's already been flipped
+				if r >= p:
+					world_grid[i][j] = -world_grid[i][j] # flip the spin back to it's original position
+
+	return world_grid
+
+# end def for sweep
+
+
+#######################################################
+# Define a function to compute E of a world_grid
+def E(local_n, world_grid, NN_list = []):
+	
+	# local_n = world_grid.shape[0]
+	E = 0.0
+
+	# sweep through whole grid
+	for i in range(local_n):
+		for j in range(local_n):
+
+			# compute the contribution to E from this spin
+			for k in range(len(NN_list)):
+				E += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%local_n ][ (j+NN_list[k][1])%local_n ]
+
+	return E
+# end def for E
+
+
+#######################################################
+# Define a function to compute M of a world_grid
+def M(local_n, world_grid):
+	
+	# local_n = world_grid.shape[0]
+	M = 0.0
+
+	# sweep through whole grid
+	for i in range(local_n):
+		for j in range(local_n):
+				M += world_grid[i][j]
+
+	return M/(local_n*local_n)
+# end def for M
 
 ########################################################
 ########################################################
@@ -212,7 +248,40 @@ if(True):
 	output_path = '../output/dev'
 	debugging = True
 
-	make_path(output_path)
+	seed = 5
+	test_n = 20
+	T = 0.00000000000000000000001
+
+	world_grid = initialize(test_n, seed)
+
+	plot('initial', output_path, 'test_initial', T, seed, world_grid)
+
+	halt_condition = 0.001
+
+	num_history = 10
+	history = np.linspace(99.0, 99.0, num_history)
+
+	old_conv_var = 99.0
+	new_conv_var = 99.0
+
+	sweep_number = 0
+
+	while np.mean(history) > halt_condition:
+
+		world_grid = sweep(T, test_n, world_grid, NN_list)
+
+		new_conv_var = E(test_n, world_grid, NN_list)
+
+		history[sweep_number%num_history] = abs(old_conv_var - new_conv_var)/new_conv_var
+
+		print '%d, DeltaE = %.5f, E = %.5f, M = %.5f, convergence = %.5f' % (sweep_number, old_conv_var - new_conv_var, new_conv_var, M(test_n, world_grid), np.mean(history) )
+		old_conv_var = new_conv_var
+
+		sweep_number += 1
+
+
+	plot('converged', output_path, 'test_converged', T, seed, world_grid)
+
 
 
 ########################################################
