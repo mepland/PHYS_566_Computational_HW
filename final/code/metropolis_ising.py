@@ -10,7 +10,7 @@ import math
 # Set fixed/global parameters
 
 J = 1.5 # nearest neighbor interaction strength J
-kB = 1.0 # Boltzmann's constant, relative to J TODO
+kB = 1.0 # Boltzmann's constant, relative to J
 
 neighborhood = 'Von Neumann'
 # neighborhood = 'Moore'
@@ -22,10 +22,10 @@ print '\nBeginning dla.py'
 print '\nFixed Parameters are:'
 print '---------------------------------------------'
 
-print '\nNN interaction strength J = %.1f ' % J
-print 'Boltzmann\'s constant kB = %.1f ' % kB
+print '\nNN interaction strength J = %.1f [J]' % J
+print 'Boltzmann\'s constant kB = %.1f [J/K]' % kB
 
-print '\nNN neighborhood type = %s ' % neighborhood
+print '\nNN neighborhood type = %s' % neighborhood
 
 print '\n---------------------------------------------'
 print '---------------------------------------------\n'
@@ -59,11 +59,11 @@ def make_path(path):
 
 
 ########################################################
-# Define a function to plot and fit the data
-def plot(optional_title, m_path, fname, m_T, m_seed, world_grid):
-	if debugging: print 'Beginning plot() for fname: '+fname	
+# Define a function to plot the world grid
+def plot_grid(optional_title, m_path, fname, m_T, m_sweep_number, halt_percent_change, m_seed, world_grid):
+	if debugging: print 'Beginning plot_grid() for fname: '+fname	
 
-	local_n = world_grid.shape[0] 
+	m_n = world_grid.shape[0] 
 
 	# Set up the figure and axes
         fig = plt.figure('fig')
@@ -75,9 +75,9 @@ def plot(optional_title, m_path, fname, m_T, m_seed, world_grid):
 	
         # adjust axis range
         ax.axis('scaled')
-        axis_offset = 0.1*(local_n+1)
-        ax.set_xlim((-axis_offset, local_n-1+axis_offset))
-        ax.set_ylim((-axis_offset, local_n-1+axis_offset))
+        axis_offset = 0.1*(m_n+1)
+        ax.set_xlim((-axis_offset, m_n-1+axis_offset))
+        ax.set_ylim((-axis_offset, m_n-1+axis_offset))
 
         # start list for legend entries/handles
         legend_handles = []
@@ -88,10 +88,10 @@ def plot(optional_title, m_path, fname, m_T, m_seed, world_grid):
 	firstcp2 = True
 
         # plot the world grid
-	for i in range(local_n):
-		for j in range(local_n):
+	for i in range(m_n):
+		for j in range(m_n):
                         if world_grid[i][j] == 1:
-                                cp1 = plt.Rectangle((i-Dx/2, j-Dx/2), Dx, Dx, color='red', fill=True, label='Spin Up')
+                                cp1 = plt.Rectangle((i-Dx/2, j-Dx/2), Dx, Dx, color='orange', fill=True, label='Spin Up')
                                 ax.add_artist(cp1)
 
                                 if firstcp1:
@@ -108,23 +108,29 @@ def plot(optional_title, m_path, fname, m_T, m_seed, world_grid):
 
 
         # make a square on the world border
-        world_border = plt.Rectangle((0-Dx/2,0-Dx/2), (local_n)*Dx, (local_n)*Dx, color='black', ls='dashed', fill=False, label='World Border')
+        world_border = plt.Rectangle((0-Dx/2,0-Dx/2), (m_n)*Dx, (m_n)*Dx, color='black', ls='dashed', fill=False, label='World Border')
         ax.add_artist(world_border)
         legend_handles.append(world_border)
 
 
         # draw legend
-        ax.legend(handles=legend_handles, bbox_to_anchor=(1.03, 1), borderaxespad=0, loc='upper left', fontsize='x-small')
+        ax.legend(handles=legend_handles, bbox_to_anchor=(1.025, 1), borderaxespad=0, loc='upper left', fontsize='x-small')
 
         # Annotate
-        ann_text = '$n =$ %d\n$N =$ %d' % (local_n, local_n*local_n)
-	ann_text += '\n$T =$ %.5g' % (m_T)
-	ann_text += '\n\n$k_{\mathrm{B}} =$ %.5g' % (kB)
-	ann_text += '\n$J =$ %.5g' % (J)
-	ann_text += '\nRNG Seed = %d' % (m_seed)
-        ann_text += '\n\nNN Neighborhood:\n'+neighborhood
+       	ann_text = '$T =$ %.5g [K]' % (m_T)
+       	if not m_sweep_number is None:
+		ann_text += '\n# Sweeps $=$ %g' % (m_sweep_number)
+		if m_sweep_number >= sweep_upper_limit: ann_text += '\nHit Limit'
+		ann_text += '\n$\langle\Delta E / E \\rangle <$ %.3f' % (halt_percent_change)
 
-        ax.text(1.0415, 0.018, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
+	ann_text += '\n\n$n =$ %d\n$N =$ %d' % (m_n, m_n*m_n)
+
+	ann_text += '\n\n$J =$ %.5g [J]' % (J)
+	ann_text += '\n$k_{\mathrm{B}} =$ %.4g [J/K]' % (kB)
+	ann_text += '\nRNG Seed = %d' % (m_seed)
+        ann_text += '\nNN Neighborhood:\n'+neighborhood
+
+        ax.text(1.04, 0.018, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
 
 
 	# Print it out
@@ -133,8 +139,84 @@ def plot(optional_title, m_path, fname, m_T, m_seed, world_grid):
 
 	fig.clf() # Clear fig for reuse
 
-	if debugging: print 'plot() completed!!!'
-# end def for plot()
+	if debugging: print 'plot_grid() completed!!!'
+# end def for plot_grid()
+
+
+
+########################################################
+# Define a function to plot M vs T
+def plot_MT(optional_title, m_path, fname, M_array, T_array, Sweeps_array, m_n, sweep_upper_limit, halt_percent_change, m_seed):
+	if debugging: print 'Beginning plot_MT() for fname: '+fname
+
+	# Setup the arrays
+
+	M_conv = []
+	M_timedout = []
+	T_conv = []
+	T_timedout = []
+
+	for i in range(Sweeps_array.size):
+		if Sweeps_array[i] < sweep_upper_limit:
+			M_conv.append(M_array[i])
+			T_conv.append(T_array[i])
+		else:
+			M_timedout.append(M_array[i])
+			T_timedout.append(T_array[i])
+
+	M_conv_array = np.array(M_conv)
+	M_timedout_array = np.array(M_timedout)
+	T_conv_array = np.array(T_conv)
+	T_timedout_array = np.array(T_timedout)
+
+
+	# Set up the figure and axes
+        fig = plt.figure('fig')
+        ax = fig.add_subplot(111)
+        ax.set_title(optional_title)
+        ax.set_xlabel('$T$ [K]')
+        ax.set_ylabel('$M = N\langle s\\rangle$') # TODO Units
+
+        # start list for legend entries/handles
+        legend_handles = []
+
+	# Plot the data
+	conv_points = ax.scatter(T_conv, M_conv, marker='o', label='Converged', c='blue')
+	legend_handles.append(conv_points)
+	
+	timedout_points = ax.scatter(T_timedout, M_timedout, marker='s', label='Timed Out', c='Green') # TODO diff name
+	legend_handles.append(timedout_points)
+	
+
+	# adjust axis range
+	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
+	ax.set_xlim(0.0, x2_auto)
+	ax.set_ylim(-max(abs(y1_auto), abs(y2_auto)), max(abs(y1_auto), abs(y2_auto)) )
+
+	
+	# draw legend
+	ax.legend(handles=legend_handles, bbox_to_anchor=(0.98, 0.98), borderaxespad=0, loc='upper right', fontsize='x-small')
+	
+        # Annotate
+	ann_text = '$n =$ %d, $N =$ %d' % (m_n, m_n*m_n)
+	ann_text += '\nMax # Sweeps $=$ %g' % (sweep_upper_limit)	
+	ann_text += '\n$\langle\Delta E / E \\rangle <$ %.3f' % (halt_percent_change)
+	ann_text += '\n\n$J =$ %.5g [J]' % (J)
+	ann_text += '\n$k_{\mathrm{B}} =$ %.4g [J/K]' % (kB)
+	ann_text += '\nRNG Seed = %d' % (m_seed)
+        ann_text += '\nNN Neighborhood:\n'+neighborhood
+
+        ax.text(0.022, 0.035, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
+
+
+	# Print it out
+	make_path(m_path)
+	fig.savefig(m_path+'/'+fname+'.pdf')	
+
+	fig.clf() # Clear fig for reuse
+
+	if debugging: print 'plot_MT() completed!!!'
+# end def for plot_MT()
 
 
 
@@ -160,19 +242,19 @@ def initialize(n, seed):
 
 #######################################################
 # Define a function to perform one sweep of the world grid
-def sweep(T, local_n, world_grid, NN_list = []):
+def sweep(T, m_n, world_grid, NN_list = []):
 	
-	# local_n = world_grid.shape[0] pass as a parameter to speed up the sweeps...
+	# m_n = world_grid.shape[0] pass as a parameter to speed up the sweeps...
 
 	# sweep through whole grid
-	for i in range(local_n):
-		for j in range(local_n):
+	for i in range(m_n):
+		for j in range(m_n):
 
 			# compute DeltaE
 
 			NN_E_original = 0.0
 			for k in range(len(NN_list)):
-				NN_E_original += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%local_n ][ (j+NN_list[k][1])%local_n ]
+				NN_E_original += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%m_n ][ (j+NN_list[k][1])%m_n ]
 
 			world_grid[i][j] = -world_grid[i][j] # test flip the spin
 
@@ -180,7 +262,7 @@ def sweep(T, local_n, world_grid, NN_list = []):
 
 			NN_E_flipped = 0.0
 			for k in range(len(NN_list)):
-				NN_E_flipped += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%local_n ][ (j+NN_list[k][1])%local_n ]
+				NN_E_flipped += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%m_n ][ (j+NN_list[k][1])%m_n ]
 
 			DeltaE = NN_E_original - NN_E_flipped
 
@@ -203,18 +285,18 @@ def sweep(T, local_n, world_grid, NN_list = []):
 
 #######################################################
 # Define a function to compute E of a world_grid
-def E(local_n, world_grid, NN_list = []):
+def E(m_n, world_grid, NN_list = []):
 	
-	# local_n = world_grid.shape[0]
+	# m_n = world_grid.shape[0]
 	E = 0.0
 
 	# sweep through whole grid
-	for i in range(local_n):
-		for j in range(local_n):
+	for i in range(m_n):
+		for j in range(m_n):
 
 			# compute the contribution to E from this spin
 			for k in range(len(NN_list)):
-				E += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%local_n ][ (j+NN_list[k][1])%local_n ]
+				E += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%m_n ][ (j+NN_list[k][1])%m_n ]
 
 	return E
 # end def for E
@@ -222,18 +304,99 @@ def E(local_n, world_grid, NN_list = []):
 
 #######################################################
 # Define a function to compute M of a world_grid
-def M(local_n, world_grid):
+def M(m_n, world_grid):
 	
-	# local_n = world_grid.shape[0]
+	# m_n = world_grid.shape[0]
 	M = 0.0
 
 	# sweep through whole grid
-	for i in range(local_n):
-		for j in range(local_n):
+	for i in range(m_n):
+		for j in range(m_n):
 				M += world_grid[i][j]
 
-	return M/(local_n*local_n)
+	return M/(m_n*m_n)
 # end def for M
+
+#######################################################
+# Define a function to run sweeps on the world grid till convergence is met
+def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, NN_list):
+
+	num_history = 10
+	history = np.linspace(99.0*m_n*m_n, 99.0*m_n*m_n, num_history)
+
+	old_conv_var = 99.0*m_n*m_n
+	new_conv_var = 99.0*m_n*m_n
+
+	sweep_number = 0
+
+	# sweep until the mean of the last num_history percent changes in the convergence variable is < halt_percent_change
+	while np.mean(history) > halt_percent_change and sweep_number < sweep_upper_limit:
+
+		world_grid = sweep(T, m_n, world_grid, NN_list)
+
+		new_conv_var = E(m_n, world_grid, NN_list) # Use E as the convergence variable
+
+		if new_conv_var != 0.0:
+			history[sweep_number%num_history] = abs((new_conv_var - old_conv_var)/new_conv_var) # store the percent change
+		else:
+			print 'avoiding divide by zero error'
+			history[sweep_number%num_history] = 10*halt_percent_change # give it a large non zero number just to kick it back up and keep it moving
+
+
+#		if info: print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M(m_n, world_grid), np.mean(history) ) # Debugging info
+		if info and sweep_number > 0.9*sweep_upper_limit: print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M(m_n, world_grid), np.mean(history) ) # Debugging info
+
+		old_conv_var = new_conv_var
+
+		sweep_number += 1
+
+	if sweep_number >= sweep_upper_limit: print 'Warning sweep upper limit hit!'
+
+	return [world_grid, sweep_number]
+
+# end def for loop_till_conv
+
+#######################################################
+# Define a function to cool down through temps, saving M vs T for graphing
+def cool_down(halt_percent_change, sweep_upper_limit, m_n, seed, temps_to_test = [], NN_list = []):
+
+	Ms = []
+	Ts = []
+	Sweeps = []
+
+	# make sure we are going through temps high to low
+	temps_to_test = sorted(temps_to_test)
+
+	for i in range(len(temps_to_test)):
+
+		T = temps_to_test[len(temps_to_test)-1-i]
+
+		print '\nStarting T = %.2g' % T
+		temp = 'T%.2f' % T
+	
+		if i == 0:
+			world_grid = initialize(m_n, seed)
+			plot_grid('Initial', output_path, 'initial', T, None, None, seed, world_grid)
+
+	
+		world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, NN_list)
+
+		title = ''
+
+		if sweep_number >= sweep_upper_limit and debugging:
+			title = 'Timed Out'
+
+		plot_grid(title, output_path, 'converged_'+temp, T, sweep_number, halt_percent_change, seed, world_grid)
+
+		Ms.append( abs(M(m_n, world_grid)) ) # TODO added in abs
+		Ts.append( T )
+		Sweeps.append( sweep_number )
+
+		print 'T = %.2g Completed!' % T
+
+	return [Ms, Ts, Sweeps]
+
+# end def for cool_down
 
 ########################################################
 ########################################################
@@ -247,41 +410,42 @@ def M(local_n, world_grid):
 if(True):
 	output_path = '../output/dev'
 	debugging = True
-
-	seed = 5
-	test_n = 20
-	T = 0.00000000000000000000001
-
-	world_grid = initialize(test_n, seed)
-
-	plot('initial', output_path, 'test_initial', T, seed, world_grid)
-
-	halt_condition = 0.001
-
-	num_history = 10
-	history = np.linspace(99.0, 99.0, num_history)
-
-	old_conv_var = 99.0
-	new_conv_var = 99.0
-
-	sweep_number = 0
-
-	while np.mean(history) > halt_condition:
-
-		world_grid = sweep(T, test_n, world_grid, NN_list)
-
-		new_conv_var = E(test_n, world_grid, NN_list)
-
-		history[sweep_number%num_history] = abs(old_conv_var - new_conv_var)/new_conv_var
-
-		print '%d, DeltaE = %.5f, E = %.5f, M = %.5f, convergence = %.5f' % (sweep_number, old_conv_var - new_conv_var, new_conv_var, M(test_n, world_grid), np.mean(history) )
-		old_conv_var = new_conv_var
-
-		sweep_number += 1
+	info = True
 
 
-	plot('converged', output_path, 'test_converged', T, seed, world_grid)
+	sweep_upper_limit = 750
+	n = 50
+	seed = 7
+	halt_percent_change = 0.02
 
+	temps_to_test = [0.1, 1, 1.5, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8, 4, 4.5, 5, 5.5, 6, 7, 8]
+#	temps_to_test = [0.1]
+
+	generate_fresh = True
+
+	if os.path.isfile(output_path+'/M_array.npy') and os.path.isfile(output_path+'/T_array.npy') and os.path.isfile(output_path+'/Sweeps_array.npy') and not generate_fresh:
+		print 'Loading saved arrays'
+	else:
+		print 'Generating M, T and Sweeps arrays'
+
+		MTSweeps = cool_down(halt_percent_change, sweep_upper_limit, n, seed, temps_to_test, NN_list)
+
+		M_array = np.array(MTSweeps[0])
+		np.save(output_path+'/M_array', M_array)
+
+		T_array = np.array(MTSweeps[1])
+		np.save(output_path+'/T_array', T_array)
+
+		Sweeps_array = np.array(MTSweeps[2])
+		np.save(output_path+'/Sweeps_array', Sweeps_array)
+
+
+	M_array = np.load(output_path+'/M_array.npy')
+	T_array = np.load(output_path+'/T_array.npy')
+	Sweeps_array = np.load(output_path+'/Sweeps_array.npy')
+
+	# plot_MT(optional_title, m_path, fname, M_array, T_array, Sweeps_array, m_n, sweep_upper_limit, halt_percent_change, m_seed)
+	plot_MT('', output_path, 'M_vs_T', M_array, T_array, Sweeps_array, n, sweep_upper_limit, halt_percent_change, seed)
 
 
 ########################################################
@@ -291,6 +455,7 @@ if(True):
 if(False):
 	top_output_path = '../output/plots_for_paper'
 	debugging = False
+	info = True
 
         # Part a
         ########################################################
