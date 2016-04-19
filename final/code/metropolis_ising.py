@@ -233,6 +233,187 @@ def plot_MT(optional_title, m_path, fname, M_array, T_array, Sweeps_array, m_n, 
 
 
 
+########################################################
+# Define a function to plot C vs T
+def plot_CT(optional_title, m_path, fname, C_list, T_list, m_n, sweep_upper_limit, halt_percent_change, m_seed):
+	if debugging: print 'Beginning plot_CT() for fname: '+fname
+
+	# Setup the arrays
+	C_array = np.array(C_list)
+	T_array = np.array(T_list)
+
+	# Set up the figure and axes
+        fig = plt.figure('fig')
+        ax = fig.add_subplot(111)
+        ax.set_title(optional_title)
+        ax.set_xlabel('$T$ [K]')
+        ax.set_ylabel('$C$ [TODO]')
+
+        # start list for legend entries/handles
+        legend_handles = []
+
+	# Plot the data
+	points = ax.scatter(T_array, C_array, marker='o', label='C', c='blue')
+	legend_handles.append(points)
+	
+
+	# adjust axis range TODO
+	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
+	ax.set_xlim(0.0, x2_auto)
+#	ax.set_ylim(-max(abs(y1_auto), abs(y2_auto)), max(abs(y1_auto), abs(y2_auto)) )
+
+	
+	# draw legend
+	# ax.legend(handles=legend_handles, bbox_to_anchor=(0.98, 0.98), borderaxespad=0, loc='upper right', fontsize='x-small')
+	
+        # Annotate
+	ann_text = '$n =$ %d, $N =$ %d' % (m_n, m_n*m_n)
+	ann_text += '\nMax # Sweeps $=$ %g' % (sweep_upper_limit)	
+	ann_text += '\n$\langle\Delta E / E \\rangle <$ %.3f' % (halt_percent_change)
+	ann_text += '\n\n$J =$ %.5g [J]' % (J)
+	ann_text += '\n$k_{\mathrm{B}} =$ %.4g [J/K]' % (kB)
+	ann_text += '\nRNG Seed = %d' % (m_seed)
+        ann_text += '\nNN Neighborhood:\n'+neighborhood
+
+		
+	ax.text(0.8, 0.725, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
+
+	# Print it out
+	make_path(m_path)
+	fig.savefig(m_path+'/'+fname+'.pdf')	
+
+	fig.clf() # Clear fig for reuse
+
+	if debugging: print 'plot_CT() completed!!!'
+# end def for plot_CT()
+
+########################################################
+# Define a function to plot C max/N vs n
+def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_limit, halt_percent_change, m_seed, fit_upper_limit):
+	if debugging: print 'Beginning Cmax_vs_n for fname: '+fname
+
+	# Setup the arrays
+
+	C_over_N_fit = []
+	C_over_N_nofit = []
+	n_fit = []
+	n_nofit = []
+
+
+       	if fit_upper_limit is None:
+		fit_upper_limit = 2.0*np.amax( n_array )
+
+	for i in range(n_array.size):
+		if n_array[i] < fit_upper_limit:
+			C_over_N_fit.append( C_over_N_array[i]/(n_array[i]*n_array[i]) )
+			n_fit.append(n_array[i])
+		else:
+			C_over_N_nofit.append( C_over_N_array[i]/(n_array[i]*n_array[i]) )
+			n_nofit.append(n_array[i])
+
+	C_over_N_fit_array = np.array(C_over_N_fit)
+	C_over_N_nofit_array = np.array(C_over_N_nofit)
+	n_fit_array = np.array(n_fit)
+	n_nofit_array = np.array(n_nofit)
+
+
+	# Set up the figure and axes
+        fig = plt.figure('fig')
+        ax = fig.add_subplot(111)
+        ax.set_title(optional_title)
+        ax.set_xlabel('$C/N$ [TODO]')
+        ax.set_ylabel('$n$')
+
+        # start list for legend entries/handles
+        legend_handles = []
+
+	# Plot the data
+	fit_points = ax.scatter(n_fit, C_over_N_fit, marker='o', label='$C/N$', c='blue')
+	legend_handles.append(fit_points)
+	
+	nofit_points = ax.scatter(n_nofit, C_over_N_nofit, marker='0', label=None, c='blue')
+
+
+
+	# Fitting 
+	########################################################
+	
+	########################################################
+	# Define the log fit function
+	def log_fit_function(n_data, offset_fit, slope_fit):
+		return offset_fit + slope_fit*np.log(n_data)
+	# end def log_fit_function
+		
+	# actually perform the fits
+	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
+	
+	m_p0 = [0.0, 1.0]
+	fit_status = True
+	
+	maxfev=m_maxfev = 2000
+	
+	fit_text = ''
+		
+	try:
+		op_par, covar_matrix = curve_fit(log_fit_function, C_over_N_fit, n_fit, p0=m_p0, maxfev=m_maxfev)
+	except RuntimeError:
+		print sys.exc_info()[1]
+		print 'log curve_fit failed, continuing...'
+		fit_status = False
+	
+	# plot the fit
+	if(fit_status):
+		fit_line, = ax.plot(n_array, log_fit_function(n_array, *op_par), ls='dashed', label='Log Fit', c="black")
+	
+	# Write out the fit parameters
+	fit_text = 'Log Fit Function: $C/N = a + b \log\left(n\\right)$'
+	if(log_fit_status):
+		fit_text += '\n$a_{\mathrm{Expected}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (m_p0[0], log_op_par[0])
+		fit_text += '\n$b_{\mathrm{Expected}} =$ %2.2f, $b_{\mathrm{Fit}} =$ %2.5f' % (m_p0[1], log_op_par[1])
+	else:
+		fit_text += '\nLog Fit Failed'
+		
+	# Print the fit parameters
+	ax.text(0.025, 1-0.03, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes, va='top')
+	
+	
+	# adjust axis range TODO
+	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
+	ax.set_xlim(0.0, x2_auto)
+	# ax.set_ylim(-max(abs(y1_auto), abs(y2_auto)), max(abs(y1_auto), abs(y2_auto)) )
+
+	
+	# draw legend
+	ax.legend(handles=legend_handles, bbox_to_anchor=(0.98, 0.98), borderaxespad=0, loc='upper right', fontsize='x-small')
+	
+        # Annotate
+	ann_text = '\nMax # Sweeps $=$ %g' % (sweep_upper_limit)	
+	ann_text += '\n$\langle\Delta E / E \\rangle <$ %.3f' % (halt_percent_change)
+	ann_text += '\n\n$J =$ %.5g [J]' % (J)
+	ann_text += '\n$k_{\mathrm{B}} =$ %.4g [J/K]' % (kB)
+	ann_text += '\nRNG Seed = %d' % (m_seed)
+        ann_text += '\nNN Neighborhood:\n'+neighborhood
+
+	# TODO
+	if abs(y2_auto) < abs(y1_auto):
+		# M goes positive, put ann text in upper left
+	        ax.text(0.022, 0.725, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
+	else:
+		# M goes negative, put ann text in lower left
+	        ax.text(0.022, 0.035, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
+
+
+	# Print it out
+	make_path(m_path)
+	fig.savefig(m_path+'/'+fname+'.pdf')	
+
+	fig.clf() # Clear fig for reuse
+
+	if debugging: print 'plot_MT() completed!!!'
+# end def for plot_MT()
+
+
+
 #######################################################
 # Define a function to initialize the world grid
 def initialize(n, seed):
@@ -432,8 +613,8 @@ def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, swee
 
 	if debugging_plots:
 		# save debugging plots
-		name = 'C_equalized_world_grid_T%.2f_n%d' % (T, m_n)
-		plot_grid('Equalized', m_path+'/debugging', name, T, None, None, -9, world_grid)
+		name = 'C_T%.2f_n%d_equalized_world_grid' % (T, m_n)
+		plot_grid('Equalized', m_path, name, T, None, None, -9, world_grid)
 
 	# Run more sweeps to generate more E values
 	for i in range(num_microstates-1):
@@ -446,8 +627,8 @@ def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, swee
 
 	if debugging_plots:
 		# save debugging plots
-		name = 'C_last_sweep_world_grid_T%.2f_n%d' % (T, m_n)
-		plot_grid('Last Sweep', m_path+'/debugging', name, T, None, None, -9, world_grid)
+		name = 'C_T%.2f_n%d_last_sweep_world_grid' % (T, m_n)
+		plot_grid('Last Sweep', m_path, name, T, None, None, -9, world_grid)
 
 
 	# Compute the variance, then C
@@ -470,6 +651,8 @@ def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_
 
 	initial_world_grid = initialize(m_n, m_seed)
 
+	name = 'CT_for_n%d' % m_n
+
 	# make sure we are going through temps high to low
 	temps_to_test = sorted(temps_to_test)
 
@@ -485,11 +668,12 @@ def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_
 		else:
 			starting_world_grid = initial_world_grid
 
-		tmp_C, equalized_world_grid = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, starting_world_grid, NN_list)
+		tmp_C, equalized_world_grid = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path+'/'+name+'_debug', starting_world_grid, NN_list)
 
 		C_values.append( tmp_C )
 		T_values.append( T )
 
+	plot_CT('', m_path, name, C_values, T_values, m_n, sweep_upper_limit, halt_percent_change, m_seed)
 
 	if debugging: print 'CT_for_n with n = %d Completed!' % (m_n)
 
@@ -511,24 +695,51 @@ if(True):
 	debugging = True
 	debugging2 = True
 	debugging_plots = True
-	info = True
+	info = False
 
-	sweep_upper_limit = 2000
-	m_n = 20
-	m_seed = 7
+	sweep_upper_limit = 2000 # TODO increase
+
+	seed = 7
 	halt_percent_change = 0.01
 
-	T = 2.0
 	num_microstates = 100
 	microstate_sweep_seperation = 10
 
-	m_path = output_path
 
-	temps_to_test = [1.0, 4.0, 8.0]
+	temps_to_test = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0]
 
-	
-	Ts, Cs = CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, NN_list, temps_to_test)
+	# n_to_test = [5, 10, 20, 30, 40, 50, 75, 100, 200, 500]
+	n_to_test = [5, 10, 20, 30] # Debugging
 
+	generate_fresh = False
+
+	C_max_list = []
+
+	if os.path.isfile(output_path+'/C_array.npy') and os.path.isfile(output_path+'/n_array.npy') and not generate_fresh:
+		print 'Loading saved arrays'
+	else:
+		print 'Generating C and n arrays'
+
+		for n in n_to_test:
+
+			Ts, Cs = CT_for_n(seed, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, n, output_path, NN_list, temps_to_test)
+
+			C_max_list.append(max(Cs))
+
+			print 'C max = %.5f' % (max(Cs))
+
+		C_array = np.array(C_max_list)
+		np.save(output_path+'/C_array', C_array)
+
+		n_array = np.array(n_to_test)
+		np.save(output_path+'/n_array', n_array)
+
+
+	C_array = np.load(output_path+'/C_array.npy')
+	n_array = np.load(output_path+'/n_array.npy')
+
+	# plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_limit, halt_percent_change, m_seed, fit_upper_limit)
+	plot_Cmax_vs_n('', output_path, 'Cmax_over_N_vs_n', C_array, n_array, sweep_upper_limit, halt_percent_change, seed, None)
 
 
 ########################################################
