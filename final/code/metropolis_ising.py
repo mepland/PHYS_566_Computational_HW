@@ -295,7 +295,7 @@ def plot_CT(optional_title, m_path, fname, C_list, T_list, m_n, sweep_upper_limi
 
 ########################################################
 # Define a function to plot C max/N vs n
-def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_limit, halt_percent_change, m_seed, fit_upper_limit):
+def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_limit, halt_percent_change, m_seed, perform_fit, fit_upper_limit):
 	if debugging: print '\n\n---------------------------------------------\n---------------------------------------------\nBeginning Cmax_vs_n for fname: '+fname
 
 	# Setup the arrays
@@ -339,54 +339,61 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 	
 	nofit_points = ax.scatter(n_nofit, C_over_N_nofit, marker='o', label=None, c='blue')
 
-
-
-	# Fitting 
-	########################################################
+	if(perform_fit):
 	
-	########################################################
-	# Define the log fit function
-	def log_fit_function(n_data, offset_fit, slope_fit):
-		return offset_fit + slope_fit*np.log(n_data)
-	# end def log_fit_function
+		# Fitting 
+		########################################################
 		
-	# actually perform the fits
-	# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
-	
-	m_p0 = [0.0, 1.0]
-	fit_status = True
-	
-	maxfev=m_maxfev = 2000
-	
-	# make nice x array for fit plot	
-	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
-	fit_x = np.linspace(min(0.1, 0.00001*abs(x2_auto)), x2_auto, 1000)
-
-	fit_text = ''
+		########################################################
+		# Define the log fit function
+		def log_fit_function(n_data, offset_fit, slope_fit):
+			return offset_fit + slope_fit*np.log(n_data)
+		# end def log_fit_function
+			
+		# actually perform the fits
+		# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
 		
-	try:
-		op_par, covar_matrix = curve_fit(log_fit_function, C_over_N_fit, n_fit, p0=m_p0, maxfev=m_maxfev)
-	except RuntimeError:
-		print sys.exc_info()[1]
-		print 'log curve_fit failed, continuing...'
-		fit_status = False
-	
-	# plot the fit
-	if(fit_status):
-		fit_line, = ax.plot(fit_x, log_fit_function(fit_x, *op_par), ls='dashed', label='Log Fit', c="black")
-		legend_handles.append(fit_line)
-	
-	# Write out the fit parameters
-	fit_text = 'Log Fit Function: $C/N = a + b \log(n)$'
-	if(fit_status):
-		fit_text += '\n$a_{\mathrm{Expected}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (m_p0[0], op_par[0])
-		fit_text += '\n$b_{\mathrm{Expected}} =$ %2.2f, $b_{\mathrm{Fit}} =$ %2.5f' % (m_p0[1], op_par[1])
-	else:
-		fit_text += '\nLog Fit Failed'
+		m_p0 = [0.0, 3.6]
+		fit_status = True
 		
-	# Print the fit parameters
-	ax.text(0.025, 1-0.03, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes, va='top')
+		maxfev=m_maxfev = 2000
+		
+		# make nice x array for fit plot	
+		x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
+		fit_x = np.linspace(min(0.1, 0.00001*abs(x2_auto)), x2_auto, 1000)
 	
+		fit_text = ''
+			
+		try:
+			op_par, covar_matrix = curve_fit(log_fit_function, C_over_N_fit, n_fit, p0=m_p0, maxfev=m_maxfev)
+		except RuntimeError:
+			print sys.exc_info()[1]
+			print 'log curve_fit failed, continuing...'
+			fit_status = False
+		
+		# plot the fit
+		if(fit_status):
+#			fit_line, = ax.plot(fit_x, log_fit_function(fit_x, *op_par), ls='dashed', label='Log Fit', c="black")
+			fit_line, = ax.plot(fit_x, log_fit_function(fit_x, *m_p0), ls='dashed', label='Starting', c="black")
+			legend_handles.append(fit_line)
+	
+			if fit_upper_limit != 2.0*np.amax( n_array ):
+				fit_upper_limit_label = 'Fit Upper Limit %.2f' % fit_upper_limit
+				fit_upper_limit_line = ax.axvline(x=fit_upper_limit, ls = 'solid', label=fit_upper_limit_label, c='gray')
+				legend_handles.append(fit_upper_limit_line)
+	
+		
+		# Write out the fit parameters
+		fit_text = 'Log Fit Function: $C/N = a + b \log(n)$'
+		if(fit_status):
+			fit_text += '\n$a_{\mathrm{Starting}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (m_p0[0], op_par[0])
+			fit_text += '\n$b_{\mathrm{Starting}} =$ %2.2f, $b_{\mathrm{Fit}} =$ %2.5f' % (m_p0[1], op_par[1])
+		else:
+			fit_text += '\nLog Fit Failed'
+			
+		# Print the fit parameters
+		ax.text(0.025, 1-0.03, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=ax.transAxes, va='top')
+		
 	
 	# adjust axis range TODO
 	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
@@ -406,8 +413,8 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 	ann_text += '\nRNG Seed = %d' % (m_seed)
         ann_text += '\nNN Neighborhood:\n'+neighborhood
 
-	# TODO
-	ax.text(0.751, 0.625, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
+	# Warning, make sure you can still see the n = 500 data point
+	ax.text(0.7495, 0.615, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=ax.transAxes)
 
 	# Print it out
 	make_path(m_path)
@@ -748,7 +755,7 @@ if(True):
 	# n_to_test = [5, 10] # Debugging
 	# n_to_test = [5, 500] # Debugging
 
-	generate_fresh = True
+	generate_fresh = False
 
 	C_max_list = []
 
@@ -775,8 +782,8 @@ if(True):
 	C_array = np.load(output_path+'/C_array.npy')
 	n_array = np.load(output_path+'/n_array.npy')
 
-	# plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_limit, halt_percent_change, m_seed, fit_upper_limit)
-	plot_Cmax_vs_n('', output_path, 'Cmax_over_N_vs_n', C_array, n_array, sweep_upper_limit, halt_percent_change, seed, None)
+	# plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_limit, halt_percent_change, m_seed, perform_fit, fit_upper_limit)
+	plot_Cmax_vs_n('', output_path, 'Cmax_over_N_vs_n', C_array, n_array, sweep_upper_limit, halt_percent_change, seed, True, 42.0)
 
 
 	'''
