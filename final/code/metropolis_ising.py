@@ -16,6 +16,7 @@ J = 1.5 # nearest neighbor interaction strength J
 kB = 1.0 # Boltzmann's constant, relative to J
 
 nh = ''
+NN_type = 0
 neighborhood = 'Von Neumann'
 # neighborhood = 'Moore'
 
@@ -37,14 +38,13 @@ print '---------------------------------------------\n'
 ########################################################
 ########################################################
 
-# Set up the neighborhood of points to check
-NN_list = []
-if neighborhood == 'Moore':
-	NN_list = [[-1,1], [0,1], [1,1], [-1,0], [1,0], [-1,-1], [0,-1], [1,-1]] # Moore neighborhood
-	nh = 'moore'
-elif neighborhood == 'Von Neumann':
-	NN_list = [[1,0], [-1,0], [0,1], [0,-1]] # Von Neumann neighborhood
+# Set up the neighborhood of points to check, helper variables
+if neighborhood == 'Von Neumann':
+	NN_type = 0
 	nh = 'von_neumann'
+elif neighborhood == 'Moore':
+	NN_type = 1
+	nh = 'moore'
 else:
 	print 'ERROR!! Unknown neighborhood, exiting!!'
 	sys.exit()
@@ -439,7 +439,17 @@ def initialize(n, seed):
 
 #######################################################
 # Define a function to perform one sweep of the world grid TODO make compiled TODO recode NN list
-def sweep(T, m_n, world_grid, NN_list = []):
+def sweep(T, m_n, NN_type, world_grid):
+
+	# Set up the neighborhood of points to check
+	NN_list = []
+	if NN_type == 1:
+		NN_list = [[-1,1], [0,1], [1,1], [-1,0], [1,0], [-1,-1], [0,-1], [1,-1]] # Moore neighborhood
+	elif NN_type == 0:
+		NN_list = [[1,0], [-1,0], [0,1], [0,-1]] # Von Neumann neighborhood
+	else:
+		print 'ERROR!! Unknown neighborhood, exiting!!'
+		sys.exit()
 	
 	# m_n = world_grid.shape[0] pass as a parameter to speed up the sweeps...
 
@@ -482,8 +492,18 @@ def sweep(T, m_n, world_grid, NN_list = []):
 
 #######################################################
 # Define a function to compute E of a world_grid
-def E(m_n, world_grid, NN_list = []):
-	
+def E(m_n, world_grid):
+
+	# Set up the neighborhood of points to check
+	NN_list = []
+	if NN_type == 1:
+		NN_list = [[-1,1], [0,1], [1,1], [-1,0], [1,0], [-1,-1], [0,-1], [1,-1]] # Moore neighborhood
+	elif NN_type == 0:
+		NN_list = [[1,0], [-1,0], [0,1], [0,-1]] # Von Neumann neighborhood
+	else:
+		print 'ERROR!! Unknown neighborhood, exiting!!'
+		sys.exit()
+		
 	# m_n = world_grid.shape[0]
 	E = 0.0
 
@@ -517,7 +537,7 @@ def M(m_n, world_grid):
 
 #######################################################
 # Define a function to run sweeps on the world grid till convergence is met
-def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, NN_list):
+def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid):
 
 	num_history = 10
 	history = np.linspace(99.0*m_n*m_n, 99.0*m_n*m_n, num_history)
@@ -530,9 +550,9 @@ def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, N
 	# sweep until the mean of the last num_history percent changes in the convergence variable is < halt_percent_change
 	while np.mean(history) > halt_percent_change and sweep_number < sweep_upper_limit:
 
-		world_grid = sweep(T, m_n, world_grid, NN_list)
+		world_grid = sweep(T, m_n, NN_type, world_grid)
 
-		new_conv_var = E(m_n, world_grid, NN_list) # Use E as the convergence variable
+		new_conv_var = E(m_n, world_grid) # Use E as the convergence variable
 
 		if new_conv_var != 0.0:
 			history[sweep_number%num_history] = abs((new_conv_var - old_conv_var)/new_conv_var) # store the percent change
@@ -556,7 +576,7 @@ def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, N
 
 #######################################################
 # Define a function to cool down through temps, saving M vs T for graphing
-def cool_down(m_path, halt_percent_change, sweep_upper_limit, m_n, seed, temps_to_test = [], NN_list = []):
+def cool_down(m_path, halt_percent_change, sweep_upper_limit, m_n, seed, temps_to_test = []):
 
 	Ms = []
 	Ts = []
@@ -577,7 +597,7 @@ def cool_down(m_path, halt_percent_change, sweep_upper_limit, m_n, seed, temps_t
 			plot_grid('Initial', m_path, 'initial', T, None, None, seed, world_grid)
 
 	
-		world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, NN_list)
+		world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid)
 
 		title = ''
 
@@ -598,7 +618,7 @@ def cool_down(m_path, halt_percent_change, sweep_upper_limit, m_n, seed, temps_t
 
 #######################################################
 # Define a function to compute C for a given n, T
-def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, initial_world_grid, NN_list = []):
+def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, initial_world_grid):
 	if info: print 'Beginning C for T = %.3f, n = %d' % (T, m_n)
 
 	E_values = []
@@ -608,11 +628,11 @@ def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, swee
 
 	world_grid = np.copy(initial_world_grid)
 
-	world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, NN_list)
+	world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid)
 
 	equalized_world_grid = np.copy(world_grid)
 
-	E_values.append( E(m_n, world_grid, NN_list) )
+	E_values.append( E(m_n, world_grid) )
 
 	if debugging_plots:
 		# save debugging plots
@@ -624,9 +644,9 @@ def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, swee
 		if info: print '\nStarting microstate # %d' % (i+1)
 
 		for j in range(microstate_sweep_seperation):
-			world_grid = sweep(T, m_n, world_grid, NN_list)	
+			world_grid = sweep(T, m_n, NN_type, world_grid)	
 
-		E_values.append( E(m_n, world_grid, NN_list) )
+		E_values.append( E(m_n, world_grid) )
 
 	if debugging_plots:
 		# save debugging plots
@@ -646,7 +666,7 @@ def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, swee
 
 #######################################################
 # Define a function to compute C for a given n, T
-def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, NN_list = [], temps_to_test = []):
+def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, temps_to_test = []):
 	if debugging: print '\n---------------------------------------------\nBeginning CT_for_n with n = %d' % (m_n)
 
 	C_values = []
@@ -671,7 +691,7 @@ def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_
 		else:
 			starting_world_grid = initial_world_grid
 
-		tmp_C, equalized_world_grid = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path+'/'+name+'_debug', starting_world_grid, NN_list)
+		tmp_C, equalized_world_grid = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path+'/'+name+'_debug', starting_world_grid)
 
 		C_values.append( tmp_C )
 		T_values.append( T )
@@ -710,8 +730,8 @@ if(True):
 
 	temps_to_test = [2.0, 2.5, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 5.0]
 
-	n_to_test = [5, 10, 20, 30, 40, 50, 75, 100, 200, 500]
-	# n_to_test = [5, 10] # Debugging
+	# n_to_test = [5, 10, 20, 30, 40, 50, 75, 100, 200, 500]
+	n_to_test = [5, 10] # Debugging
 
 	generate_fresh = True
 
@@ -724,7 +744,7 @@ if(True):
 
 		for n in n_to_test:
 
-			Ts, Cs = CT_for_n(seed, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, n, output_path, NN_list, temps_to_test)
+			Ts, Cs = CT_for_n(seed, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, n, output_path, temps_to_test)
 
 			C_max_list.append(max(Cs))
 
@@ -774,7 +794,7 @@ if(False):
 	else:
 		print 'Generating M, T and Sweeps arrays'
 
-		MTSweeps = cool_down(output_path, halt_percent_change, sweep_upper_limit, n, seed, temps_to_test, NN_list)
+		MTSweeps = cool_down(output_path, halt_percent_change, sweep_upper_limit, n, seed, temps_to_test)
 
 		M_array = np.array(MTSweeps[0])
 		np.save(output_path+'/M_array', M_array)
