@@ -6,6 +6,9 @@ from scipy.optimize import curve_fit
 #import random
 import math
 
+import time
+start_time = time.time()
+
 ########################################################
 # Set fixed/global parameters
 
@@ -257,9 +260,9 @@ def plot_CT(optional_title, m_path, fname, C_list, T_list, m_n, sweep_upper_limi
 	legend_handles.append(points)
 	
 
-	# adjust axis range TODO
-	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
-	ax.set_xlim(0.0, x2_auto)
+	# adjust axis range
+#	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
+	ax.set_xlim(min(T_list)-0.5, max(T_list)+0.5)
 #	ax.set_ylim(-max(abs(y1_auto), abs(y2_auto)), max(abs(y1_auto), abs(y2_auto)) )
 
 	
@@ -276,7 +279,7 @@ def plot_CT(optional_title, m_path, fname, C_list, T_list, m_n, sweep_upper_limi
         ann_text += '\nNN Neighborhood:\n'+neighborhood
 
 		
-	ax.text(0.8, 0.725, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
+	ax.text(0.752, 0.72, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes) # TODO Move left
 
 	# Print it out
 	make_path(m_path)
@@ -290,7 +293,7 @@ def plot_CT(optional_title, m_path, fname, C_list, T_list, m_n, sweep_upper_limi
 ########################################################
 # Define a function to plot C max/N vs n
 def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_limit, halt_percent_change, m_seed, fit_upper_limit):
-	if debugging: print 'Beginning Cmax_vs_n for fname: '+fname
+	if debugging: print '\n\n---------------------------------------------\n---------------------------------------------\nBeginning Cmax_vs_n for fname: '+fname
 
 	# Setup the arrays
 
@@ -371,7 +374,7 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 		legend_handles.append(fit_line)
 	
 	# Write out the fit parameters
-	fit_text = 'Log Fit Function: $C/N = a + b \log\left(n\\right)$'
+	fit_text = 'Log Fit Function: $C/N = a + b \log(n)$'
 	if(fit_status):
 		fit_text += '\n$a_{\mathrm{Expected}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (m_p0[0], op_par[0])
 		fit_text += '\n$b_{\mathrm{Expected}} =$ %2.2f, $b_{\mathrm{Fit}} =$ %2.5f' % (m_p0[1], op_par[1])
@@ -435,7 +438,7 @@ def initialize(n, seed):
 
 
 #######################################################
-# Define a function to perform one sweep of the world grid
+# Define a function to perform one sweep of the world grid TODO make compiled TODO recode NN list
 def sweep(T, m_n, world_grid, NN_list = []):
 	
 	# m_n = world_grid.shape[0] pass as a parameter to speed up the sweeps...
@@ -644,7 +647,7 @@ def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, swee
 #######################################################
 # Define a function to compute C for a given n, T
 def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, NN_list = [], temps_to_test = []):
-	if debugging: print 'Beginning CT_for_n with n = %d' % (m_n)
+	if debugging: print '\n---------------------------------------------\nBeginning CT_for_n with n = %d' % (m_n)
 
 	C_values = []
 	T_values = []
@@ -705,13 +708,12 @@ if(True):
 	num_microstates = 100
 	microstate_sweep_seperation = 10
 
+	temps_to_test = [2.0, 2.5, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 5.0]
 
-	temps_to_test = [1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0, 5.5, 6.0, 6.5, 7.0, 7.5, 8.0]
+	n_to_test = [5, 10, 20, 30, 40, 50, 75, 100, 200, 500]
+	# n_to_test = [5, 10] # Debugging
 
-	# n_to_test = [5, 10, 20, 30, 40, 50, 75, 100, 200, 500]
-	n_to_test = [5, 10, 20, 30] # Debugging
-
-	generate_fresh = False
+	generate_fresh = True
 
 	C_max_list = []
 
@@ -726,7 +728,7 @@ if(True):
 
 			C_max_list.append(max(Cs))
 
-			print 'C max = %.5f' % (max(Cs))
+			print '\nC max = %.5f' % (max(Cs))
 
 		C_array = np.array(C_max_list)
 		np.save(output_path+'/C_array', C_array)
@@ -801,4 +803,4 @@ if(False):
 ########################################################
 print '\n\nDone!\n'
 
-
+print('Run Time: %s seconds' % (time.time() - start_time)) 
