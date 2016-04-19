@@ -12,6 +12,7 @@ import math
 J = 1.5 # nearest neighbor interaction strength J
 kB = 1.0 # Boltzmann's constant, relative to J
 
+nh = ''
 neighborhood = 'Von Neumann'
 # neighborhood = 'Moore'
 
@@ -37,8 +38,10 @@ print '---------------------------------------------\n'
 NN_list = []
 if neighborhood == 'Moore':
 	NN_list = [[-1,1], [0,1], [1,1], [-1,0], [1,0], [-1,-1], [0,-1], [1,-1]] # Moore neighborhood
+	nh = 'moore'
 elif neighborhood == 'Von Neumann':
-	NN_list = [[0,1], [-1,0], [1,0], [0,-1]] # Von Neumann neighborhood
+	NN_list = [[1,0], [-1,0], [0,1], [0,-1]] # Von Neumann neighborhood
+	nh = 'von_neumann'
 else:
 	print 'ERROR!! Unknown neighborhood, exiting!!'
 	sys.exit()
@@ -146,7 +149,7 @@ def plot_grid(optional_title, m_path, fname, m_T, m_sweep_number, halt_percent_c
 
 ########################################################
 # Define a function to plot M vs T
-def plot_MT(optional_title, m_path, fname, M_array, T_array, Sweeps_array, m_n, sweep_upper_limit, halt_percent_change, m_seed):
+def plot_MT(optional_title, m_path, fname, M_array, T_array, Sweeps_array, m_n, sweep_upper_limit, halt_percent_change, m_seed, Tc):
 	if debugging: print 'Beginning plot_MT() for fname: '+fname
 
 	# Setup the arrays
@@ -175,7 +178,7 @@ def plot_MT(optional_title, m_path, fname, M_array, T_array, Sweeps_array, m_n, 
         ax = fig.add_subplot(111)
         ax.set_title(optional_title)
         ax.set_xlabel('$T$ [K]')
-        ax.set_ylabel('$M = N\langle s\\rangle$') # TODO Units
+        ax.set_ylabel('$M = N\langle s\\rangle$ [$s_{i}$]')
 
         # start list for legend entries/handles
         legend_handles = []
@@ -184,9 +187,14 @@ def plot_MT(optional_title, m_path, fname, M_array, T_array, Sweeps_array, m_n, 
 	conv_points = ax.scatter(T_conv, M_conv, marker='o', label='Converged', c='blue')
 	legend_handles.append(conv_points)
 	
-	timedout_points = ax.scatter(T_timedout, M_timedout, marker='s', label='Timed Out', c='Green') # TODO diff name
+	timedout_points = ax.scatter(T_timedout, M_timedout, marker='s', label='Timed Out', c='Green')
 	legend_handles.append(timedout_points)
 	
+	# Plot the Tc line, if given
+       	if not Tc is None:
+		Tc_label = '$T_{C}$ = %.2f [K]' % Tc
+		Tc_line = ax.axvline(x=Tc, ls = 'dashed', label=Tc_label, c='gray')
+		legend_handles.append(Tc_line)
 
 	# adjust axis range
 	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
@@ -206,7 +214,12 @@ def plot_MT(optional_title, m_path, fname, M_array, T_array, Sweeps_array, m_n, 
 	ann_text += '\nRNG Seed = %d' % (m_seed)
         ann_text += '\nNN Neighborhood:\n'+neighborhood
 
-        ax.text(0.022, 0.035, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
+	if abs(y2_auto) < abs(y1_auto):
+		# M goes positive, put ann text in upper left
+	        ax.text(0.022, 0.725, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
+	else:
+		# M goes negative, put ann text in lower left
+	        ax.text(0.022, 0.035, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
 
 
 	# Print it out
@@ -252,19 +265,19 @@ def sweep(T, m_n, world_grid, NN_list = []):
 
 			# compute DeltaE
 
-			NN_E_original = 0.0
+			E_NN_original = 0.0
 			for k in range(len(NN_list)):
-				NN_E_original += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%m_n ][ (j+NN_list[k][1])%m_n ]
+				E_NN_original += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%m_n ][ (j+NN_list[k][1])%m_n ]
 
 			world_grid[i][j] = -world_grid[i][j] # test flip the spin
 
 			# compute DeltaE for the spin flipped
 
-			NN_E_flipped = 0.0
+			E_NN_flipped = 0.0
 			for k in range(len(NN_list)):
-				NN_E_flipped += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%m_n ][ (j+NN_list[k][1])%m_n ]
+				E_NN_flipped += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%m_n ][ (j+NN_list[k][1])%m_n ]
 
-			DeltaE = NN_E_original - NN_E_flipped
+			DeltaE = E_NN_flipped - E_NN_original
 
 			# if DeltaE <= 0 always keep the spin, ie do nothing as it's already been flipped
 			if DeltaE > 0.0:
@@ -296,7 +309,8 @@ def E(m_n, world_grid, NN_list = []):
 
 			# compute the contribution to E from this spin
 			for k in range(len(NN_list)):
-				E += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%m_n ][ (j+NN_list[k][1])%m_n ]
+				E += -J*world_grid[i][j]*world_grid[ (i+NN_list[k][0])%m_n ][ (j+NN_list[k][1])%m_n ]	
+
 
 	return E
 # end def for E
@@ -339,12 +353,12 @@ def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, N
 		if new_conv_var != 0.0:
 			history[sweep_number%num_history] = abs((new_conv_var - old_conv_var)/new_conv_var) # store the percent change
 		else:
-			print 'avoiding divide by zero error'
+			# if debugging2: print 'avoiding divide by zero error'
 			history[sweep_number%num_history] = 10*halt_percent_change # give it a large non zero number just to kick it back up and keep it moving
 
 
-#		if info: print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M(m_n, world_grid), np.mean(history) ) # Debugging info
-		if info and sweep_number > 0.9*sweep_upper_limit: print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M(m_n, world_grid), np.mean(history) ) # Debugging info
+#		if info: print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M(m_n, world_grid), np.mean(history) ) # sweep info
+		if info and sweep_number > max(0, sweep_upper_limit-50): print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M(m_n, world_grid), np.mean(history) ) # sweep info
 
 		old_conv_var = new_conv_var
 
@@ -358,7 +372,7 @@ def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, N
 
 #######################################################
 # Define a function to cool down through temps, saving M vs T for graphing
-def cool_down(halt_percent_change, sweep_upper_limit, m_n, seed, temps_to_test = [], NN_list = []):
+def cool_down(m_path, halt_percent_change, sweep_upper_limit, m_n, seed, temps_to_test = [], NN_list = []):
 
 	Ms = []
 	Ts = []
@@ -376,7 +390,7 @@ def cool_down(halt_percent_change, sweep_upper_limit, m_n, seed, temps_to_test =
 	
 		if i == 0:
 			world_grid = initialize(m_n, seed)
-			plot_grid('Initial', output_path, 'initial', T, None, None, seed, world_grid)
+			plot_grid('Initial', m_path, 'initial', T, None, None, seed, world_grid)
 
 	
 		world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, NN_list)
@@ -386,9 +400,9 @@ def cool_down(halt_percent_change, sweep_upper_limit, m_n, seed, temps_to_test =
 		if sweep_number >= sweep_upper_limit and debugging:
 			title = 'Timed Out'
 
-		plot_grid(title, output_path, 'converged_'+temp, T, sweep_number, halt_percent_change, seed, world_grid)
+		plot_grid(title, m_path, 'converged_'+temp, T, sweep_number, halt_percent_change, seed, world_grid)
 
-		Ms.append( abs(M(m_n, world_grid)) ) # TODO added in abs
+		Ms.append( M(m_n, world_grid) )
 		Ts.append( T )
 		Sweeps.append( sweep_number )
 
@@ -397,6 +411,52 @@ def cool_down(halt_percent_change, sweep_upper_limit, m_n, seed, temps_to_test =
 	return [Ms, Ts, Sweeps]
 
 # end def for cool_down
+
+#######################################################
+# Define a function to compute C for a given n, T
+def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, initial_world_grid, NN_list = []):
+	if debugging: print 'Beginning C for T = %.3f, n = %d' % (T, m_n)
+
+	E_values = []
+
+	# initialize and run to the first convergence	
+	if info: print '\nStarting microstate # 0'
+
+	world_grid = np.copy(initial_world_grid)
+
+	world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, NN_list)
+
+	E_values.append( E(m_n, world_grid, NN_list) )
+
+	if debugging_plots:
+		# save debugging plots
+		name = 'C_equalized_world_grid_T%.2f_n%d' % (T, m_n)
+		plot_grid('Equalized', m_path+'/debugging', name, T, None, None, -9, world_grid)
+
+	# Run more sweeps to generate more E values
+	for i in range(num_microstates-1):
+		if info: print '\nStarting microstate # %d' % (i+1)
+
+		for j in range(microstate_sweep_seperation):
+			world_grid = sweep(T, m_n, world_grid, NN_list)	
+
+		E_values.append( E(m_n, world_grid, NN_list) )
+
+	if debugging_plots:
+		# save debugging plots
+		name = 'C_last_sweep_world_grid_T%.2f_n%d' % (T, m_n)
+		plot_grid('Last Sweep', m_path+'/debugging', name, T, None, None, -9, world_grid)
+
+
+	# Compute the variance, then C
+	variance_E = np.mean( np.square(E_values) ) - np.mean(E_values)**2
+
+	C = variance_E / (kB*T*T)
+
+	if info: print 'C for T = %.3f, n = %d Completed!' % (T, m_n)
+
+	return C
+
 
 ########################################################
 ########################################################
@@ -408,18 +468,53 @@ def cool_down(halt_percent_change, sweep_upper_limit, m_n, seed, temps_to_test =
 # Development Runs 
 
 if(True):
-	output_path = '../output/dev'
+	output_path = '../output/dev_'+nh
 	debugging = True
+	debugging2 = True
+	debugging_plots = True
 	info = True
 
-
-	sweep_upper_limit = 750
-	n = 50
+	sweep_upper_limit = 500
+	m_n = 20
 	seed = 7
 	halt_percent_change = 0.02
 
-	temps_to_test = [0.1, 1, 1.5, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.4, 3.6, 3.8, 4, 4.5, 5, 5.5, 6, 7, 8]
-#	temps_to_test = [0.1]
+	T = 2.0
+	num_microstates = 100
+	microstate_sweep_seperation = 10
+
+	initial_world_grid = initialize(m_n, seed)
+
+	tmp_C = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, initial_world_grid, NN_list)
+	print 'n = %d, T = %.3f, C = %.5f' % (m_n, T, tmp_C)
+	
+	T = 3.0
+	tmp_C = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, initial_world_grid, NN_list)
+	print 'C = %.5f\n' % (tmp_C)
+
+
+########################################################
+########################################################
+# Production Runs for paper 
+
+if(False):
+	top_output_path = '../output/plots_for_paper_'+nh
+	debugging = True
+	debugging_plots = False
+	debugging2 = False
+	info = True
+
+        # Part a
+        ########################################################
+        print '\nPart a:'
+        output_path = top_output_path+'/part_a'
+
+	sweep_upper_limit = 5000
+	n = 50
+	seed = 7
+	halt_percent_change = 0.01
+
+	temps_to_test = [0.1, 0.5, 1, 1.5, 2, 2.25, 2.5, 2.6, 2.7, 2.8, 2.9, 3, 3.1, 3.2, 3.3, 3.35, 3.4, 3.45, 3.5, 3.55, 3.6, 3.7, 3.8, 3.9, 4, 4.5, 5, 5.5, 6, 6.5, 7, 8, 9]
 
 	generate_fresh = True
 
@@ -428,7 +523,7 @@ if(True):
 	else:
 		print 'Generating M, T and Sweeps arrays'
 
-		MTSweeps = cool_down(halt_percent_change, sweep_upper_limit, n, seed, temps_to_test, NN_list)
+		MTSweeps = cool_down(output_path, halt_percent_change, sweep_upper_limit, n, seed, temps_to_test, NN_list)
 
 		M_array = np.array(MTSweeps[0])
 		np.save(output_path+'/M_array', M_array)
@@ -444,25 +539,8 @@ if(True):
 	T_array = np.load(output_path+'/T_array.npy')
 	Sweeps_array = np.load(output_path+'/Sweeps_array.npy')
 
-	# plot_MT(optional_title, m_path, fname, M_array, T_array, Sweeps_array, m_n, sweep_upper_limit, halt_percent_change, m_seed)
-	plot_MT('', output_path, 'M_vs_T', M_array, T_array, Sweeps_array, n, sweep_upper_limit, halt_percent_change, seed)
+	plot_MT('', output_path, 'M_vs_T', M_array, T_array, Sweeps_array, n, sweep_upper_limit, halt_percent_change, seed, 3.46)
 
-
-########################################################
-########################################################
-# Production Runs for paper 
-
-if(False):
-	top_output_path = '../output/plots_for_paper'
-	debugging = False
-	info = True
-
-        # Part a
-        ########################################################
-        print '\nPart a:'
-        output_path = top_output_path+'/part_a'
-
-	# TODO
 
 	# Part b
         ########################################################
