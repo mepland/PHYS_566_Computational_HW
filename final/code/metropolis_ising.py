@@ -2,7 +2,7 @@ import os
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-#from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit
 #import random
 import math
 
@@ -305,10 +305,10 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 
 	for i in range(n_array.size):
 		if n_array[i] < fit_upper_limit:
-			C_over_N_fit.append( C_over_N_array[i]/(n_array[i]*n_array[i]) )
+			C_over_N_fit.append( C_array[i]/(n_array[i]*n_array[i]) )
 			n_fit.append(n_array[i])
 		else:
-			C_over_N_nofit.append( C_over_N_array[i]/(n_array[i]*n_array[i]) )
+			C_over_N_nofit.append( C_array[i]/(n_array[i]*n_array[i]) )
 			n_nofit.append(n_array[i])
 
 	C_over_N_fit_array = np.array(C_over_N_fit)
@@ -321,8 +321,8 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
         fig = plt.figure('fig')
         ax = fig.add_subplot(111)
         ax.set_title(optional_title)
-        ax.set_xlabel('$C/N$ [TODO]')
-        ax.set_ylabel('$n$')
+        ax.set_xlabel('$n$')
+        ax.set_ylabel('$C/N$ [TODO]')
 
         # start list for legend entries/handles
         legend_handles = []
@@ -331,7 +331,7 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 	fit_points = ax.scatter(n_fit, C_over_N_fit, marker='o', label='$C/N$', c='blue')
 	legend_handles.append(fit_points)
 	
-	nofit_points = ax.scatter(n_nofit, C_over_N_nofit, marker='0', label=None, c='blue')
+	nofit_points = ax.scatter(n_nofit, C_over_N_nofit, marker='o', label=None, c='blue')
 
 
 
@@ -352,6 +352,10 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 	
 	maxfev=m_maxfev = 2000
 	
+	# make nice x array for fit plot	
+	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
+	fit_x = np.linspace(min(0.1, 0.00001*abs(x2_auto)), x2_auto, 1000)
+
 	fit_text = ''
 		
 	try:
@@ -363,13 +367,14 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 	
 	# plot the fit
 	if(fit_status):
-		fit_line, = ax.plot(n_array, log_fit_function(n_array, *op_par), ls='dashed', label='Log Fit', c="black")
+		fit_line, = ax.plot(fit_x, log_fit_function(fit_x, *op_par), ls='dashed', label='Log Fit', c="black")
+		legend_handles.append(fit_line)
 	
 	# Write out the fit parameters
 	fit_text = 'Log Fit Function: $C/N = a + b \log\left(n\\right)$'
-	if(log_fit_status):
-		fit_text += '\n$a_{\mathrm{Expected}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (m_p0[0], log_op_par[0])
-		fit_text += '\n$b_{\mathrm{Expected}} =$ %2.2f, $b_{\mathrm{Fit}} =$ %2.5f' % (m_p0[1], log_op_par[1])
+	if(fit_status):
+		fit_text += '\n$a_{\mathrm{Expected}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (m_p0[0], op_par[0])
+		fit_text += '\n$b_{\mathrm{Expected}} =$ %2.2f, $b_{\mathrm{Fit}} =$ %2.5f' % (m_p0[1], op_par[1])
 	else:
 		fit_text += '\nLog Fit Failed'
 		
@@ -380,14 +385,15 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 	# adjust axis range TODO
 	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
 	ax.set_xlim(0.0, x2_auto)
-	# ax.set_ylim(-max(abs(y1_auto), abs(y2_auto)), max(abs(y1_auto), abs(y2_auto)) )
+#	ax.set_ylim(-max(abs(y1_auto), abs(y2_auto)), max(abs(y1_auto), abs(y2_auto)) )
+	ax.set_ylim(0.0, y2_auto)
 
 	
 	# draw legend
 	ax.legend(handles=legend_handles, bbox_to_anchor=(0.98, 0.98), borderaxespad=0, loc='upper right', fontsize='x-small')
 	
-        # Annotate
-	ann_text = '\nMax # Sweeps $=$ %g' % (sweep_upper_limit)	
+        # Annotate TODO 
+	ann_text = 'Max # Sweeps $=$ %g' % (sweep_upper_limit)	
 	ann_text += '\n$\langle\Delta E / E \\rangle <$ %.3f' % (halt_percent_change)
 	ann_text += '\n\n$J =$ %.5g [J]' % (J)
 	ann_text += '\n$k_{\mathrm{B}} =$ %.4g [J/K]' % (kB)
@@ -395,13 +401,7 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
         ann_text += '\nNN Neighborhood:\n'+neighborhood
 
 	# TODO
-	if abs(y2_auto) < abs(y1_auto):
-		# M goes positive, put ann text in upper left
-	        ax.text(0.022, 0.725, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
-	else:
-		# M goes negative, put ann text in lower left
-	        ax.text(0.022, 0.035, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
-
+	ax.text(0.751, 0.625, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
 
 	# Print it out
 	make_path(m_path)
