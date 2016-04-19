@@ -414,8 +414,8 @@ def cool_down(m_path, halt_percent_change, sweep_upper_limit, m_n, seed, temps_t
 
 #######################################################
 # Define a function to compute C for a given n, T
-def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, initial_world_grid, NN_list = []):
-	if debugging: print 'Beginning C for T = %.3f, n = %d' % (T, m_n)
+def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, initial_world_grid, NN_list = []):
+	if info: print 'Beginning C for T = %.3f, n = %d' % (T, m_n)
 
 	E_values = []
 
@@ -425,6 +425,8 @@ def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, swee
 	world_grid = np.copy(initial_world_grid)
 
 	world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid, NN_list)
+
+	equalized_world_grid = np.copy(world_grid)
 
 	E_values.append( E(m_n, world_grid, NN_list) )
 
@@ -453,10 +455,47 @@ def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, swee
 
 	C = variance_E / (kB*T*T)
 
-	if info: print 'C for T = %.3f, n = %d Completed!' % (T, m_n)
+	if info: print 'C for T = %.3f, n = %d Completed! C = %.4f' % (T, m_n, C)
 
-	return C
+	return [C, equalized_world_grid]
+# end def for C
 
+#######################################################
+# Define a function to compute C for a given n, T
+def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, NN_list = [], temps_to_test = []):
+	if debugging: print 'Beginning CT_for_n with n = %d' % (m_n)
+
+	C_values = []
+	T_values = []
+
+	initial_world_grid = initialize(m_n, m_seed)
+
+	# make sure we are going through temps high to low
+	temps_to_test = sorted(temps_to_test)
+
+	for i in range(len(temps_to_test)):
+
+		T = temps_to_test[len(temps_to_test)-1-i]
+
+		print '\nStarting T = %.2g' % T
+#		temp = 'T%.2f' % T
+
+		if i != 0:
+			starting_world_grid = equalized_world_grid
+		else:
+			starting_world_grid = initial_world_grid
+
+		tmp_C, equalized_world_grid = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, starting_world_grid, NN_list)
+
+		C_values.append( tmp_C )
+		T_values.append( T )
+
+
+	if debugging: print 'CT_for_n with n = %d Completed!' % (m_n)
+
+	return [T_values, C_values]
+
+# end def for CT_for_n
 
 ########################################################
 ########################################################
@@ -474,23 +513,22 @@ if(True):
 	debugging_plots = True
 	info = True
 
-	sweep_upper_limit = 500
+	sweep_upper_limit = 2000
 	m_n = 20
-	seed = 7
-	halt_percent_change = 0.02
+	m_seed = 7
+	halt_percent_change = 0.01
 
 	T = 2.0
 	num_microstates = 100
 	microstate_sweep_seperation = 10
 
-	initial_world_grid = initialize(m_n, seed)
+	m_path = output_path
 
-	tmp_C = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, initial_world_grid, NN_list)
-	print 'n = %d, T = %.3f, C = %.5f' % (m_n, T, tmp_C)
+	temps_to_test = [1.0, 4.0, 8.0]
+
 	
-	T = 3.0
-	tmp_C = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, initial_world_grid, NN_list)
-	print 'C = %.5f\n' % (tmp_C)
+	Ts, Cs = CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, NN_list, temps_to_test)
+
 
 
 ########################################################
