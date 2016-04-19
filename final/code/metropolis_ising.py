@@ -9,6 +9,8 @@ import math
 import time
 start_time = time.time()
 
+import sweepMod
+
 ########################################################
 # Set fixed/global parameters
 
@@ -138,10 +140,11 @@ def plot_grid(optional_title, m_path, fname, m_T, m_sweep_number, halt_percent_c
 
         ax.text(1.04, 0.018, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
 
+	if debugging2: print 'plot_grid() finished making the plot, now saving to png'
 
 	# Print it out
 	make_path(m_path)
-	fig.savefig(m_path+'/'+fname+'.pdf')	
+	fig.savefig(m_path+'/'+fname+'.png')	
 
 	fig.clf() # Clear fig for reuse
 
@@ -250,7 +253,7 @@ def plot_CT(optional_title, m_path, fname, C_list, T_list, m_n, sweep_upper_limi
         ax = fig.add_subplot(111)
         ax.set_title(optional_title)
         ax.set_xlabel('$T$ [K]')
-        ax.set_ylabel('$C$ [TODO]')
+        ax.set_ylabel('$C$ [J/K]')
 
         # start list for legend entries/handles
         legend_handles = []
@@ -279,7 +282,7 @@ def plot_CT(optional_title, m_path, fname, C_list, T_list, m_n, sweep_upper_limi
         ann_text += '\nNN Neighborhood:\n'+neighborhood
 
 		
-	ax.text(0.752, 0.72, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes) # TODO Move left
+	ax.text(0.025, 0.72, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
 
 	# Print it out
 	make_path(m_path)
@@ -325,7 +328,7 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
         ax = fig.add_subplot(111)
         ax.set_title(optional_title)
         ax.set_xlabel('$n$')
-        ax.set_ylabel('$C/N$ [TODO]')
+        ax.set_ylabel('$C/N$ [J/K]')
 
         # start list for legend entries/handles
         legend_handles = []
@@ -436,9 +439,9 @@ def initialize(n, seed):
 # end def for initialize
 
 
-
+'''
 #######################################################
-# Define a function to perform one sweep of the world grid TODO make compiled TODO recode NN list
+# Define a function to perform one sweep of the world grid
 def sweep(T, m_n, NN_type, world_grid):
 
 	# Set up the neighborhood of points to check
@@ -488,8 +491,9 @@ def sweep(T, m_n, NN_type, world_grid):
 	return world_grid
 
 # end def for sweep
+'''
 
-
+'''
 #######################################################
 # Define a function to compute E of a world_grid
 def E(m_n, world_grid):
@@ -518,7 +522,7 @@ def E(m_n, world_grid):
 
 	return E
 # end def for E
-
+'''
 
 #######################################################
 # Define a function to compute M of a world_grid
@@ -537,7 +541,7 @@ def M(m_n, world_grid):
 
 #######################################################
 # Define a function to run sweeps on the world grid till convergence is met
-def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid):
+def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, initial_seed, world_grid):
 
 	num_history = 10
 	history = np.linspace(99.0*m_n*m_n, 99.0*m_n*m_n, num_history)
@@ -550,9 +554,11 @@ def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid):
 	# sweep until the mean of the last num_history percent changes in the convergence variable is < halt_percent_change
 	while np.mean(history) > halt_percent_change and sweep_number < sweep_upper_limit:
 
-		world_grid = sweep(T, m_n, NN_type, world_grid)
+		# world_grid = sweep(T, m_n, NN_type, world_grid)
+		sweepMod.run_sweep(T, kB, J, NN_type, initial_seed+sweep_number, world_grid)
 
-		new_conv_var = E(m_n, world_grid) # Use E as the convergence variable
+		# new_conv_var = E(m_n, world_grid) # Use E as the convergence variable
+		new_conv_var = sweepMod.find_E(J, NN_type, world_grid)
 
 		if new_conv_var != 0.0:
 			history[sweep_number%num_history] = abs((new_conv_var - old_conv_var)/new_conv_var) # store the percent change
@@ -596,8 +602,9 @@ def cool_down(m_path, halt_percent_change, sweep_upper_limit, m_n, seed, temps_t
 			world_grid = initialize(m_n, seed)
 			plot_grid('Initial', m_path, 'initial', T, None, None, seed, world_grid)
 
-	
-		world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid)
+
+		# loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, initial_seed, world_grid)	
+		world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, seed+(i*(sweep_upper_limit+2)), world_grid)
 
 		title = ''
 
@@ -618,35 +625,36 @@ def cool_down(m_path, halt_percent_change, sweep_upper_limit, m_n, seed, temps_t
 
 #######################################################
 # Define a function to compute C for a given n, T
-def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, initial_world_grid):
+def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, initial_seed, initial_world_grid):
 	if info: print 'Beginning C for T = %.3f, n = %d' % (T, m_n)
 
 	E_values = []
 
 	# initialize and run to the first convergence	
-	if info: print '\nStarting microstate # 0'
+	if info2: print '\nStarting microstate # 0'
 
-	world_grid = np.copy(initial_world_grid)
+	# loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, initial_seed, initial_world_grid)
+	equalized_world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, initial_seed, initial_world_grid)
+	world_grid = np.copy(equalized_world_grid)
 
-	world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, world_grid)
-
-	equalized_world_grid = np.copy(world_grid)
-
-	E_values.append( E(m_n, world_grid) )
+	# E_values.append( E(m_n, world_grid) )
+	E_values.append( sweepMod.find_E(J, NN_type, equalized_world_grid) )
 
 	if debugging_plots:
 		# save debugging plots
 		name = 'C_T%.2f_n%d_equalized_world_grid' % (T, m_n)
-		plot_grid('Equalized', m_path, name, T, None, None, -9, world_grid)
+		plot_grid('Equalized', m_path, name, T, None, None, -9, equalized_world_grid)
 
 	# Run more sweeps to generate more E values
 	for i in range(num_microstates-1):
-		if info: print '\nStarting microstate # %d' % (i+1)
+		if info2: print '\nStarting microstate # %d' % (i+1)
 
 		for j in range(microstate_sweep_seperation):
-			world_grid = sweep(T, m_n, NN_type, world_grid)	
+			# world_grid = sweep(T, m_n, NN_type, world_grid)	
+			sweepMod.run_sweep(T, kB, J, NN_type, initial_seed+1+i, world_grid)
 
-		E_values.append( E(m_n, world_grid) )
+		# E_values.append( E(m_n, world_grid) )
+		E_values.append( sweepMod.find_E(J, NN_type, world_grid) )
 
 	if debugging_plots:
 		# save debugging plots
@@ -686,12 +694,16 @@ def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_
 		print '\nStarting T = %.2g' % T
 #		temp = 'T%.2f' % T
 
-		if i != 0:
-			starting_world_grid = equalized_world_grid
-		else:
-			starting_world_grid = initial_world_grid
 
-		tmp_C, equalized_world_grid = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path+'/'+name+'_debug', starting_world_grid)
+
+		if i == 0:
+			starting_world_grid = initial_world_grid
+		else:
+			starting_world_grid = equalized_world_grid
+
+		# C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, initial_seed, initial_world_grid)
+		tmp_C, equalized_world_grid = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path+'/'+name+'_debug', m_seed+1+i, starting_world_grid)
+	
 
 		C_values.append( tmp_C )
 		T_values.append( T )
@@ -716,11 +728,13 @@ def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_
 if(True):
 	output_path = '../output/dev_'+nh
 	debugging = True
-	debugging2 = True
-	debugging_plots = True
+	debugging2 = False
+	debugging_plots = False
 	info = False
+	info2 = False
 
-	sweep_upper_limit = 2000 # TODO increase
+
+	sweep_upper_limit = 8000 # TODO
 
 	seed = 7
 	halt_percent_change = 0.01
@@ -728,10 +742,11 @@ if(True):
 	num_microstates = 100
 	microstate_sweep_seperation = 10
 
-	temps_to_test = [2.0, 2.5, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 5.0]
+	temps_to_test = [2.0, 2.5, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 5.0]
 
-	# n_to_test = [5, 10, 20, 30, 40, 50, 75, 100, 200, 500]
-	n_to_test = [5, 10] # Debugging
+	n_to_test = [5, 10, 20, 30, 40, 50, 75, 100, 200, 500]
+	# n_to_test = [5, 10] # Debugging
+	# n_to_test = [5, 500] # Debugging
 
 	generate_fresh = True
 
@@ -764,6 +779,34 @@ if(True):
 	plot_Cmax_vs_n('', output_path, 'Cmax_over_N_vs_n', C_array, n_array, sweep_upper_limit, halt_percent_change, seed, None)
 
 
+	'''
+	# C module testing
+	T = 1.0
+	seed = 7
+	n = 500
+
+	initial_world_grid = initialize(n, seed)
+	world_grid = np.copy(initial_world_grid)
+
+	for i in range(15):
+		print 'On Sweep #%d' % i
+		seed += 1
+		sweepMod.run_sweep(T, kB, J, NN_type, seed, world_grid)
+
+	t1 = time.time()
+	print 'Python E = %.5f' % ( E(n, world_grid) )
+	print('Run Time: %s seconds' % (time.time() - t1)) 
+
+	t2 = time.time()
+	print 'Compiled C E = %.5f' % ( sweepMod.find_E(J, NN_type, world_grid) )  
+	print('Run Time: %s seconds' % (time.time() - t2)) 
+
+	# plot_grid('Initial', output_path, 'initial', T, None, None, -9, initial_world_grid)
+	# plot_grid('Final', output_path, 'final', T, None, None, seed, world_grid)
+	'''
+
+
+
 ########################################################
 ########################################################
 # Production Runs for paper 
@@ -772,8 +815,9 @@ if(False):
 	top_output_path = '../output/plots_for_paper_'+nh
 	debugging = True
 	debugging_plots = False
-	debugging2 = False
-	info = True
+	debugging2 = True
+	info = False
+	info2 = False
 
         # Part a
         ########################################################

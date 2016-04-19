@@ -1,7 +1,7 @@
 from distutils.core import setup, Extension
 import numpy as np
 
-ext_modules = [ Extension('sweep', sources = ['sweepmodule.c']) ]
+ext_modules = [ Extension('sweepMod', sources = ['sweepmodule.c']) ]
 
 setup(
         name = 'Sweep',
