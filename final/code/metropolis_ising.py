@@ -330,6 +330,7 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
         ax.set_xlabel('$n$')
         ax.set_ylabel('$C/N$ [J/K]')
 
+
         # start list for legend entries/handles
         legend_handles = []
 
@@ -339,32 +340,49 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 	
 	nofit_points = ax.scatter(n_nofit, C_over_N_nofit, marker='o', label=None, c='blue')
 
+	# adjust axis range
+	x2_scale_factor = 1.22
+	y2_scale_factor = 1.0
+
+	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
+	ax.set_xlim(0.0, x2_scale_factor*x2_auto)
+#	ax.set_ylim(-max(abs(y1_auto), abs(y2_auto)), max(abs(y1_auto), abs(y2_auto)) )
+	ax.set_ylim(0.0, y2_scale_factor*y2_auto)
+
 	if(perform_fit):
 	
 		# Fitting 
 		########################################################
 		
 		########################################################
-		# Define the log fit function
-		def log_fit_function(n_data, offset_fit, slope_fit):
+		# Define the log fit function, with offset
+		def log_fit_function2(n_data, offset_fit, slope_fit):
 			return offset_fit + slope_fit*np.log(n_data)
+		# end def log_fit_function2
+	
+		########################################################
+		# Define the log fit function
+		def log_fit_function(n_data, slope_fit):
+			return slope_fit*np.log(n_data)
 		# end def log_fit_function
-			
+		
 		# actually perform the fits
 		# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
 		
-		m_p0 = [0.0, 3.6]
+		#m_p0_2 = [0.0, 3.6]
+		m_p0 = [3.6]
+
 		fit_status = True
 		
 		maxfev=m_maxfev = 2000
 		
-		# make nice x array for fit plot	
-		x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
-		fit_x = np.linspace(min(0.1, 0.00001*abs(x2_auto)), x2_auto, 1000)
+		# make nice x array for fit plot
+		fit_x = np.linspace(min(0.1, 0.00001*abs(x2_auto)), x2_scale_factor*x2_auto, 1000)
 	
 		fit_text = ''
 			
 		try:
+			# op_par, covar_matrix = curve_fit(log_fit_function2, C_over_N_fit, n_fit, p0=m_p0_2, maxfev=m_maxfev)
 			op_par, covar_matrix = curve_fit(log_fit_function, C_over_N_fit, n_fit, p0=m_p0, maxfev=m_maxfev)
 		except RuntimeError:
 			print sys.exc_info()[1]
@@ -373,8 +391,10 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 		
 		# plot the fit
 		if(fit_status):
-#			fit_line, = ax.plot(fit_x, log_fit_function(fit_x, *op_par), ls='dashed', label='Log Fit', c="black")
-			fit_line, = ax.plot(fit_x, log_fit_function(fit_x, *m_p0), ls='dashed', label='Starting', c="black")
+			expectation_line, = ax.plot(fit_x, log_fit_function(fit_x, *m_p0), ls='dashed', label='Starting', c="black")
+			legend_handles.append(expectation_line)
+
+			fit_line, = ax.plot(fit_x, log_fit_function(fit_x, *op_par), ls='dashed', label='Log Fit', c="darkmagenta")
 			legend_handles.append(fit_line)
 	
 			if fit_upper_limit != 2.0*np.amax( n_array ):
@@ -383,24 +403,23 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 				legend_handles.append(fit_upper_limit_line)
 	
 		
-		# Write out the fit parameters
-		fit_text = 'Log Fit Function: $C/N = a + b \log(n)$'
+		# Write out the fit parameters	
+		fit_text = 'Log Fit Function: $C/N = a + b \log(n)$' # with offset
+		fit_text = 'Log Fit Function: $C/N = a \log(n)$' # no offset
 		if(fit_status):
+			# fit_text += '\n$a_{\mathrm{Starting}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (m_p0[0], op_par[0])
+			# fit_text += '\n$b_{\mathrm{Starting}} =$ %2.2f, $b_{\mathrm{Fit}} =$ %2.5f' % (m_p0[1], op_par[1])
+
 			fit_text += '\n$a_{\mathrm{Starting}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (m_p0[0], op_par[0])
-			fit_text += '\n$b_{\mathrm{Starting}} =$ %2.2f, $b_{\mathrm{Fit}} =$ %2.5f' % (m_p0[1], op_par[1])
+
 		else:
 			fit_text += '\nLog Fit Failed'
+
+
 			
 		# Print the fit parameters
 		ax.text(0.025, 1-0.03, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=ax.transAxes, va='top')
 		
-	
-	# adjust axis range TODO
-	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
-	ax.set_xlim(0.0, x2_auto)
-#	ax.set_ylim(-max(abs(y1_auto), abs(y2_auto)), max(abs(y1_auto), abs(y2_auto)) )
-	ax.set_ylim(0.0, y2_auto)
-
 	
 	# draw legend
 	ax.legend(handles=legend_handles, bbox_to_anchor=(0.98, 0.98), borderaxespad=0, loc='upper right', fontsize='x-small')
@@ -414,7 +433,7 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
         ann_text += '\nNN Neighborhood:\n'+neighborhood
 
 	# Warning, make sure you can still see the n = 500 data point
-	ax.text(0.7495, 0.615, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=ax.transAxes)
+	ax.text(0.75, 0.57, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=ax.transAxes)
 
 	# Print it out
 	make_path(m_path)
@@ -423,7 +442,7 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 	fig.clf() # Clear fig for reuse
 
 	if debugging: print 'plot_MT() completed!!!'
-# end def for plot_MT()
+# end def for TODO
 
 
 
