@@ -144,18 +144,18 @@ TODO
 \label{sec:theory}
 \subsection{Ising Model}
 \label{subsec:ising}
-The Ising model is the standard statistical mechanics first order model for a lattice of spins, such as the spins of atoms in a ferromagnet. In the Ising model each lattice point can either be spin up, $s=+1$ or spin down, $s=-1$, and the Hamiltonian\footnote{Without the presence of an external field} (\ref{eq:E}) only considers nearest neighbor (NN) interactions with exchange energy $J$.
+The Ising model is the standard statistical mechanics first order model for a lattice of spins, such as the spins of atoms in a ferromagnet. It is unique in being both analytically solvable, for some cases\footnote{1D with periodic boundary conditions is fairly straight forward, however no 3D analytical solutions have yet been developed.}, and in having a phase transition. In the Ising model each lattice point can either be spin up, $s=+1$ or spin down, $s=-1$, and the Hamiltonian\footnote{Without the presence of an external field} (\ref{eq:E}) only considers nearest neighbor (NN) interactions with exchange energy $J$.
 
 \begin{equation}
 \label{eq:E}
 E = -J \sum_{\mathrm{NN}} s_{i} s_{j}
 \end{equation}
 
-Due to the binary spin orientations, the magnetization of an Ising model lattice can easily be calculated in a simple averaging over the $N$ lattice points (\ref{eq:M}).
+Due to the binary spin orientations, the magnetization of an Ising model lattice can easily be calculated as a simple average over the $N$ lattice points (\ref{eq:M}).
 
 \begin{equation}
 \label{eq:M}
-M = \frac{1}{N} \sum_{j=1}^{N} s_{i}
+M = \frac{1}{N} \sum_{j=1}^{N} s_{i} = N \langle s \rangle
 \end{equation}
 
 The above equations apply to specific lattices or microstates. As is common in statistical mechanics we can take averages over microstates $\alpha$ to produce more accurate thermal quantities, in particular $\langle E \rangle$ (\ref{eq:ave_E}) and $\langle E^{2} \rangle$ (\ref{eq:ave_E2}).
@@ -165,15 +165,14 @@ The above equations apply to specific lattices or microstates. As is common in s
 \langle E^{2} \rangle &= \frac{1}{N_{\mathrm{microstates}}} \sum_{\alpha} E_{\alpha}^{2} \label{eq:ave_E2}
 \end{align}
 
-We are interested in $\langle E \rangle$ and $\langle E^{2} \rangle$ because they can be used to compute the squared variance of $E$, $\sigma_{E}^{2}$ (\ref{eq:sigmaE2}), which can itself be used to compute the specific heat $C$ via the fluctuation--dissipation theorem\footnote{$k_{B}$ is the standard Boltzmann constant.} (\ref{eq:C}).
+We are interested in $\langle E \rangle$ and $\langle E^{2} \rangle$ because they can be used to compute the squared variance of $E$, $\sigma_{E}^{2}$ (\ref{eq:sigmaE2}), which can itself be used to compute the specific heat $C$ at temperature $T$ via the fluctuation--dissipation theorem\footnote{$k_{B}$ is the standard Boltzmann constant.} (\ref{eq:C}).
 
 \begin{align}
 \sigma_{E}^{2} &=  \langle E^{2} \rangle - \langle E \rangle^{2} \label{eq:sigmaE2} \\
 C &= \frac{\sigma_{E}^{2}}{k_{B} T^{2}} \label{eq:C}
 \end{align}
 
-
-While one of the Ising models main positives is that analytical solutions can be found, particularly in the 1D case, we will not be discussing analytical approaches in this work, though references can easily be found in the literature. Instead we will be focused on simulating the Ising model numerically with the Metropolis algorithm.
+The Ising model can exhibit a phase transition between $M=\langle s \rangle \sim 0$ disordered spins and $\left|M\right|\sim N,\,\left|\langle s \rangle\right| \sim 1$ ordered spins, ie spontaneous magnetization, as $T$ changes through some critical $T_{C}$. It is possible to analytically derive $T_{C}$, and indeed this is one of the Ising models main positives, however we will not be discussing analytical approaches in this work.\footnote{References can easily be found in the literature, one example is Pathria and Beale.} Instead we will be focused on simulating the Ising model numerically with the Metropolis algorithm.
 
 \subsection{Metropolis Algorithm}
 \label{subsec:met_alg}
@@ -242,6 +241,14 @@ TODO
   \includegraphics[width=.72\textwidth]{{../output/plots_for_paper_von_neumann/part_a/converged_T2.50}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{Lattice at $T=2.5$. At lower $T$ the lattice becomes increasingly uniform.}
+	\label{fig:T2.5}
+\end{figure}
+
+\begin{figure}[!htbc]
+  \centering
+  \includegraphics[width=.72\textwidth]{../output/plots_for_paper_von_neumann/part_a/M_vs_T.pdf}
+	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
+	\caption{$M/N$ vs $T$. Notice the phase transition between $\langle s \rangle = 0$ and $\left|\langle s \rangle\right| = 1$ at $T_{C} = 3.50$ K. For this simulation and RNG seed the lattice transitioned to the $\langle s \rangle = 1$ spin up magnetization state.}
 	\label{fig:T2.5}
 \end{figure}
 
