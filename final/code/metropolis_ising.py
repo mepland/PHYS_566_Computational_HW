@@ -182,7 +182,7 @@ def plot_MT(optional_title, m_path, fname, M_array, T_array, Sweeps_array, m_n, 
         ax = fig.add_subplot(111)
         ax.set_title(optional_title)
         ax.set_xlabel('$T$ [K]')
-        ax.set_ylabel('$M = N\langle s\\rangle$ [$s_{i}$]')
+        ax.set_ylabel('$M/N = \langle s\\rangle$ [$s_{i}$]')
 
         # start list for legend entries/handles
         legend_handles = []
@@ -536,7 +536,7 @@ def E(m_n, world_grid):
 
 #######################################################
 # Define a function to compute M of a world_grid
-def M(m_n, world_grid):
+def M_over_N(m_n, world_grid):
 	
 	# m_n = world_grid.shape[0]
 	M = 0.0
@@ -577,8 +577,8 @@ def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, initial_seed,
 			history[sweep_number%num_history] = 10*halt_percent_change # give it a large non zero number just to kick it back up and keep it moving
 
 
-#		if info: print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M(m_n, world_grid), np.mean(history) ) # sweep info
-		# if info and sweep_number > max(0, sweep_upper_limit-50): print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M(m_n, world_grid), np.mean(history) ) # sweep info
+#		if info: print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M_over_N(m_n, world_grid), np.mean(history) ) # sweep info
+		# if info and sweep_number > max(0, sweep_upper_limit-50): print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M_over_N(m_n, world_grid), np.mean(history) ) # sweep info
 
 		old_conv_var = new_conv_var
 
@@ -618,7 +618,7 @@ def cool_down(m_path, halt_percent_change, sweep_upper_limit, m_n, seed, temps_t
 
 		plot_grid('', m_path, 'converged_'+temp, T, sweep_number, halt_percent_change, seed, world_grid)
 
-		Ms.append( M(m_n, world_grid) )
+		Ms.append( M_over_N(m_n, world_grid) )
 		Ts.append( T )
 		Sweeps.append( sweep_number )
 
