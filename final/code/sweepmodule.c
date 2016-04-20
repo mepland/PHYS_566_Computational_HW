@@ -90,16 +90,16 @@ run_sweep (PyObject *dummy, PyObject *args)
         double DeltaE = E_NN_flipped - E_NN_original;
 
 
-        // if DeltaE <= 0 always keep the spin, ie do nothing as it's already been flipped
+        // if DeltaE <= 0 always keep the spin, ie do nothing as it has already been flipped
         if( DeltaE > 0.0){ // if here, keep the spin with probability p = exp(-DeltaE/kB*T)
 
           double p = exp( -DeltaE/(kB*T) );
           double r = (double)rand() / (double)((unsigned)RAND_MAX + 1); // [0, 1) rng
 
-           // if r < p keep the spin, ie do nothing as it's already been flipped
+           // if r < p keep the spin, ie do nothing as it has already been flipped
            if( r >= p ){
 
-             // flip the spin back to it's original position
+             // flip the spin back to its original position
              *this_point = -(*this_point);
 
            } // end r >= p if statement
