@@ -140,15 +140,67 @@
 TODO
 \end{abstract}\maketitle
 
-\section{Introduction}
-\label{sec:intro}
+\section{Introduction and Theory}
+\label{sec:theory}
+\subsection{Ising Model}
+\label{subsec:ising}
+The Ising model is the standard statistical mechanics first order model for a lattice of spins, such as the spins of atoms in a ferromagnet. In the Ising model each lattice point can either be spin up, $s=+1$ or spin down, $s=-1$, and the Hamiltonian\footnote{Without the presence of an external field} (\ref{eq:E}) only considers nearest neighbor (NN) interactions with exchange energy $J$.
+
+\begin{equation}
+\label{eq:E}
+E = -J \sum_{\mathrm{NN}} s_{i} s_{j}
+\end{equation}
+
+Due to the binary spin orientations, the magnetization of an Ising model lattice can easily be calculated in a simple averaging over the $N$ lattice points (\ref{eq:M}).
+
+\begin{equation}
+\label{eq:M}
+M = \frac{1}{N} \sum_{j=1}^{N} s_{i}
+\end{equation}
+
+The above equations apply to specific lattices or microstates. As is common in statistical mechanics we can take averages over microstates $\alpha$ to produce more accurate thermal quantities, in particular $\langle E \rangle$ (\ref{eq:ave_E}) and $\langle E^{2} \rangle$ (\ref{eq:ave_E2}).
+
+\begin{align}
+\langle E \rangle &= \frac{1}{N_{\mathrm{microstates}}} \sum_{\alpha} E_{\alpha} \label{eq:ave_E} \\
+\langle E^{2} \rangle &= \frac{1}{N_{\mathrm{microstates}}} \sum_{\alpha} E_{\alpha}^{2} \label{eq:ave_E2}
+\end{align}
+
+We are interested in $\langle E \rangle$ and $\langle E^{2} \rangle$ because they can be used to compute the squared variance of $E$, $\sigma_{E}^{2}$ (\ref{eq:sigmaE2}), which can itself be used to compute the specific heat $C$ via the fluctuation--dissipation theorem\footnote{$k_{B}$ is the standard Boltzmann constant.} (\ref{eq:C}).
+
+\begin{align}
+\sigma_{E}^{2} &=  \langle E^{2} \rangle - \langle E \rangle^{2} \label{eq:sigmaE2} \\
+C &= \frac{\sigma_{E}^{2}}{k_{B} T^{2}} \label{eq:C}
+\end{align}
+
+
+While one of the Ising models main positives is that analytical solutions can be found, particularly in the 1D case, we will not be discussing analytical approaches in this work, though references can easily be found in the literature. Instead we will be focused on simulating the Ising model numerically with the Metropolis algorithm.
+
+\subsection{Metropolis Algorithm}
+\label{subsec:met_alg}
+TODO\footnote{The Von Neumann neighborhood consists of the four normal lattice points, to the left, right, up, and down of the original point. The Moore neighborhood adds the four diagonal neighbors for a total of eight.}
+
+$N=n^{2}$
+
+$\Delta E = E_{\mathrm{flipped}} - E_{\mathrm{original}}$
+
+
+\begin{equation}
+\label{eq:p}
+p = \exp\left(\frac{-\Delta E}{k_{B} T}\right)
+\end{equation}
+
+
+
+\subsubsection{Convergence Criteria}
+\label{subsubsec:convergence}
 TODO
 
-\section{Theory}
-\label{sec:theory}
-%\subsection{Box--Muller Transform}
-%\label{subsec:box_muller}
-TODO
+
+\begin{equation}
+\label{eq:histE}
+\langle \Delta E \rangle_{\mathrm{sweeps}} = \frac{1}{N_{\mathrm{sweeps}}} \sum_{i=0}^{N_{\mathrm{sweeps}}-1} \left|\frac{ E_{i+1} - E_{i}}{E_{i+1}}\right|
+\end{equation}
+
 
 
 \section{Results}
