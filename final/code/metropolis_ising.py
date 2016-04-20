@@ -584,7 +584,7 @@ def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, initial_seed,
 
 		sweep_number += 1
 
-	if sweep_number >= sweep_upper_limit: print 'Warning sweep upper limit hit!\nOn T = %.2f' % T # TODO
+	if sweep_number >= sweep_upper_limit: print 'Warning sweep upper limit hit!\nOn T = %.2f' % T
 
 	return [world_grid, sweep_number]
 
