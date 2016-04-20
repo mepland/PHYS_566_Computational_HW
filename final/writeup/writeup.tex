@@ -176,9 +176,10 @@ The Ising model can exhibit a phase transition between $M=\langle s \rangle \sim
 
 \subsection{Metropolis Algorithm}
 \label{subsec:met_alg}
-TODO\footnote{The Von Neumann neighborhood consists of the four normal lattice points, to the left, right, up, and down of the original point. The Moore neighborhood adds the four diagonal neighbors for a total of eight.}
 
-$N=n^{2}$
+The Ising model is an ideal candidate for Monte Carlo simulation as it only depends on nearest neighbor interactions. The Metropolis algorithm is one Monte Carlo technique for modeling such interactions on an $n\times n$ lattice, $N=n^{2}$, with periodic boundary conditions. The algorithm assumes the lattice is held at temperature $T$ by an external heat bath. In this work $n=5$ to $500$ and $k_{B}=1$ were used, setting the interesting temperature range to be around $0 < T < 5$. The nearest neighborhood type chosen is for use in the Metropolis algorithm is typically either the Von Neumann or Moore neighborhood\footnote{The Von Neumann neighborhood consists of the four normal lattice points; left, right, up, and down, of the original point. The Moore neighborhood adds the four diagonal neighbors for a total of eight.}. The Von Neumann neighborhood was used in this work, though the simulation code was written to be able to use either.
+
+The Metropolis algorithm works by first initializing the lattice as an $n\times n$ array of randomly generated spins, $\pm 1$. Sweeps are performed of the array\footnote{The sweeps of the lattice can be done by going through the lattice points sequentially or randomly. In this work the simpler sequential method was used.} changing each lattice points spin according to the following rules.
 
 $\Delta E = E_{\mathrm{flipped}} - E_{\mathrm{original}}$
 
@@ -249,7 +250,7 @@ TODO
   \includegraphics[width=.72\textwidth]{../output/plots_for_paper_von_neumann/part_a/M_vs_T.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$M/N$ vs $T$. Notice the phase transition between $\langle s \rangle = 0$ and $\left|\langle s \rangle\right| = 1$ at $T_{C} = 3.50$ K. For this simulation and RNG seed the lattice transitioned to the $\langle s \rangle = 1$ spin up magnetization state.}
-	\label{fig:T2.5}
+	\label{fig:M_vs_T}
 \end{figure}
 
 
@@ -328,14 +329,5 @@ The Python source code used to produce these results can be found online at \url
 
 \bibliographystyle{bib_files/styles/atlasBibStyleWoTitle}
 \bibliography{bib_files/my_bib.bib}
-
-
-\begin{figure}[!htbc]
-  \centering
-  \includegraphics[width=.72\textwidth]{part_a/uniform_N_1000_bins_10.pdf}
-	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{Uniform random number distribution with $N = 1000$ and $10$ bins.}
-	\label{fig:uniform_N_1000_bins_10}
-\end{figure}
 
 
