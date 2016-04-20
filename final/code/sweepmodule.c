@@ -5,7 +5,7 @@
 
 // compile and install module with:
 // python module_setup_for_sweepMod.py install
-// or TODO
+// or
 // python module_setup_for_sweepMod.py build_ext --inplace
 
 #include "Python.h"

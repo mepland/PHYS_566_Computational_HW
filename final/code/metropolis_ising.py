@@ -25,7 +25,7 @@ neighborhood = 'Von Neumann'
 
 ########################################################
 # Print out fixed values
-print '\nBeginning dla.py'
+print '\nBeginning metropolis_ising.py'
 print '\nFixed Parameters are:'
 print '---------------------------------------------'
 
@@ -140,11 +140,9 @@ def plot_grid(optional_title, m_path, fname, m_T, m_sweep_number, halt_percent_c
 
         ax.text(1.04, 0.018, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=False), size='x-small', transform=ax.transAxes)
 
-	if debugging2: print 'plot_grid() finished making the plot, now saving to png'
-
 	# Print it out
 	make_path(m_path)
-	fig.savefig(m_path+'/'+fname+'.png')	
+	fig.savefig(m_path+'/'+fname+'.pdf')	
 
 	fig.clf() # Clear fig for reuse
 
@@ -264,9 +262,9 @@ def plot_CT(optional_title, m_path, fname, C_list, T_list, m_n, sweep_upper_limi
 	
 
 	# adjust axis range
-#	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
+	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
 	ax.set_xlim(min(T_list)-0.5, max(T_list)+0.5)
-#	ax.set_ylim(-max(abs(y1_auto), abs(y2_auto)), max(abs(y1_auto), abs(y2_auto)) )
+	ax.set_ylim(0.0, y2_auto)
 
 	
 	# draw legend
@@ -295,7 +293,7 @@ def plot_CT(optional_title, m_path, fname, C_list, T_list, m_n, sweep_upper_limi
 
 ########################################################
 # Define a function to plot C max/N vs n
-def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_limit, halt_percent_change, m_seed, perform_fit, fit_upper_limit):
+def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_limit, halt_percent_change, perform_fit, fit_upper_limit):
 	if debugging: print '\n\n---------------------------------------------\n---------------------------------------------\nBeginning Cmax_vs_n for fname: '+fname
 
 	# Setup the arrays
@@ -319,15 +317,15 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 
 	C_over_N_fit_array = np.array(C_over_N_fit)
 	C_over_N_nofit_array = np.array(C_over_N_nofit)
-	n_fit_array = np.array(n_fit)
-	n_nofit_array = np.array(n_nofit)
+	log_n_fit_array = np.log(np.array(n_fit))
+	log_n_nofit_array = np.log(np.array(n_nofit))
 
 
 	# Set up the figure and axes
         fig = plt.figure('fig')
         ax = fig.add_subplot(111)
         ax.set_title(optional_title)
-        ax.set_xlabel('$n$')
+        ax.set_xlabel('$\log(n)$')
         ax.set_ylabel('$C/N$ [J/K]')
 
 
@@ -335,87 +333,74 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
         legend_handles = []
 
 	# Plot the data
-	fit_points = ax.scatter(n_fit, C_over_N_fit, marker='o', label='$C/N$', c='blue')
+	fit_points = ax.scatter(log_n_fit_array, C_over_N_fit_array, marker='o', label='$C/N$', c='blue')
 	legend_handles.append(fit_points)
 	
-	nofit_points = ax.scatter(n_nofit, C_over_N_nofit, marker='o', label=None, c='blue')
+	nofit_points = ax.scatter(log_n_nofit_array, C_over_N_nofit_array, marker='o', label=None, c='blue')
 
 	# adjust axis range
-	x2_scale_factor = 1.22
+	x2_scale_factor = 1.3
 	y2_scale_factor = 1.0
 
 	x1_auto,x2_auto,y1_auto,y2_auto = ax.axis()
 	ax.set_xlim(0.0, x2_scale_factor*x2_auto)
-#	ax.set_ylim(-max(abs(y1_auto), abs(y2_auto)), max(abs(y1_auto), abs(y2_auto)) )
 	ax.set_ylim(0.0, y2_scale_factor*y2_auto)
 
 	if(perform_fit):
 	
 		# Fitting 
 		########################################################
-		
-		########################################################
-		# Define the log fit function, with offset
-		def log_fit_function2(n_data, offset_fit, slope_fit):
-			return offset_fit + slope_fit*np.log(n_data)
-		# end def log_fit_function2
+	
 	
 		########################################################
-		# Define the log fit function
-		def log_fit_function(n_data, slope_fit):
-			return slope_fit*np.log(n_data)
-		# end def log_fit_function
-		
+		# Define the linear fit function, with offset
+		def linear_fit_function(data, offset_fit, slope_fit):
+			return offset_fit + slope_fit*data
+		# end def linear_fit_function
+
+
 		# actually perform the fits
 		# op_par = optimal parameters, covar_matrix has covariance but no errors on plot so it's incorrect...
-		
-		#m_p0_2 = [0.0, 3.6]
-		m_p0 = [3.6]
-
-		fit_status = True
-		
-		maxfev=m_maxfev = 2000
-		
-		# make nice x array for fit plot
-		fit_x = np.linspace(min(0.1, 0.00001*abs(x2_auto)), x2_scale_factor*x2_auto, 1000)
 	
+		m_p0 = [0.0, 1.0]	
+		# m_p0 = [0.0, 3.6]
+
+		fit_status = True		
+		maxfev=m_maxfev = 2000	
 		fit_text = ''
 			
 		try:
-			# op_par, covar_matrix = curve_fit(log_fit_function2, C_over_N_fit, n_fit, p0=m_p0_2, maxfev=m_maxfev)
-			op_par, covar_matrix = curve_fit(log_fit_function, C_over_N_fit, n_fit, p0=m_p0, maxfev=m_maxfev)
+			op_par, covar_matrix = curve_fit(linear_fit_function, log_n_fit_array, C_over_N_fit_array, p0=m_p0, maxfev=m_maxfev)
 		except RuntimeError:
 			print sys.exc_info()[1]
-			print 'log curve_fit failed, continuing...'
+			print 'curve_fit failed, continuing...'
 			fit_status = False
 		
 		# plot the fit
 		if(fit_status):
-			expectation_line, = ax.plot(fit_x, log_fit_function(fit_x, *m_p0), ls='dashed', label='Starting', c="black")
-			legend_handles.append(expectation_line)
+			# make nice x array for fit plot
+			fit_x = np.linspace(min(0.1, 0.00001*abs(x2_auto)), x2_scale_factor*x2_auto, 1000)
 
-			fit_line, = ax.plot(fit_x, log_fit_function(fit_x, *op_par), ls='dashed', label='Log Fit', c="darkmagenta")
+			fit_line, = ax.plot(fit_x, linear_fit_function(fit_x, *op_par), ls='dashed', label='Linear Fit', c="black")
 			legend_handles.append(fit_line)
 	
 			if fit_upper_limit != 2.0*np.amax( n_array ):
-				fit_upper_limit_label = 'Fit Upper Limit %.2f' % fit_upper_limit
-				fit_upper_limit_line = ax.axvline(x=fit_upper_limit, ls = 'solid', label=fit_upper_limit_label, c='gray')
+				fit_upper_limit_label = 'Fit Upper Limit %.1f' % np.log(fit_upper_limit)
+				fit_upper_limit_line = ax.axvline(x=np.log(fit_upper_limit), ls = 'solid', label=fit_upper_limit_label, c='gray')
 				legend_handles.append(fit_upper_limit_line)
 	
 		
 		# Write out the fit parameters	
-		fit_text = 'Log Fit Function: $C/N = a + b \log(n)$' # with offset
-		fit_text = 'Log Fit Function: $C/N = a \log(n)$' # no offset
+		fit_text = 'Fit Function: $C/N = a + b \log(n)$'
 		if(fit_status):
 			# fit_text += '\n$a_{\mathrm{Starting}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (m_p0[0], op_par[0])
 			# fit_text += '\n$b_{\mathrm{Starting}} =$ %2.2f, $b_{\mathrm{Fit}} =$ %2.5f' % (m_p0[1], op_par[1])
 
-			fit_text += '\n$a_{\mathrm{Starting}} =$ %2.2f, $a_{\mathrm{Fit}} =$ %2.5f' % (m_p0[0], op_par[0])
+			fit_text += '\n$a_{\mathrm{Fit}} =$ %2.5f' % (op_par[0])
+			fit_text += ', $b_{\mathrm{Fit}} =$ %2.5f' % (op_par[1])
 
 		else:
-			fit_text += '\nLog Fit Failed'
-
-
+			fit_text += '\nFit Failed'
 			
 		# Print the fit parameters
 		ax.text(0.025, 1-0.03, fit_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=ax.transAxes, va='top')
@@ -424,16 +409,15 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 	# draw legend
 	ax.legend(handles=legend_handles, bbox_to_anchor=(0.98, 0.98), borderaxespad=0, loc='upper right', fontsize='x-small')
 	
-        # Annotate TODO 
+        # Annotate
 	ann_text = 'Max # Sweeps $=$ %g' % (sweep_upper_limit)	
 	ann_text += '\n$\langle\Delta E / E \\rangle <$ %.3f' % (halt_percent_change)
 	ann_text += '\n\n$J =$ %.5g [J]' % (J)
 	ann_text += '\n$k_{\mathrm{B}} =$ %.4g [J/K]' % (kB)
-	ann_text += '\nRNG Seed = %d' % (m_seed)
         ann_text += '\nNN Neighborhood:\n'+neighborhood
 
 	# Warning, make sure you can still see the n = 500 data point
-	ax.text(0.75, 0.57, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=ax.transAxes)
+	ax.text(0.025, 0.67, ann_text, bbox=dict(edgecolor='black', facecolor='white', fill=True), size='x-small', transform=ax.transAxes)
 
 	# Print it out
 	make_path(m_path)
@@ -442,7 +426,7 @@ def plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_
 	fig.clf() # Clear fig for reuse
 
 	if debugging: print 'plot_MT() completed!!!'
-# end def for TODO
+# end def for plot_Cmax_vs_n()
 
 
 
@@ -594,13 +578,13 @@ def loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, initial_seed,
 
 
 #		if info: print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M(m_n, world_grid), np.mean(history) ) # sweep info
-		if info and sweep_number > max(0, sweep_upper_limit-50): print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M(m_n, world_grid), np.mean(history) ) # sweep info
+		# if info and sweep_number > max(0, sweep_upper_limit-50): print 'Sweep #%d, E = %.2f, DeltaE = %.2f, M = %.2f, conv mean = %.5f' % (sweep_number, new_conv_var, new_conv_var - old_conv_var, M(m_n, world_grid), np.mean(history) ) # sweep info
 
 		old_conv_var = new_conv_var
 
 		sweep_number += 1
 
-	if sweep_number >= sweep_upper_limit: print 'Warning sweep upper limit hit!'
+	if sweep_number >= sweep_upper_limit: print 'Warning sweep upper limit hit!\nOn T = %.2f' % T # TODO
 
 	return [world_grid, sweep_number]
 
@@ -632,12 +616,7 @@ def cool_down(m_path, halt_percent_change, sweep_upper_limit, m_n, seed, temps_t
 		# loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, initial_seed, world_grid)	
 		world_grid, sweep_number = loop_till_conv(T, halt_percent_change, sweep_upper_limit, m_n, seed+(i*(sweep_upper_limit+2)), world_grid)
 
-		title = ''
-
-		if sweep_number >= sweep_upper_limit and debugging:
-			title = 'Timed Out'
-
-		plot_grid(title, m_path, 'converged_'+temp, T, sweep_number, halt_percent_change, seed, world_grid)
+		plot_grid('', m_path, 'converged_'+temp, T, sweep_number, halt_percent_change, seed, world_grid)
 
 		Ms.append( M(m_n, world_grid) )
 		Ts.append( T )
@@ -651,7 +630,7 @@ def cool_down(m_path, halt_percent_change, sweep_upper_limit, m_n, seed, temps_t
 
 #######################################################
 # Define a function to compute C for a given n, T
-def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, initial_seed, initial_world_grid):
+def C(T, num_microstates, microstate_sweep_separation, halt_percent_change, sweep_upper_limit, m_n, m_path, initial_seed, initial_world_grid):
 	if info: print 'Beginning C for T = %.3f, n = %d' % (T, m_n)
 
 	E_values = []
@@ -675,7 +654,7 @@ def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, swee
 	for i in range(num_microstates-1):
 		if info2: print '\nStarting microstate # %d' % (i+1)
 
-		for j in range(microstate_sweep_seperation):
+		for j in range(microstate_sweep_separation):
 			# world_grid = sweep(T, m_n, NN_type, world_grid)	
 			sweepMod.run_sweep(T, kB, J, NN_type, initial_seed+1+i, world_grid)
 
@@ -700,7 +679,7 @@ def C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, swee
 
 #######################################################
 # Define a function to compute C for a given n, T
-def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, temps_to_test = []):
+def CT_for_n(m_seed, num_microstates, microstate_sweep_separation, halt_percent_change, sweep_upper_limit, m_n, m_path, temps_to_test = []):
 	if debugging: print '\n---------------------------------------------\nBeginning CT_for_n with n = %d' % (m_n)
 
 	C_values = []
@@ -717,18 +696,15 @@ def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_
 
 		T = temps_to_test[len(temps_to_test)-1-i]
 
-		print '\nStarting T = %.2g' % T
-#		temp = 'T%.2f' % T
-
-
+	# 	print '\nStarting T = %.2g' % T
 
 		if i == 0:
 			starting_world_grid = initial_world_grid
 		else:
 			starting_world_grid = equalized_world_grid
 
-		# C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path, initial_seed, initial_world_grid)
-		tmp_C, equalized_world_grid = C(T, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, m_n, m_path+'/'+name+'_debug', m_seed+1+i, starting_world_grid)
+		# C(T, num_microstates, microstate_sweep_separation, halt_percent_change, sweep_upper_limit, m_n, m_path, initial_seed, initial_world_grid)
+		tmp_C, equalized_world_grid = C(T, num_microstates, microstate_sweep_separation, halt_percent_change, sweep_upper_limit, m_n, m_path+'/'+name+'_debug', m_seed+1+i, starting_world_grid)
 	
 
 		C_values.append( tmp_C )
@@ -751,7 +727,7 @@ def CT_for_n(m_seed, num_microstates, microstate_sweep_seperation, halt_percent_
 ########################################################
 # Development Runs 
 
-if(True):
+if(False):
 	output_path = '../output/dev_'+nh
 	debugging = True
 	debugging2 = False
@@ -760,52 +736,6 @@ if(True):
 	info2 = False
 
 
-	sweep_upper_limit = 8000 # TODO
-
-	seed = 7
-	halt_percent_change = 0.01
-
-	num_microstates = 100
-	microstate_sweep_seperation = 10
-
-	temps_to_test = [2.0, 2.5, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 5.0]
-
-	n_to_test = [5, 10, 20, 30, 40, 50, 75, 100, 200, 500]
-	# n_to_test = [5, 10] # Debugging
-	# n_to_test = [5, 500] # Debugging
-
-	generate_fresh = False
-
-	C_max_list = []
-
-	if os.path.isfile(output_path+'/C_array.npy') and os.path.isfile(output_path+'/n_array.npy') and not generate_fresh:
-		print 'Loading saved arrays'
-	else:
-		print 'Generating C and n arrays'
-
-		for n in n_to_test:
-
-			Ts, Cs = CT_for_n(seed, num_microstates, microstate_sweep_seperation, halt_percent_change, sweep_upper_limit, n, output_path, temps_to_test)
-
-			C_max_list.append(max(Cs))
-
-			print '\nC max = %.5f' % (max(Cs))
-
-		C_array = np.array(C_max_list)
-		np.save(output_path+'/C_array', C_array)
-
-		n_array = np.array(n_to_test)
-		np.save(output_path+'/n_array', n_array)
-
-
-	C_array = np.load(output_path+'/C_array.npy')
-	n_array = np.load(output_path+'/n_array.npy')
-
-	# plot_Cmax_vs_n(optional_title, m_path, fname, C_array, n_array, sweep_upper_limit, halt_percent_change, m_seed, perform_fit, fit_upper_limit)
-	plot_Cmax_vs_n('', output_path, 'Cmax_over_N_vs_n', C_array, n_array, sweep_upper_limit, halt_percent_change, seed, True, 42.0)
-
-
-	'''
 	# C module testing
 	T = 1.0
 	seed = 7
@@ -829,66 +759,106 @@ if(True):
 
 	# plot_grid('Initial', output_path, 'initial', T, None, None, -9, initial_world_grid)
 	# plot_grid('Final', output_path, 'final', T, None, None, seed, world_grid)
-	'''
-
 
 
 ########################################################
 ########################################################
 # Production Runs for paper 
 
-if(False):
+if(True):
 	top_output_path = '../output/plots_for_paper_'+nh
 	debugging = True
-	debugging_plots = False
+	debugging_plots = False # Good to see, but slows the process down ridiculously 
 	debugging2 = True
 	info = False
 	info2 = False
 
         # Part a
         ########################################################
-        print '\nPart a:'
-        output_path = top_output_path+'/part_a'
+	if(True):
+	        print '\nPart a:'
+	        output_path = top_output_path+'/part_a'
+	
+		sweep_upper_limit = 20000
+		n = 50
+		seed = 7
+		halt_percent_change = 0.01
+	
+		temps_to_test = [0.1, 0.5, 1, 1.5, 2, 2.25, 2.5, 2.6, 2.7, 2.8, 2.9, 3, 3.1, 3.2, 3.3, 3.35, 3.4, 3.45, 3.5, 3.55, 3.6, 3.7, 3.8, 3.9, 4, 4.5, 5, 5.5, 6, 6.5, 7, 8, 9]
+	
+		generate_fresh = False
+	
+		if os.path.isfile(output_path+'/M_array.npy') and os.path.isfile(output_path+'/T_array.npy') and os.path.isfile(output_path+'/Sweeps_array.npy') and not generate_fresh:
+			print 'Loading saved arrays'
+		else:
+			print 'Generating M, T and Sweeps arrays'
+	
+			MTSweeps = cool_down(output_path, halt_percent_change, sweep_upper_limit, n, seed, temps_to_test)
+	
+			M_array = np.array(MTSweeps[0])
+			np.save(output_path+'/M_array', M_array)
+	
+			T_array = np.array(MTSweeps[1])
+			np.save(output_path+'/T_array', T_array)
+	
+			Sweeps_array = np.array(MTSweeps[2])
+			np.save(output_path+'/Sweeps_array', Sweeps_array)
+	
+	
+		M_array = np.load(output_path+'/M_array.npy')
+		T_array = np.load(output_path+'/T_array.npy')
+		Sweeps_array = np.load(output_path+'/Sweeps_array.npy')
+	
+		plot_MT('', output_path, 'M_vs_T', M_array, T_array, Sweeps_array, n, sweep_upper_limit, halt_percent_change, seed, 3.5)
 
-	sweep_upper_limit = 5000
-	n = 50
-	seed = 7
-	halt_percent_change = 0.01
-
-	temps_to_test = [0.1, 0.5, 1, 1.5, 2, 2.25, 2.5, 2.6, 2.7, 2.8, 2.9, 3, 3.1, 3.2, 3.3, 3.35, 3.4, 3.45, 3.5, 3.55, 3.6, 3.7, 3.8, 3.9, 4, 4.5, 5, 5.5, 6, 6.5, 7, 8, 9]
-
-	generate_fresh = True
-
-	if os.path.isfile(output_path+'/M_array.npy') and os.path.isfile(output_path+'/T_array.npy') and os.path.isfile(output_path+'/Sweeps_array.npy') and not generate_fresh:
-		print 'Loading saved arrays'
-	else:
-		print 'Generating M, T and Sweeps arrays'
-
-		MTSweeps = cool_down(output_path, halt_percent_change, sweep_upper_limit, n, seed, temps_to_test)
-
-		M_array = np.array(MTSweeps[0])
-		np.save(output_path+'/M_array', M_array)
-
-		T_array = np.array(MTSweeps[1])
-		np.save(output_path+'/T_array', T_array)
-
-		Sweeps_array = np.array(MTSweeps[2])
-		np.save(output_path+'/Sweeps_array', Sweeps_array)
-
-
-	M_array = np.load(output_path+'/M_array.npy')
-	T_array = np.load(output_path+'/T_array.npy')
-	Sweeps_array = np.load(output_path+'/Sweeps_array.npy')
-
-	plot_MT('', output_path, 'M_vs_T', M_array, T_array, Sweeps_array, n, sweep_upper_limit, halt_percent_change, seed, 3.46)
-
-
+	
 	# Part b
         ########################################################
-        print '\nPart b:'
-        output_path = top_output_path+'/part_b'
+	if(False):
+	        print '\nPart b:'
+		output_path = top_output_path+'/part_b'
 
-	# TODO
+
+		sweep_upper_limit = 10000
+	
+		seed = 7
+		halt_percent_change = 0.01
+	
+		num_microstates = 100
+		microstate_sweep_separation = 10
+	
+		temps_to_test = [2.0, 2.5, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 5.0]	
+		n_to_test = [5, 10, 20, 30, 40, 50, 75, 100, 200, 500]
+	
+		generate_fresh = False
+	
+		C_max_list = []
+	
+		if os.path.isfile(output_path+'/C_array.npy') and os.path.isfile(output_path+'/n_array.npy') and not generate_fresh:
+			print 'Loading saved arrays'
+		else:
+			print 'Generating C and n arrays'
+	
+			for n in n_to_test:
+	
+				Ts, Cs = CT_for_n(seed, num_microstates, microstate_sweep_separation, halt_percent_change, sweep_upper_limit, n, output_path, temps_to_test)
+	
+				C_max_list.append(max(Cs))
+	
+				print '\nC max = %.5f' % (max(Cs))
+	
+			C_array = np.array(C_max_list)
+			np.save(output_path+'/C_array', C_array)
+	
+			n_array = np.array(n_to_test)
+			np.save(output_path+'/n_array', n_array)
+	
+	
+		C_array = np.load(output_path+'/C_array.npy')
+		n_array = np.load(output_path+'/n_array.npy')
+	
+		plot_Cmax_vs_n('', output_path, 'Cmax_over_N_vs_n', C_array, n_array, sweep_upper_limit, halt_percent_change, True, 60.0)
+
 
 ########################################################
 print '\n\nDone!\n'
