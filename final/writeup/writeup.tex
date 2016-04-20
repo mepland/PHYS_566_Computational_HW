@@ -177,11 +177,13 @@ The Ising model can exhibit a phase transition between $M=\langle s \rangle \sim
 \subsection{Metropolis Algorithm}
 \label{subsec:met_alg}
 
-The Ising model is an ideal candidate for Monte Carlo simulation as it only depends on nearest neighbor interactions. The Metropolis algorithm is one Monte Carlo technique for modeling such interactions on an $n\times n$ lattice, $N=n^{2}$, with periodic boundary conditions. The algorithm assumes the lattice is held at temperature $T$ by an external heat bath. In this work $n=5$ to $500$ and $k_{B}=1$ were used, setting the interesting temperature range to be around $0 < T < 5$. The nearest neighborhood type chosen is for use in the Metropolis algorithm is typically either the Von Neumann or Moore neighborhood\footnote{The Von Neumann neighborhood consists of the four normal lattice points; left, right, up, and down, of the original point. The Moore neighborhood adds the four diagonal neighbors for a total of eight.}. The Von Neumann neighborhood was used in this work, though the simulation code was written to be able to use either.
+The Ising model is an ideal candidate for Monte Carlo simulation as it only depends on nearest neighbor interactions. The Metropolis algorithm is one Monte Carlo technique for modeling such interactions on an $n\times n$ lattice, $N=n^{2}$, with periodic boundary conditions. The algorithm assumes the lattice is held at temperature $T$ by an external heat bath. In this work $n=5$ to $500$, $J=1.5$ J, and $k_{B}=1$ J/K were used, setting the interesting temperature range to be around $0 < T < 5$ K. The nearest neighborhood type chosen is for use in the Metropolis algorithm is typically either the Von Neumann or Moore neighborhood\footnote{The Von Neumann neighborhood consists of the four normal lattice points; left, right, up, and down, of the original point. The Moore neighborhood adds the four diagonal neighbors for a total of eight.}. The Von Neumann neighborhood was chosen for use in this work, though the simulation code was written such that either neighborhood type could be easily selected.to be able to use either.
 
-The Metropolis algorithm works by first initializing the lattice as an $n\times n$ array of randomly generated spins, $\pm 1$. Sweeps are performed of the array\footnote{The sweeps of the lattice can be done by going through the lattice points sequentially or randomly. In this work the simpler sequential method was used.} changing each lattice points spin according to the following rules.
+The Metropolis algorithm begins by initializing the lattice as an $n\times n$ array of randomly generated spins, $\pm 1$. Sweeps are performed of the array\footnote{The sweeps of the lattice can be done by going through the lattice points sequentially or randomly. Here the simpler sequential option was used.} changing each lattice point's spin according to the following rules. First the spin is flipped and $\Delta E = E_{\mathrm{flipped}} - E_{\mathrm{original}}$ is computed. Note that due to the structure of the Hamiltonian (\ref{eq:E}) $\Delta E$ only depends on the spin's NN points and thus is an easy sum to perform computationally. If $\Delta E \leq 0$ the flipped spin will always be kept and the sweep moves on to the next point. If $\Delta E > 0$ the flipped spin will be kept with probability $p$ (\ref{eq:p}) as a function of $\Delta E$ and $T$, but otherwise will be flipped a second time returning to its original state. This chance of changing the spin to an energetically unfavorable state models the random thermal excitations of the atoms, which naturally die away as $T\rightarrow0$ thereby producing the $\langle s \rangle \rightarrow \pm 1$ spontaneous magnetization behavior.
 
-$\Delta E = E_{\mathrm{flipped}} - E_{\mathrm{original}}$
+Sweeps are performed of the lattice in this manner until a halting condition is met, at which point the thermodynamic properties of the lattice, such as $E$ and $M$, can be computed. Due to the large number of sweeps, through a potentially $N=n^2$ large number of lattice points, a compiled C module was written to perform sweeps and compute $E$ in order to decrease the overall Python code's run time.
+
+
 
 
 \begin{equation}
@@ -189,41 +191,37 @@ $\Delta E = E_{\mathrm{flipped}} - E_{\mathrm{original}}$
 p = \exp\left(\frac{-\Delta E}{k_{B} T}\right)
 \end{equation}
 
-
-
-\subsubsection{Convergence Criteria}
+\subsubsection{Halting Conditions and Convergence}
 \label{subsubsec:convergence}
-TODO
+While the Metropolis algorithm does find equilibrium solutions it does not necessarily converge monotonically to equilibrium. To prevent a single random fluctuation from halting the simulation prematurely, the average of the percent absolute change in energy between sweeps $\langle \Delta E / E \rangle$ (\ref{eq:histE}) over the past $N_{\mathrm{history}} = 10$ sweeps was used to judge convergence. The simulation was written to stop sweeping when $\langle \Delta E / E \rangle < 0.01$, or when the number of sweeps reached an upper limit, $N_{\mathrm{sweeps}} = 10000$ or $20000$. The $\langle \Delta E / E \rangle < 0.01$ halting condition always resulted in an equilibrium lattice. The $N_{\mathrm{sweeps}}$, time out halting condition in general does not guarantee an equilibrium lattice, however the upper limit on the number of sweeps was set large enough that in effect semi--equilibrium states were found\footnote{Semi--equilibrium meaning that the total energy is still fluctuating but $\langle s \rangle$ and the general $\pm1$ regions of the lattice are roughly constant. The simulation tended to time out at higher $T$s, where there is more thermal fluctuation, and lower $n$.}.
 
 
 \begin{equation}
 \label{eq:histE}
-\langle \Delta E \rangle_{\mathrm{sweeps}} = \frac{1}{N_{\mathrm{sweeps}}} \sum_{i=0}^{N_{\mathrm{sweeps}}-1} \left|\frac{ E_{i+1} - E_{i}}{E_{i+1}}\right|
+\langle \Delta E / E \rangle \equiv \frac{1}{N_{\mathrm{history}}} \sum_{i=1}^{N_{\mathrm{history}}} \left|\frac{ E_{i+1} - E_{i}}{E_{i+1}}\right|
 \end{equation}
 
 
-
+\clearpage
 \section{Results}
 \label{sec:results}
-TODO
-
 
 \subsection{Part A}
 \label{subsec:results_part_a}
-TODO
-
+In the first half of the assignment we are interested in the behavior of $M$ as a function of $T$, particularly the spontaneous magnetization phase transition and $T_{C}$. To investigate this behavior we cool a $n=50$ lattice down in stages from $T=9$ to $0.1$ K, using the equilibrium or halting array from one $T$ as the starting array for the next $T$. The temperatures investigated\footnote{$T = 0.1, 0.5, 1, 1.5, 2, 2.25, 2.5, 2.6, 2.7, 2.8, 2.9, 3, 3.1, 3.2, 3.3, 3.35, 3.4, 3.45, 3.5, 3.55, 3.6, 3.7, 3.8, 3.9, 4, 4.5, 5, 5.5, 6, 6.5, 7, 8, 9$} where chosen by hand to minimize the total run time while still showing the phase transition and general behavior in detail. The initial randomly generated lattice and equilibrium lattices at a few example $T$s are shown in Figures~\ref{fig:initial} through~\ref{fig:T2.5} below. As mentioned previously, the higher $T$ lattices did not satisfy the convergence condition, but were in reasonable semi--equilibrium states when the simulation timed out at $N_{\mathrm{sweeps}} = 20000$. The resulting plot of $M/N$ vs $T$, Figure~\ref{fig:M_vs_T}, shows a nice spontaneous magnetization phase transition from $\langle s \rangle = 0$ to $\langle s \rangle = +1$ at a critical temperature\footnote{$T_{C}$ was determined graphically by hand.} of $T_{C} = 3.50$ K, matching our expectations.
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.72\textwidth]{../output/plots_for_paper_von_neumann/part_a/initial.pdf}
+  \includegraphics[width=.82\textwidth]{../output/plots_for_paper_von_neumann/part_a/initial.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{Initial lattice.}
 	\label{fig:initial}
 \end{figure}
 
+\clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.72\textwidth]{{../output/plots_for_paper_von_neumann/part_a/converged_T6.00}.pdf}
+  \includegraphics[width=.75\textwidth]{{../output/plots_for_paper_von_neumann/part_a/converged_T6.00}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{Lattice at $T=6.0$. While the convergence condition was not met before the simulation timed out the lattice seems reasonable.}
 	\label{fig:T6.0}
@@ -231,15 +229,16 @@ TODO
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.72\textwidth]{{../output/plots_for_paper_von_neumann/part_a/converged_T3.60}.pdf}
+  \includegraphics[width=.75\textwidth]{{../output/plots_for_paper_von_neumann/part_a/converged_T3.60}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{Lattice at $T=3.6$. Here the simulation met the convergence condition.}
 	\label{fig:T3.6}
 \end{figure}
 
+\clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.72\textwidth]{{../output/plots_for_paper_von_neumann/part_a/converged_T2.50}.pdf}
+  \includegraphics[width=.75\textwidth]{{../output/plots_for_paper_von_neumann/part_a/converged_T2.50}.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{Lattice at $T=2.5$. At lower $T$ the lattice becomes increasingly uniform.}
 	\label{fig:T2.5}
@@ -247,15 +246,15 @@ TODO
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.72\textwidth]{../output/plots_for_paper_von_neumann/part_a/M_vs_T.pdf}
+  \includegraphics[width=.75\textwidth]{../output/plots_for_paper_von_neumann/part_a/M_vs_T.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$M/N$ vs $T$. Notice the phase transition between $\langle s \rangle = 0$ and $\left|\langle s \rangle\right| = 1$ at $T_{C} = 3.50$ K. For this simulation and RNG seed the lattice transitioned to the $\langle s \rangle = 1$ spin up magnetization state.}
 	\label{fig:M_vs_T}
 \end{figure}
 
 
-\clearpage
 
+\clearpage
 \subsection{Part B}
 \label{subsec:results_part_b}
 TODO
@@ -263,47 +262,48 @@ TODO
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.72\textwidth]{../output/plots_for_paper_von_neumann/part_b/CT_for_n10.pdf}
+  \includegraphics[width=.8\textwidth]{../output/plots_for_paper_von_neumann/part_b/CT_for_n10.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$C\left(T\right)$ for $n=10$. This is an example of the noise present at low $n$.}
 	\label{fig:CT_n10}
 \end{figure}
 
+\clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.72\textwidth]{../output/plots_for_paper_von_neumann/part_b/CT_for_n50.pdf}
+  \includegraphics[width=.75\textwidth]{../output/plots_for_paper_von_neumann/part_b/CT_for_n50.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
-	\caption{$C\left(T\right)$ for $n=50$, sharpest peak.}
+	\caption{$C\left(T\right)$ for $n=50$. This $n$ value produced the sharpest peak in $C\left(T\right)$.}
 	\label{fig:CT_n50}
 \end{figure}
 
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.72\textwidth]{../output/plots_for_paper_von_neumann/part_b/CT_for_n500.pdf}
+  \includegraphics[width=.75\textwidth]{../output/plots_for_paper_von_neumann/part_b/CT_for_n500.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$C\left(T\right)$ for $n=500$.}
 	\label{fig:CT_n500}
 \end{figure}
 
 
+\clearpage
 \begin{figure}[!htbc]
   \centering
-  \includegraphics[width=.72\textwidth]{../output/plots_for_paper_von_neumann/part_b/Cmax_over_N_vs_n.pdf}
+  \includegraphics[width=.82\textwidth]{../output/plots_for_paper_von_neumann/part_b/Cmax_over_N_vs_n.pdf}
 	{\par\nobreak\rule[9pt]{35em}{0.5pt}\vspace{-5mm}}
 	\caption{$C_{\mathrm{max}}/N$ vs $\log(n)$. The linear fit is consistent with $C_{\mathrm{max}}/N \sim \log(n)$, for low $n$.}
 	\label{fig:Cmax_over_N_vs_n}
 \end{figure}
 
 
-
-\clearpage
 \section{Conclusions}
 \label{sec:Conclusions}
 TODO
 
-The Python source code used to produce these results can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/final/code}, and is included in Section~\ref{sec:code}.
+The Python and C source code used to produce these results can be found online at \url{http://github.com/mepland/PHYS_566_Computational_HW/tree/master/final/code}, and is included in Section~\ref{sec:code}.
 
 
+\clearpage
 \section{Supporting Material}
 \label{sec:Supporting_Material}
 

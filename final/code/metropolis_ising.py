@@ -182,7 +182,7 @@ def plot_MT(optional_title, m_path, fname, M_array, T_array, Sweeps_array, m_n, 
         ax = fig.add_subplot(111)
         ax.set_title(optional_title)
         ax.set_xlabel('$T$ [K]')
-        ax.set_ylabel('$M/N = \langle s\\rangle$ [$s_{i}$]')
+        ax.set_ylabel('$M/N = \langle s\\rangle$')
 
         # start list for legend entries/handles
         legend_handles = []
@@ -814,7 +814,7 @@ if(True):
 	
 	# Part b
         ########################################################
-	if(False):
+	if(True):
 	        print '\nPart b:'
 		output_path = top_output_path+'/part_b'
 
