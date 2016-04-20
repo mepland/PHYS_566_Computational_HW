@@ -1,0 +1,207 @@
+
+Beginning metropolis_ising.py
+
+Fixed Parameters are:
+---------------------------------------------
+
+NN interaction strength J = 1.5 [J]
+Boltzmann's constant kB = 1.0 [J/K]
+
+NN neighborhood type = Von Neumann
+
+---------------------------------------------
+---------------------------------------------
+
+
+Part a:
+Generating M, T and Sweeps arrays
+
+Starting T = 9
+Beginning plot_grid() for fname: initial
+plot_grid() completed!!!
+Warning sweep upper limit hit!
+On T = 9.00
+Beginning plot_grid() for fname: converged_T9.00
+plot_grid() completed!!!
+T = 9 Completed!
+
+Starting T = 8
+Warning sweep upper limit hit!
+On T = 8.00
+Beginning plot_grid() for fname: converged_T8.00
+plot_grid() completed!!!
+T = 8 Completed!
+
+Starting T = 7
+Warning sweep upper limit hit!
+On T = 7.00
+Beginning plot_grid() for fname: converged_T7.00
+plot_grid() completed!!!
+T = 7 Completed!
+
+Starting T = 6.5
+Warning sweep upper limit hit!
+On T = 6.50
+Beginning plot_grid() for fname: converged_T6.50
+plot_grid() completed!!!
+T = 6.5 Completed!
+
+Starting T = 6
+Warning sweep upper limit hit!
+On T = 6.00
+Beginning plot_grid() for fname: converged_T6.00
+plot_grid() completed!!!
+T = 6 Completed!
+
+Starting T = 5.5
+Warning sweep upper limit hit!
+On T = 5.50
+Beginning plot_grid() for fname: converged_T5.50
+plot_grid() completed!!!
+T = 5.5 Completed!
+
+Starting T = 5
+Warning sweep upper limit hit!
+On T = 5.00
+Beginning plot_grid() for fname: converged_T5.00
+plot_grid() completed!!!
+T = 5 Completed!
+
+Starting T = 4.5
+Beginning plot_grid() for fname: converged_T4.50
+plot_grid() completed!!!
+T = 4.5 Completed!
+
+Starting T = 4
+Warning sweep upper limit hit!
+On T = 4.00
+Beginning plot_grid() for fname: converged_T4.00
+plot_grid() completed!!!
+T = 4 Completed!
+
+Starting T = 3.9
+Beginning plot_grid() for fname: converged_T3.90
+plot_grid() completed!!!
+T = 3.9 Completed!
+
+Starting T = 3.8
+Beginning plot_grid() for fname: converged_T3.80
+plot_grid() completed!!!
+T = 3.8 Completed!
+
+Starting T = 3.7
+Beginning plot_grid() for fname: converged_T3.70
+plot_grid() completed!!!
+T = 3.7 Completed!
+
+Starting T = 3.6
+Beginning plot_grid() for fname: converged_T3.60
+plot_grid() completed!!!
+T = 3.6 Completed!
+
+Starting T = 3.5
+Beginning plot_grid() for fname: converged_T3.55
+plot_grid() completed!!!
+T = 3.5 Completed!
+
+Starting T = 3.5
+Beginning plot_grid() for fname: converged_T3.50
+plot_grid() completed!!!
+T = 3.5 Completed!
+
+Starting T = 3.5
+Beginning plot_grid() for fname: converged_T3.45
+plot_grid() completed!!!
+T = 3.5 Completed!
+
+Starting T = 3.4
+Beginning plot_grid() for fname: converged_T3.40
+plot_grid() completed!!!
+T = 3.4 Completed!
+
+Starting T = 3.4
+Beginning plot_grid() for fname: converged_T3.35
+plot_grid() completed!!!
+T = 3.4 Completed!
+
+Starting T = 3.3
+Beginning plot_grid() for fname: converged_T3.30
+plot_grid() completed!!!
+T = 3.3 Completed!
+
+Starting T = 3.2
+Beginning plot_grid() for fname: converged_T3.20
+plot_grid() completed!!!
+T = 3.2 Completed!
+
+Starting T = 3.1
+Beginning plot_grid() for fname: converged_T3.10
+plot_grid() completed!!!
+T = 3.1 Completed!
+
+Starting T = 3
+Beginning plot_grid() for fname: converged_T3.00
+plot_grid() completed!!!
+T = 3 Completed!
+
+Starting T = 2.9
+Beginning plot_grid() for fname: converged_T2.90
+plot_grid() completed!!!
+T = 2.9 Completed!
+
+Starting T = 2.8
+Beginning plot_grid() for fname: converged_T2.80
+plot_grid() completed!!!
+T = 2.8 Completed!
+
+Starting T = 2.7
+Beginning plot_grid() for fname: converged_T2.70
+plot_grid() completed!!!
+T = 2.7 Completed!
+
+Starting T = 2.6
+Beginning plot_grid() for fname: converged_T2.60
+plot_grid() completed!!!
+T = 2.6 Completed!
+
+Starting T = 2.5
+Beginning plot_grid() for fname: converged_T2.50
+plot_grid() completed!!!
+T = 2.5 Completed!
+
+Starting T = 2.2
+Beginning plot_grid() for fname: converged_T2.25
+plot_grid() completed!!!
+T = 2.2 Completed!
+
+Starting T = 2
+Beginning plot_grid() for fname: converged_T2.00
+plot_grid() completed!!!
+T = 2 Completed!
+
+Starting T = 1.5
+Beginning plot_grid() for fname: converged_T1.50
+plot_grid() completed!!!
+T = 1.5 Completed!
+
+Starting T = 1
+Beginning plot_grid() for fname: converged_T1.00
+plot_grid() completed!!!
+T = 1 Completed!
+
+Starting T = 0.5
+Beginning plot_grid() for fname: converged_T0.50
+plot_grid() completed!!!
+T = 0.5 Completed!
+
+Starting T = 0.1
+Beginning plot_grid() for fname: converged_T0.10
+plot_grid() completed!!!
+T = 0.1 Completed!
+Beginning plot_MT() for fname: M_vs_T
+plot_MT() completed!!!
+
+
+Done!
+
+Run Time: 193.566056967 seconds

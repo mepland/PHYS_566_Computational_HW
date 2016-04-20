@@ -1,0 +1,252 @@
+
+Beginning metropolis_ising.py
+
+Fixed Parameters are:
+---------------------------------------------
+
+NN interaction strength J = 1.5 [J]
+Boltzmann's constant kB = 1.0 [J/K]
+
+NN neighborhood type = Von Neumann
+
+---------------------------------------------
+---------------------------------------------
+
+
+Part b:
+Generating C and n arrays
+
+---------------------------------------------
+Beginning CT_for_n with n = 5
+Warning sweep upper limit hit!
+On T = 5.00
+Warning sweep upper limit hit!
+On T = 4.50
+Warning sweep upper limit hit!
+On T = 4.40
+Warning sweep upper limit hit!
+On T = 4.30
+Warning sweep upper limit hit!
+On T = 4.20
+Warning sweep upper limit hit!
+On T = 4.10
+Warning sweep upper limit hit!
+On T = 4.00
+Warning sweep upper limit hit!
+On T = 3.90
+Warning sweep upper limit hit!
+On T = 3.80
+Warning sweep upper limit hit!
+On T = 3.70
+Warning sweep upper limit hit!
+On T = 3.60
+Warning sweep upper limit hit!
+On T = 3.50
+Beginning plot_CT() for fname: CT_for_n5
+plot_CT() completed!!!
+CT_for_n with n = 5 Completed!
+
+C max = 127.03053
+
+---------------------------------------------
+Beginning CT_for_n with n = 10
+Warning sweep upper limit hit!
+On T = 5.00
+Warning sweep upper limit hit!
+On T = 4.50
+Warning sweep upper limit hit!
+On T = 4.40
+Warning sweep upper limit hit!
+On T = 4.30
+Warning sweep upper limit hit!
+On T = 4.20
+Warning sweep upper limit hit!
+On T = 4.10
+Warning sweep upper limit hit!
+On T = 4.00
+Warning sweep upper limit hit!
+On T = 3.90
+Warning sweep upper limit hit!
+On T = 3.80
+Warning sweep upper limit hit!
+On T = 3.70
+Warning sweep upper limit hit!
+On T = 3.60
+Warning sweep upper limit hit!
+On T = 3.50
+Warning sweep upper limit hit!
+On T = 3.40
+Warning sweep upper limit hit!
+On T = 3.30
+Warning sweep upper limit hit!
+On T = 3.20
+Warning sweep upper limit hit!
+On T = 3.10
+Warning sweep upper limit hit!
+On T = 3.00
+Warning sweep upper limit hit!
+On T = 2.90
+Beginning plot_CT() for fname: CT_for_n10
+plot_CT() completed!!!
+CT_for_n with n = 10 Completed!
+
+C max = 811.58699
+
+---------------------------------------------
+Beginning CT_for_n with n = 20
+Warning sweep upper limit hit!
+On T = 5.00
+Warning sweep upper limit hit!
+On T = 4.50
+Warning sweep upper limit hit!
+On T = 4.40
+Warning sweep upper limit hit!
+On T = 4.30
+Warning sweep upper limit hit!
+On T = 4.20
+Warning sweep upper limit hit!
+On T = 4.10
+Warning sweep upper limit hit!
+On T = 4.00
+Warning sweep upper limit hit!
+On T = 3.90
+Warning sweep upper limit hit!
+On T = 3.80
+Warning sweep upper limit hit!
+On T = 3.70
+Warning sweep upper limit hit!
+On T = 3.60
+Warning sweep upper limit hit!
+On T = 3.50
+Warning sweep upper limit hit!
+On T = 3.40
+Warning sweep upper limit hit!
+On T = 3.30
+Warning sweep upper limit hit!
+On T = 3.20
+Warning sweep upper limit hit!
+On T = 3.10
+Warning sweep upper limit hit!
+On T = 3.00
+Beginning plot_CT() for fname: CT_for_n20
+plot_CT() completed!!!
+CT_for_n with n = 20 Completed!
+
+C max = 3563.61222
+
+---------------------------------------------
+Beginning CT_for_n with n = 30
+Warning sweep upper limit hit!
+On T = 5.00
+Warning sweep upper limit hit!
+On T = 4.50
+Warning sweep upper limit hit!
+On T = 4.40
+Warning sweep upper limit hit!
+On T = 4.30
+Warning sweep upper limit hit!
+On T = 4.20
+Warning sweep upper limit hit!
+On T = 4.10
+Warning sweep upper limit hit!
+On T = 4.00
+Warning sweep upper limit hit!
+On T = 3.90
+Warning sweep upper limit hit!
+On T = 3.80
+Warning sweep upper limit hit!
+On T = 3.70
+Warning sweep upper limit hit!
+On T = 3.60
+Warning sweep upper limit hit!
+On T = 3.50
+Warning sweep upper limit hit!
+On T = 3.40
+Warning sweep upper limit hit!
+On T = 3.30
+Warning sweep upper limit hit!
+On T = 3.20
+Beginning plot_CT() for fname: CT_for_n30
+plot_CT() completed!!!
+CT_for_n with n = 30 Completed!
+
+C max = 9919.53228
+
+---------------------------------------------
+Beginning CT_for_n with n = 40
+Warning sweep upper limit hit!
+On T = 5.00
+Warning sweep upper limit hit!
+On T = 4.40
+Warning sweep upper limit hit!
+On T = 4.30
+Warning sweep upper limit hit!
+On T = 4.20
+Warning sweep upper limit hit!
+On T = 4.10
+Warning sweep upper limit hit!
+On T = 4.00
+Warning sweep upper limit hit!
+On T = 3.90
+Beginning plot_CT() for fname: CT_for_n40
+plot_CT() completed!!!
+CT_for_n with n = 40 Completed!
+
+C max = 17554.37107
+
+---------------------------------------------
+Beginning CT_for_n with n = 50
+Warning sweep upper limit hit!
+On T = 5.00
+Warning sweep upper limit hit!
+On T = 4.40
+Warning sweep upper limit hit!
+On T = 4.30
+Beginning plot_CT() for fname: CT_for_n50
+plot_CT() completed!!!
+CT_for_n with n = 50 Completed!
+
+C max = 35618.11318
+
+---------------------------------------------
+Beginning CT_for_n with n = 75
+Beginning plot_CT() for fname: CT_for_n75
+plot_CT() completed!!!
+CT_for_n with n = 75 Completed!
+
+C max = 107983.53365
+
+---------------------------------------------
+Beginning CT_for_n with n = 100
+Beginning plot_CT() for fname: CT_for_n100
+plot_CT() completed!!!
+CT_for_n with n = 100 Completed!
+
+C max = 176823.13523
+
+---------------------------------------------
+Beginning CT_for_n with n = 200
+Beginning plot_CT() for fname: CT_for_n200
+plot_CT() completed!!!
+CT_for_n with n = 200 Completed!
+
+C max = 1594100.80688
+
+---------------------------------------------
+Beginning CT_for_n with n = 500
+Beginning plot_CT() for fname: CT_for_n500
+plot_CT() completed!!!
+CT_for_n with n = 500 Completed!
+
+C max = 25806625.33925
+
+
+---------------------------------------------
+---------------------------------------------
+Beginning Cmax_vs_n for fname: Cmax_over_N_vs_n
+plot_MT() completed!!!
+
+
+Done!
+
+Run Time: 863.31247592 seconds
