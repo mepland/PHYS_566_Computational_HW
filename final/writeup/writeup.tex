@@ -208,7 +208,7 @@ While the Metropolis algorithm does find equilibrium solutions it does not neces
 
 \subsection{Part A}
 \label{subsec:results_part_a}
-In the first half of the assignment we are interested in the behavior of $M$ as a function of $T$, particularly the spontaneous magnetization phase transition and $T_{C}$. To investigate this behavior we cool a $n=50$ lattice down in stages from $T=9$ to $0.1$ K, using the equilibrium or halting array from one $T$ as the starting array for the next $T$. The temperatures investigated\footnote{$T = 0.1, 0.5, 1, 1.5, 2, 2.25, 2.5, 2.6, 2.7, 2.8, 2.9, 3, 3.1, 3.2, 3.3, 3.35, 3.4, 3.45, 3.5, 3.55, 3.6, 3.7, 3.8, 3.9, 4, 4.5, 5, 5.5, 6, 6.5, 7, 8, 9$} where chosen by hand to minimize the total run time while still showing the phase transition and general behavior in detail. The initial randomly generated lattice and equilibrium lattices at a few example $T$s are shown in Figures~\ref{fig:initial} through~\ref{fig:T2.5} below. As mentioned previously, the higher $T$ lattices did not satisfy the convergence condition, but were in reasonable semi--equilibrium states when the simulation timed out at $N_{\mathrm{sweeps}} = 20000$. The resulting plot of $M/N$ vs $T$, Figure~\ref{fig:M_vs_T}, shows a nice spontaneous magnetization phase transition from $\langle s \rangle = 0$ to $\langle s \rangle = +1$ at a critical temperature\footnote{$T_{C}$ was determined graphically by hand.} of $T_{C} = 3.50$ K, matching our expectations.
+In the first half of the assignment we are interested in the behavior of $M$ as a function of $T$, particularly the spontaneous magnetization phase transition and $T_{C}$. To investigate this behavior we cool a $n=50$ lattice down in stages from $T=9$ to $0.1$ K, using the equilibrium or halting array from one $T$ as the starting array for the next $T$. The temperatures investigated\footnote{$T = 0.1, 0.5, 1, 1.5, 2, 2.25, 2.5, 2.6, 2.7, 2.8, 2.9, 3, 3.1, 3.2, 3.3, 3.35, 3.4, 3.45, 3.5, 3.55, 3.6, 3.7, 3.8, 3.9, 4, 4.5, 5, 5.5, 6, 6.5, 7, 8, 9$} where chosen by hand to minimize the total run time while still showing the phase transition and general behavior in detail. The initial randomly generated lattice and equilibrium lattices at a few example $T$s are shown in Figures~\ref{fig:initial} through~\ref{fig:T2.5} below. As mentioned previously, the higher $T$ lattices did not satisfy the convergence condition, but were in reasonable semi--equilibrium states when the simulation timed out at $N_{\mathrm{sweeps}} = 20000$. The resulting plot of $M/N$ vs $T$, Figure~\ref{fig:M_vs_T}, shows a nice spontaneous magnetization phase transition from $\langle s \rangle = 0$ to $\langle s \rangle = +1$ at a critical temperature\footnote{$T_{C}$ was determined graphically by hand.} of $T_{C} = 3.50$ K, matching our phenomenological expectations.
 
 \begin{figure}[!htbc]
   \centering
@@ -257,7 +257,9 @@ In the first half of the assignment we are interested in the behavior of $M$ as 
 \clearpage
 \subsection{Part B}
 \label{subsec:results_part_b}
-TODO
+In the second half of the assignment we turn our focus to the specific heat $C$ as a function of lattice size $n$. To allow us to compare $C$ between different $n$ values we must divide by the total number of lattice points $N$. $C/N$ can be calculated via the fluctuation--dissipation theorem, but first we must compute $\sigma_{E}^{2}$ which involves averaging over many microstates of a single macrostate. To generate these microstates it is not necessary to start from a random initial lattice like Figure~\ref{fig:initial} every time, but instead one initial state can be simulated to equilibrium at $T$, then the rest of the microstates can be generated from the equilibrium lattice by simply preforming more sweeps on it. In this assignment $N_{\mathrm{microstates}} = 100$ microstates, each separated by 10 full lattice sweeps, were used to generate each $\sigma_{E}^{2}$, and hence $C/N$, value. Using these method $C/N$ vs $T$ curves\footnote{$T = 2.0, 2.5, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9, 4.0, 4.1, 4.2, 4.3, 4.4, 4.5, 5.0$} were generated for a variety of $n$ values\footnote{$n = 5, 10, 20, 30, 40, 50, 75, 100, 200, 500$}, see Figures~\ref{fig:CT_n10} through~\ref{fig:CT_n500}. Due to the very large number of sweeps needed to complete this task it was necessary to implement the compiled C module. Additionally $N_{\mathrm{sweeps}}$ was reduced\footnote{In fact this was the original value and $N_{\mathrm{sweeps}}$ was bumped up for part A as the lower number of sweeps required made it possible to do so.} to $10000$.
+
+From each of the $C/N$ vs $T$ plots we can find a maximum $C_{\mathrm{max}}$ allowing us to plot $C_{\mathrm{max}}$ vs $n$. From the problem assignment we expect to see $C_{\mathrm{max}}\left(n\right)$ obey an approximate finite--size scaling relation $C_{\mathrm{max}}/N \sim \log(n)$, particularly for small values of $n$. Indeed looking at the linear fit of  $C_{\mathrm{max}}/N$ vs $\log(n)$ in Figure~\ref{fig:Cmax_over_N_vs_n} we see that the simulated data is consistent with the scaling relation, $C_{\mathrm{max}}/N = -0.33 + 3.37 \log(n)$ for $n < 60$.
 
 
 \begin{figure}[!htbc]
@@ -318,7 +320,6 @@ The Python and C source code used to produce these results can be found online a
 \section{Code}
 \label{sec:code}
 
-% TODO clearpages
 \lstinputlisting[style=python]{../code/metropolis_ising.py}
 \lstinputlisting[style=python]{../code/sweepmodule.c}
 \lstinputlisting[style=python]{../code/module_setup_for_sweepMod.py}
